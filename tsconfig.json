@@ -1,0 +1,23 @@
+{  
+  "exclude": ["node_modules", "lib"],
+  "compilerOptions": {
+      "module": "commonjs",
+      "target": "es6",
+      "sourceMap": true,
+      "esModuleInterop": true,
+      "moduleResolution": "node",
+      "resolveJsonModule": true,
+      "experimentalDecorators": true,
+      "declaration": true,
+      "outDir": "lib",
+      "rootDir": "src",
+      "allowJs": true,
+      "composite": true
+  },
+  "baseUrl": "./",
+  "references": [],
+  "include": ["src/**/*", "src/**/*.d.ts"],
+  "ts-node": {
+    "files":true
+  }
+}

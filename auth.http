@@ -1,0 +1,43 @@
+### Test
+GET https://tiger-crunch.com:4433
+
+### Authenticate
+POST https://tiger-crunch.com:4433/auth HTTP/1.1
+content-type: application/json
+
+{
+    "claims" : 
+    {   
+        "email": "paulsembereka@zohomail.eu",
+        "proposedPIN": "1234",
+        "otp":"711854"
+    }
+}
+
+### Register
+POST https://tiger-crunch.com:4433/users HTTP/1.1
+content-type: application/json
+
+{
+    "name":"Paul Sembereka", 
+    "email":"paulsembereka@zohomail.eu",
+    "phone":"12345678",
+    "proposedPIN":"1234"
+}
+
+### Register 2fa
+
+POST https://tiger-crunch.com:4433/auth/2fa HTTP/1.1
+content-type: application/json
+
+{
+    "proposedPIN":"1234"
+}
+
+### Verify 2fa
+POST https://tiger-crunch.com:4433/auth/2fa/verify HTTP/1.1
+content-type: application/json
+
+{
+    "otp":"164018"
+}

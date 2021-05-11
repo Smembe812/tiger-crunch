@@ -1,0 +1,30 @@
+## keys and certs
+*.pem
+*.cnf
+*.srl
+*.enc
+.env
+nodemailer-312912-e9f05650556d.json
+## logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+## modules
+node_modules
+
+users
+
+## yarn
+.yarn
+yarn.lock
+
+## ts
+*.tsbuildinfo
+
+## ca-db
+*-database.txt
+*-database.txt.*

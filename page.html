@@ -1,0 +1,352 @@
+<script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.1/socket.io.js" integrity="sha512-q/dWJ3kcmjBLU4Qc47E4A9kTB4m3wuTY7vkFJDTZKjTs8jhyGQnaUrxa0Ytd0ssMZhbNua9hE+E7Qv1j+DyZwA==" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    // fetch('https://tiger-crunch.com:4433/auth', {mode: 'cors',  credentials: "same-origin",   credentials: 'include'})
+    //     .then(response => response.json())
+    //     .then(response => {
+    //         document.cookie = `at=${response.access_token};secure; domain=tiger-crunch.com; HttpOnly`;
+    //     })
+    //     .catch(e => console.log(e))
+    
+    // var socket = io("http://127.0.0.1:5000");
+    // socket.on('connect', function() {
+    //     socket.emit('my song');
+    // });
+
+    // socket.on('my song', function(data) {
+    //     console.log(data)
+    // });
+</script>
+<h2>queue</h2>
+<div id="music-container">
+    <ul id="music-queue">       
+    </ul>
+    <div id="cover-art">
+
+    </div>
+</div>
+<button id="on_play">play</button>
+<button id="on_stop">stop</button>
+<button id="on_pause">pause</button>
+<button id="on_next">next</button>
+
+<script>
+const events = PubSub();
+const musicContainer = document.querySelector("#music-container");
+const musicQueueContainer = document.querySelector("#music-queue")
+const coverArtContainer = document.querySelector("#cover-art")
+
+function PubSub(){
+    const _topics = new Map()
+    function publish(topic) {
+        let topicObservers = _topics.get(topic)
+        if(topicObservers){
+            topicObservers.forEach(observer => observer.call())
+        }
+    }
+    function subscribe(topic, observer) {
+        let topicObservers = _topics.get(topic)
+        if(!topicObservers){
+            _topics.set(topic, [observer])
+        }
+        else{
+            topicObservers.push(observer)
+        }
+    }
+    function unsubscribe(topic, observer){
+        let topicObservers = _topics.get(topic)
+        if(topicObservers){
+            topicObservers = topicObservers.filter(topicObserver => topicObserver != observer)
+            if (topicObservers.length === 0){
+                _topics.delete(topic)
+            }else{
+                _topics.set(topic, topicObservers)
+            }
+        }
+    }
+    return {publish, subscribe, topics: _topics, unsubscribe}
+};
+
+class Model {
+    constructor (name){
+        this._name = name;
+        this._list = [];
+        this._currentIndex = null
+        this._store = null;
+    }
+    dispatch(message, to=null){
+        this._store.dispatch(message, this, to);
+        return this
+    }
+    receive(message, from){
+        console.log(message+" from ", from)
+    }
+    get getCurrentIndex () {
+            return this._currentIndex;
+    }
+    set changeCurrentIndex(index) {
+        this._currentIndex = index;
+        return index;
+    }
+    get getList () {
+        return this._list;
+    }
+    updateList (index, options=null) {
+        if(options && options.hardReset){
+            this._list = Array.from(new Set(index))
+        }
+        else{
+            const list = [...this._list, ...index]
+            this._list = Array.from(new Set(list));
+        }
+        return this;
+    }
+}
+
+class Nyimbo extends Model{
+    constructor (name){
+        super(name)
+    }
+    fetchSongs(){
+        return fetch(`${BASE_URL}/songs`).then(response => response.json())
+    }
+    async receive(message, from=null){
+        if (message === "I need some music to play"){
+            const songs = await this.fetchSongs()
+            this.updateList(songs)
+            events.publish("music_added")
+        }
+        return this
+    }
+}
+
+function Store(){
+    this._store = new Map()
+    this.register = register.bind(this)
+    this.dispatch = dispatch.bind(this)
+    function register(item){
+        if(!item._store){
+            item._store = this
+            this._store.set(item._name, item)
+        }
+        return this
+    }
+    function dispatch(message, from, to=null){
+        if(to){
+            to.receive(message, from)
+        } else {
+            this._store.forEach(item, item.receive(message, from))
+        }
+        return this
+    }
+}
+
+const store = new Store()
+
+const BASE_URL="http://127.0.0.1:5000"
+function playSong(uuid){
+    return fetch(`${BASE_URL}/songs/${uuid}/play`)
+        .then(response => {
+            const reader = response.body.getReader();
+            return new ReadableStream({
+                start(controller) {
+                    return pump();
+                    function pump() {
+                        return reader.read().then(({ done, value }) => {
+                        // When no more data needs to be consumed, close the stream
+                        if (done) {
+                            controller.close();
+                            return;
+                        }
+                        // Enqueue the next data chunk into our target stream
+                        controller.enqueue(value);
+                        return pump();
+                        });
+                    }
+                }
+            })
+        })
+        .then(stream => new Response(stream))
+        .then(response => response.blob())
+        .then(blob => URL.createObjectURL(blob))
+        .catch(e => console.log(e))
+}
+
+class AudioManager{
+    constructor(){
+        this._nowPlaying;
+    }
+    play(){
+        this._nowPlaying.play()
+        musicContainer.appendChild(this._nowPlaying)
+        events.publish('now_playing');
+        return this
+    }
+    pause(){
+        this._nowPlaying.pause()
+        return this
+    }
+    stop(){
+        this._nowPlaying.remove()
+        return this
+    }
+    setAudio(_url){
+        this._nowPlaying = new Audio(_url);
+        this._nowPlaying.autoplay = false
+        this._nowPlaying.controls = true
+        this._nowPlaying.setAttribute("id", "music-player")
+        return this
+    }
+}
+
+class Player extends Model{
+    constructor(name){
+        super(name)
+        this.audioManager = new AudioManager()
+        events.subscribe("music_added", ()=>{
+            this.addToQueue = store._store.get("songs")._list
+            console.log("music added")
+        })
+    }
+    get getNowPlaying(){
+        return this._currentIndex
+    }
+    set changeNowPlaying(song){
+        this.changeCurrentIndex = song
+        return this
+    }
+    get getQueue(){
+        return this.getList
+    }
+    set removeFromQueue(uuid){
+        const itemToBeRemoved = this._list.findIndex(item => item.uuid === uuid)
+        const queueLength = this.getQueue.length
+        const previousIndex = itemToBeRemoved - 1 === -1 ? queueLength - 1 : itemToBeRemoved - 1;
+        const nextIndex = itemToBeRemoved + 1 === queueLength ? 0 : itemToBeRemoved + 1
+        const newNext = this.getQueue[nextIndex].uuid
+        const newPrev = this.getQueue[previousIndex].uuid
+        this.getQueue.map((item, index) => {
+            if(index === previousIndex){
+                item.tail = newNext
+            }else if(index === nextIndex){
+                item.head = newPrev
+            }
+            return item
+        })
+        this.updateList(this.getQueue.filter(item => item.uuid !== uuid), {hardReset:true})
+        events.publish("music_added_to_queue")
+        return this
+    }
+    set addToQueue(music){
+        const listLength = music.length
+        const linkedList = music.map((song, index) => {
+            const previousIndex = index - 1 === -1 ? listLength - 1 : index - 1;
+            const nextIndex = index + 1 === listLength ? 0 : index + 1
+            return {
+                head: music[previousIndex].uuid,
+                ...song,
+                tail: music[nextIndex].uuid
+            }
+        })
+        this.updateList(linkedList)
+        events.publish("music_added_to_queue")
+        return this
+    }
+    async play(uuid){
+        let songUrl;
+        const songToPlay = this.getQueue.filter(song => song.uuid === uuid)[0]
+        if(songToPlay.blob){
+            songUrl = songToPlay.blob
+        }else{
+            songUrl = await playSong(uuid)
+        }
+        if(this.getCurrentIndex){
+            this.stop()
+        }
+        this.audioManager.setAudio(songUrl)
+        this.changeCurrentIndex = songToPlay 
+        this.audioManager.play()
+        if(!songToPlay.blob){
+            const que = this.getQueue.map(item => {
+                if(item.uuid === uuid){
+                    item.blob = songUrl
+                }
+                return item
+            })
+        }
+        return this
+    }
+    pause(){
+        this.audioManager.pause()
+        return this
+    }
+    stop(){
+        this.audioManager.stop()
+        this._currentIndex = null;
+        return this
+    }
+    async next(){
+        this.audioManager.stop()
+        this.play(this._currentIndex.tail)
+        return this
+    }
+}
+
+const nyimbo = new Nyimbo("songs")
+const player = new Player("player")
+store.register(nyimbo)
+store.register(player)
+async function playHandler(e) {
+    player.play(e.target.id)
+}
+
+
+customElements.define('queue', class extends HTMLElement{
+    constructor(){
+        super()
+        const _render = /*html*/`
+            <ul>
+            </ul>
+        `
+        const root = this.attachShadow({mode: 'open'})
+            .appendChild(_render);
+    }
+})
+
+events.subscribe("music_added_to_queue", function() {
+    const songs = store._store.get("player")._list.map(song => {
+        const item = /*html*/`
+            <li id="${song.uuid}" onclick="playHandler(event)">
+                ${song.title} by ${song.artist}
+            </li>
+        `
+        return item
+    }).join('')
+    musicQueueContainer.innerHTML = songs
+})
+
+events.subscribe("now_playing", function() {
+    const artWork = /*html*/`
+        <img src="${BASE_URL+store._store.get("player").getCurrentIndex.art_work[0]}"
+            width="${500}"
+            height="${500}"
+            id="art_work">`
+    coverArtContainer.innerHTML = artWork
+})
+
+if(store._store.get("songs").getList.length === 0){
+    player.dispatch("I need some music to play", nyimbo)
+}
+
+on_stop.addEventListener('click', function() {
+    player.stop()
+});
+on_pause.addEventListener('click', function() {
+    player.pause()
+})
+// on_play.addEventListener('click', function() {
+//     player.play()
+// })
+on_next.addEventListener('click', function() {
+    player.next()
+})
+</script>
