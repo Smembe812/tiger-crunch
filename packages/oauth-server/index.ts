@@ -2,8 +2,8 @@ var fs = require('fs');
 import * as crypto from 'crypto';
 var jwt = require('jsonwebtoken');
 export const options = { 
-    key: fs.readFileSync('server-key.pem'), 
-    cert: fs.readFileSync('server-crt.pem')
+    key: fs.readFileSync('../../server-key.pem'), 
+    cert: fs.readFileSync('../../server-crt.pem')
 };
 import logger from "./logger"
 require("dotenv").config()
@@ -14,7 +14,7 @@ import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid';
-import User from "./user"
+import User from '@tiger-crunch/user-service'
 const userUseCases = User.userUseCases
 const app = express()
 const { 

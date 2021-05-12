@@ -1,22 +1,32 @@
 {  
-  "exclude": ["node_modules", "lib"],
+  "exclude": [
+    "node_modules", 
+    "lib",
+    "__tests__",
+    "packages/**/node_modules", 
+    "packages/**/lib",
+    "packages/**/__tests__"
+  ],
   "compilerOptions": {
-      "module": "commonjs",
-      "target": "es6",
-      "sourceMap": true,
-      "esModuleInterop": true,
-      "moduleResolution": "node",
-      "resolveJsonModule": true,
-      "experimentalDecorators": true,
-      "declaration": true,
-      "outDir": "lib",
-      "rootDir": "src",
-      "allowJs": true,
-      "composite": true
+    "module": "commonjs",
+    "target": "esnext",
+    "lib": [
+      "esnext"
+    ],
+    "skipLibCheck": true,
+    "allowSyntheticDefaultImports": true,
+    "sourceMap": true,
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "resolveJsonModule": true,
+    "experimentalDecorators": true,
+    "declaration": true,
+    "allowJs": true,
+    "composite": true
   },
   "baseUrl": "./",
   "references": [],
-  "include": ["src/**/*", "src/**/*.d.ts"],
+  "include": ["packages/**/*", "packages/**/*.d.ts"],
   "ts-node": {
     "files":true
   }

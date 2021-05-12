@@ -10,7 +10,7 @@ content-type: application/json
     {   
         "email": "paulsembereka@zohomail.eu",
         "proposedPIN": "1234",
-        "otp":"711854"
+        "otp":"603393"
     }
 }
 
@@ -39,5 +39,5 @@ POST https://tiger-crunch.com:4433/auth/2fa/verify HTTP/1.1
 content-type: application/json
 
 {
-    "otp":"164018"
+    "otp":"603393"
 }

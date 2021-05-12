@@ -1,4 +1,4 @@
-import app, {options} from "./"
+import app, {options} from "./index"
 const https = require('https');
 const server = https.createServer(options, app);
 const yargs = require('yargs/yargs')
