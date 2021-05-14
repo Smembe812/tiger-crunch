@@ -37,7 +37,50 @@ content-type: application/json
 ### Verify 2fa
 POST https://tiger-crunch.com:4433/auth/2fa/verify HTTP/1.1
 content-type: application/json
-
 {
     "otp":"603393"
 }
+
+## Clients
+### register client
+POST https://tiger-crunch.com:4433/clients HTTP/1.1
+content-type: application/json
+
+{
+    "email":"findyourcat@app.com",
+    "project_name":"findyourcat",
+    "domain":"findyourcat.com"
+}
+
+### verify client
+GET https://tiger-crunch.com:4433/clients/verify HTTP/1.1
+content-type: application/json
+
+{
+    "id": "149c4d18-6282-4480-9350-09b756897fb3",
+    "client_key": "M-wyJaHpkxgHOm6yhQQ0dBnAMUBxmsF2zBvI-9P7zbb4ZS8-XReqKn1mMdFpI7x6TlZna-4xg2WyLeQnF7zFxVIPgckJDnO74K3KOUUmWpQGzzCnxeAOelGKR6LPEj4I6R8H0lpNNqLsSOQ3PW9i7L6evbVqO0bveqQbzAEtApaANIpga78_vDdsrnIwwLmWyZR6jA79HzPlD6392uIIvEiXiGrYiLasjepHs_EEdmboUcKpKYGlXY7IiS_ulwEW4A1wkpkWgAxCtgb2dCfiKSHgEX6ezACrS_f4vw3RyCstIGC6YeDWr0JyX58NJbJKjAYOKEOrqfo6IQ0it_pfwE1iJgfXi8vBh4xuzH434myXWLqhy8m37SSDpGX1fFhaCCo1I6oWO8sA1d5ThXG0R7Mn2Znx1OUMQkYJs7a5YcU5xt4nu4LhKm3Kd4vBYeexQuqOu40Wa9Q="
+}
+
+## OAuth grnnt routes
+### request code 
+POST https://tiger-crunch.com:4433/auth/code
+?response_type=code
+&scope=openid%20profile%20email
+&client_id=s6BhdRkqt3
+&state=af0ifjsldkj
+&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
+
+### request token
+POST https://tiger-crunch.com:4433/auth/token
+?grant_type=authorization_code
+&code=SplxlOBeZQQYbYS6WxSbIA
+&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
+
+### implicit flow
+GET https://tiger-crunch.com:4433/auth/implicit
+?response_type=id_token%20token 
+&client_id=s6BhdRkqt3
+&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
+&scope=openid%20profile
+&state=af0ifjsldkj
+&nonce=n-0S6_WzA2Mj HTTP/1.1

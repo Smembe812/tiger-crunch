@@ -2,7 +2,7 @@
   "exclude": [
     "node_modules", 
     "lib",
-    "__tests__",
+    "packages/oauth-server/__tests__",
     "packages/**/node_modules", 
     "packages/**/lib",
     "packages/**/__tests__"

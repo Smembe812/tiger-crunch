@@ -3,7 +3,7 @@
   "compilerOptions": {
     "outDir": "lib",
   },
-  "include": ["**/*", "**/*.d.ts", "global.d.ts"],
+  "include": ["**/*", "**/*.d.ts", "global.d.ts", "/*"],
   "ts-node": {
     "files":true
   },

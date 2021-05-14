@@ -1,13 +1,13 @@
 interface ClientInput {
     secret: string,
     id:string,
-    url:string,
+    domain:string,
     projectName: string
 }
 export default function makeClient(){
     return {
-        create({url, project_name}){
-            return Object.freeze({url,project_name})
+        create({domain, project_name, email, id}){
+            return Object.freeze({id, domain,project_name, email})
         }
     }
 }

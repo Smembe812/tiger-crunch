@@ -64,23 +64,23 @@ const {
 });
 
 function Aunthenticator({Issuer}){
-    function IDUser(user){
-        const {username, password} = user.claims
-        if (username === bob.username && password === bob.password){
-            let access_token = jwt.sign(
-                { username} , 
-                {
-                    key: AUTH_SIGNER_KEY,
-                    passphrase:''
-                }, 
-                { algorithm: 'RS256' }
-            );
-            return access_token
-        }
-        else{
-            throw new Error("Unable to id user")
-        }
-    }
+    // function IDUser(user){
+    //     const {username, password} = user.claims
+    //     if (username === bob.username && password === bob.password){
+    //         let access_token = jwt.sign(
+    //             { username} , 
+    //             {
+    //                 key: AUTH_SIGNER_KEY,
+    //                 passphrase:''
+    //             }, 
+    //             { algorithm: 'RS256' }
+    //         );
+    //         return access_token
+    //     }
+    //     else{
+    //         throw new Error("Unable to id user")
+    //     }
+    // }
     function IDClient({claims}){
         const {
             client_secrete: CLIENT_SECRETE, 
@@ -97,7 +97,7 @@ function Aunthenticator({Issuer}){
         const issuerKey = issuer.generateKeys()
 
         const client = crypto.createDiffieHellman(Buffer.from(CLIENT_SECRETE))
-        const clientKey = issuer.generateKeys()
+        const clientKey = client.generateKeys()
 
         const clientSecret = client.computeSecret(issuerKey);
         const issuerSecret = issuer.computeSecret(clientKey);
@@ -149,7 +149,7 @@ function Aunthenticator({Issuer}){
 // const forge = require('node-forge');
  
 // // Generate Alice's keys...
-// const alice = crypto.createDiffieHellman(2048);
+const alice = crypto.createDiffieHellman(2048);
 // const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
 //     namedCurve: 'sect239k1',
 //     publicKeyEncoding:  { type: 'spki', format: 'pem' },
@@ -287,10 +287,10 @@ function Aunthenticator({Issuer}){
 //     // const decrypted = crypto.privateDecrypt({
 //     //     key: data,
 //     //     passphrase: 'top
-const bob = {
-    username: "bob",
-    password: "mrbombastic"
-}
+// const bob = {
+//     username: "bob",
+//     password: "mrbombastic"
+// }
 //     // }, Buffer.from(publicKey, 'utf8'));
 
 // });
@@ -314,3 +314,22 @@ const bob = {
 
 // // OK
 // assert.strictEqual(aliceSecret.toString('hex'), bobSecret.toString('hex'));
+
+// const { 
+//     privateKey: AUTH_SIGNER_KEY, 
+//     publicKey: AUTH_PUB_KEY 
+// } = crypto.generateKeyPairSync('rsa', {
+//     modulusLength: 2048,
+//     publicKeyEncoding: {
+//       type: 'spki',
+//       format: 'pem'
+//     },
+//     privateKeyEncoding: {
+//       type: 'pkcs8',
+//       format: 'pem',
+//       cipher: 'aes-256-cbc',
+//       passphrase: ''
+//     }
+// });
+// fs.writeFileSync(`auth-siger-private-key.pem`, AUTH_SIGNER_KEY)
+// fs.writeFileSync(`auth-siger-public-key.pem`, AUTH_PUB_KEY)

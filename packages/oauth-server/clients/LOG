@@ -1,0 +1,5 @@
+2021/05/13-20:13:21.967606 7fb4abfff700 Recovering log #29
+2021/05/13-20:13:21.967759 7fb4abfff700 Level-0 table #31: started
+2021/05/13-20:13:21.979577 7fb4abfff700 Level-0 table #31: 1008 bytes OK
+2021/05/13-20:13:22.000381 7fb4abfff700 Delete type=0 #29
+2021/05/13-20:13:22.000508 7fb4abfff700 Delete type=3 #28

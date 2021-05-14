@@ -1,12 +1,16 @@
 var fs = require('fs'); 
+const path = require('path')
 import * as crypto from 'crypto';
-var jwt = require('jsonwebtoken');
+// var jwt = require('jsonwebtoken');
+import JWT from "./jwt-wrapper"
+import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
+const jwt = new JWT({algo:'RS256', signer:{key:AUTH_SIGNER_KEY, passphrase:""}})
 export const options = { 
-    key: fs.readFileSync('../../server-key.pem'), 
-    cert: fs.readFileSync('../../server-crt.pem')
+    key: keys.SEVER_KEY, 
+    cert: keys.SEVER_CRT
 };
 import logger from "./logger"
-require("dotenv").config()
+require("dotenv").config({path:path.resolve(__dirname+'../../../../.env')})
 import express from 'express'
 import helmet from 'helmet'
 import uaParser from 'ua-parser-js'
@@ -15,41 +19,11 @@ import cors from 'cors'
 import bodyParser from 'body-parser'
 import { v4 as uuidv4 } from 'uuid';
 import User from '@tiger-crunch/user-service'
+import Client from "@tiger-crunch/clients-service"
+import AuthGrants from "./grant-types/grant-types"
 const userUseCases = User.userUseCases
+const clientUseCases = Client.useCases
 const app = express()
-const { 
-    privateKey: AUTH_SIGNER_KEY, 
-    publicKey: AUTH_PUB_KEY 
-} = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem'
-    },
-    privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
-      cipher: 'aes-256-cbc',
-      passphrase: ''
-    }
-});
-
-const { 
-    privateKey: CLIENT_PRIV_KEY, 
-    publicKey: CLIENT_PUB_KEY
-} = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem'
-    },
-    privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
-      cipher: 'aes-256-cbc',
-      passphrase: ''
-    }
-});
 const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex')
 
 app.use(helmet())
@@ -97,12 +71,7 @@ app.post('/auth', async(req, res, next) => {
                 aud: "client-id/domain",
                 auth_time: + new Date()
             }, 
-            {
-                key: AUTH_SIGNER_KEY,
-                passphrase:''
-            }, 
             { 
-                algorithm: 'RS256', 
                 expiresIn: 60 * 60 
             }
         );
@@ -132,7 +101,7 @@ app.post('/users', async (req, res, next) => {
 })
 app.post('/auth/2fa', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
-    const { sub } = jwt.verify(access_token, AUTH_PUB_KEY)
+    const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
     const proposedPIN = req.body.proposedPIN
     const data_url = await userUseCases.setUp2FA({
         email:sub,
@@ -143,20 +112,82 @@ app.post('/auth/2fa', async (req, res, next) => {
 app.post('/auth/2fa/verify', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
     const otp = req.body.otp
-    const { sub } = jwt.verify(access_token, AUTH_PUB_KEY)
+    const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
     const isUser = await userUseCases.verify2faSetup({email:sub}, otp)
     return res.json({
         me:sub,
         success: isUser
     })
 })
+app.post('/auth/code', async(req, res, next) => {
+    //verify client
+    //verify user scope
+    //check/verify user
+    //redirect with code
+    const {response_type,scope,client_id,state,redirect_uri} = req.query
+    if(response_type === "code"){
+        const code = await generateRandomCode()
+        return res.redirect(`${redirect_uri}?code=${code}&state=${state}`)
+    }
+    return res.redirect(`${redirect_uri}?error=invalid_request&error_description=Unsupported%20response_type%20value&state=${state}`)
+})
+app.post('/auth/token/', async(req, res, next) => {
+    // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
+    // Ensure the Authorization Code was issued to the authenticated Client.
+    // Verify that the Authorization Code is valid.
+    // If possible, verify that the Authorization Code has not been previously used.
+    // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
+    // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
+    const {grant_type,code,redirect_uri} = req.query
+    res.set({'Cache-Control':'no-store'})
+    res.set({'Pragma': 'no-cache'})
+    const token = await AuthGrants({jwt, keys}).tokenGrant({grant_type,code,redirect_uri})
+    return res.json(token)
+})
+app.get('/auth/implicit/', async(req, res, next) => {
+    // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
+    // Ensure the Authorization Code was issued to the authenticated Client.
+    // Verify that the Authorization Code is valid.
+    // If possible, verify that the Authorization Code has not been previously used.
+    // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
+    // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
+    
+    const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
+    const params = {redirect_uri,response_type,client_id,scope,state,nonce}
+    res.set({'Cache-Control':'no-store'})
+    res.set({'Pragma': 'no-cache'})
+    const token = await AuthGrants({jwt, keys}).implicitFlow({...params})
+    return res.redirect(`${token.redirect_uri}?access_token=${token.access_token}&state=${token.state}&token_type=${token.token_type}&id_token=${token.id_token}&expires_in=${token.expires_in}`)
+})
+async function generateRandomCode(){
+    const {randomFill,} = await import('crypto');
+    return new Promise((resolve, reject) => {
+        const buf = Buffer.alloc(10);
+        randomFill(buf, (err, buf) => {
+        if (err) throw err;
+            resolve(buf.toString('hex'))
+        });
+    })
+}
+
+app.post('/clients', async (req, res, next) => {
+    try {
+        const {email,domain, project_name} = req.body
+        const responce = await clientUseCases.registerClient({email,domain, project_name})
+        res.status(201)
+        return res.json(responce)
+    } catch (error) {
+        return res.status(422).json({error:error.message})
+    }
+})
+
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash
     const access_token = req.signedCookies['access_token']
     if(!access_token){
         return (!!access_token)
     }
-    const {uaid: browserHash} = jwt.verify(access_token, AUTH_PUB_KEY)
+    const {uaid: browserHash} = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
     return (browserHash === incomingBrowserHash)
 }
 function browserHash(req) : Promise<{
@@ -186,20 +217,6 @@ function logConnections(req, res, next){
     // req.socket.getPeerCertificate().subject.CN+' '+ 
     req.method+' '+req.url)
     next()
-}
-
-
-
-function requestPayment(sender, receiver){
-    const senderPubKey = isAuthenticated(sender)
-    const receiverPubKey = receiver
-
-}
-
-
-function processPayment(sender, receiver){
-    const authenticSender = jwt.verify(sender.token, AUTH_PUB_KEY)
-    const authenticReceiver = receiver.verify()
 }
 
 async function isAuthenticated(user, agent=null) : Promise<boolean>{
