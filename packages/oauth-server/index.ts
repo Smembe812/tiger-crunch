@@ -1,7 +1,5 @@
 var fs = require('fs'); 
-const path = require('path')
 import * as crypto from 'crypto';
-// var jwt = require('jsonwebtoken');
 import JWT from "./jwt-wrapper"
 import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
 const jwt = new JWT({algo:'RS256', signer:{key:AUTH_SIGNER_KEY, passphrase:""}})
@@ -10,7 +8,8 @@ export const options = {
     cert: keys.SEVER_CRT
 };
 import logger from "./logger"
-require("dotenv").config({path:path.resolve(__dirname+'../../../../.env')})
+import path from 'path'
+require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 import express from 'express'
 import helmet from 'helmet'
 import uaParser from 'ua-parser-js'
@@ -25,7 +24,6 @@ const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
 const app = express()
 const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex')
-
 app.use(helmet())
 app.use(cors({
     origin: ['tiger-crunch.com', 'https://tiger-crunch.com:8000'],
@@ -159,6 +157,17 @@ app.get('/auth/implicit/', async(req, res, next) => {
     const token = await AuthGrants({jwt, keys}).implicitFlow({...params})
     return res.redirect(`${token.redirect_uri}?access_token=${token.access_token}&state=${token.state}&token_type=${token.token_type}&id_token=${token.id_token}&expires_in=${token.expires_in}`)
 })
+app.post('/clients', async (req, res) => {
+    const {email, project_name, domain} = req.body
+    const client = await clientUseCases.registerClient({email, project_name, domain})
+    return res.json({...client})
+})
+app.get('/clients/verify', async (req, res) => {
+    const {id, client_key} = req.body
+    const client = await clientUseCases.verifyClient({id, client_key})
+    console.log(client)
+    return res.json({...client})
+})
 async function generateRandomCode(){
     const {randomFill,} = await import('crypto');
     return new Promise((resolve, reject) => {
@@ -169,18 +178,6 @@ async function generateRandomCode(){
         });
     })
 }
-
-app.post('/clients', async (req, res, next) => {
-    try {
-        const {email,domain, project_name} = req.body
-        const responce = await clientUseCases.registerClient({email,domain, project_name})
-        res.status(201)
-        return res.json(responce)
-    } catch (error) {
-        return res.status(422).json({error:error.message})
-    }
-})
-
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash
     const access_token = req.signedCookies['access_token']

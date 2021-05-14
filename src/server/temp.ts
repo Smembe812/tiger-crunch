@@ -148,8 +148,30 @@ function Aunthenticator({Issuer}){
 // const fs = require('fs')
 // const forge = require('node-forge');
  
+
+
+// const alice = crypto.createDiffieHellman(2048);
+// const aliceKeys = alice.generateKeys()
+// const aliceKey = alice.getPrivateKey("base64");
+// const alicePublicKey = alice.getPublicKey("base64")
+
+// const arice = crypto.createDiffieHellman(alice.getPrime("base64"), "base64", alice.getGenerator())
+// // arice.generateKeys()
+// arice.setPrivateKey(alice.getPrivateKey())
+// arice.setPublicKey(alice.getPublicKey())
+
+// // const aricePriKey = arice.getPrivateKey("base64")
+// // const ariceKeys = arice.getPublicKey("base64")
+// // const ariceKey = arice.getPublicKey("base64")
+
+// console.log(arice.getPublicKey("base64"), alice.getPublicKey("base64"))
+// const aliceSecret = alice.computeSecret(arice.getPublicKey());
+// const ariceSecret = arice.computeSecret(alice.getPublicKey());
+// console.log(aliceSecret.toString("hex"), ariceSecret.toString("hex"))
+
+
 // // Generate Alice's keys...
-const alice = crypto.createDiffieHellman(2048);
+// const alice = crypto.createDiffieHellman(2048);
 // const { privateKey, publicKey } = crypto.generateKeyPairSync('ec', {
 //     namedCurve: 'sect239k1',
 //     publicKeyEncoding:  { type: 'spki', format: 'pem' },
@@ -294,6 +316,25 @@ const alice = crypto.createDiffieHellman(2048);
 //     // }, Buffer.from(publicKey, 'utf8'));
 
 // });
+
+const alice = crypto.createDiffieHellman(2048);
+const aliceKeys = alice.generateKeys()
+const aliceKey = alice.getPrivateKey("base64");
+const alicePublicKey = alice.getPublicKey("base64")
+
+const arice = crypto.createDiffieHellman(alice.getPrime("base64"), "base64", alice.getGenerator())
+// arice.generateKeys()
+arice.setPrivateKey(alice.getPrivateKey())
+arice.setPublicKey(alice.getPublicKey())
+
+// const aricePriKey = arice.getPrivateKey("base64")
+// const ariceKeys = arice.getPublicKey("base64")
+// const ariceKey = arice.getPublicKey("base64")
+
+console.log(arice.getPublicKey("base64"), alice.getPublicKey("base64"))
+const aliceSecret = alice.computeSecret(arice.getPublicKey());
+const ariceSecret = arice.computeSecret(alice.getPublicKey());
+console.log(aliceSecret.toString("hex"), ariceSecret.toString("hex"))
 
 // const aliceKey = alice.generateKeys();
 

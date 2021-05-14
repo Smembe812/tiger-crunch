@@ -57,8 +57,8 @@ GET https://tiger-crunch.com:4433/clients/verify HTTP/1.1
 content-type: application/json
 
 {
-    "id": "149c4d18-6282-4480-9350-09b756897fb3",
-    "client_key": "M-wyJaHpkxgHOm6yhQQ0dBnAMUBxmsF2zBvI-9P7zbb4ZS8-XReqKn1mMdFpI7x6TlZna-4xg2WyLeQnF7zFxVIPgckJDnO74K3KOUUmWpQGzzCnxeAOelGKR6LPEj4I6R8H0lpNNqLsSOQ3PW9i7L6evbVqO0bveqQbzAEtApaANIpga78_vDdsrnIwwLmWyZR6jA79HzPlD6392uIIvEiXiGrYiLasjepHs_EEdmboUcKpKYGlXY7IiS_ulwEW4A1wkpkWgAxCtgb2dCfiKSHgEX6ezACrS_f4vw3RyCstIGC6YeDWr0JyX58NJbJKjAYOKEOrqfo6IQ0it_pfwE1iJgfXi8vBh4xuzH434myXWLqhy8m37SSDpGX1fFhaCCo1I6oWO8sA1d5ThXG0R7Mn2Znx1OUMQkYJs7a5YcU5xt4nu4LhKm3Kd4vBYeexQuqOu40Wa9Q="
+    "id": "918658c0-99e1-44b4-8cf4-d8f92b96e033",
+    "client_key": "Jze5WL9zdwjBfBm_dx7ZUzNheJq4s7z6xNl7FWaWta4="
 }
 
 ## OAuth grnnt routes

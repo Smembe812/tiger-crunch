@@ -21,52 +21,6 @@ async function isValidPin({proposedPIN, salt, iterations, hash}):Promise<boolean
   }) 
 }
 
-async function encryptPass(pin){
-    const pinstring = `${pin.hash}.${pin.salt}.${pin.iterations}`
-    const {
-        createCipheriv,
-        createDecipheriv,
-        randomBytes,
-    } = await import('crypto');
-    
-    const key = "keykeykeykeykeykeykeykey"
-    const nonce = randomBytes(12);
-      
-    const aad = Buffer.from('0123456789', 'hex');
-    
-    const cipher = createCipheriv('aes-192-ccm', key, nonce, {
-        authTagLength: 16
-    });
-      cipher.setAAD(aad, {
-          plaintextLength: Buffer.byteLength(pinstring)
-        });
-        const ciphertext = cipher.update(pinstring, 'utf8');
-        cipher.final();
-        const tag = cipher.getAuthTag();
-        console.log(tag.toString('hex'), nonce.toString('hex'))
-      
-      // Now transmit { ciphertext, nonce, tag }.
-      
-    //   const decipher = createDecipheriv('aes-192-ccm', key, nonce, {
-    //     authTagLength: 16
-    //   });
-    //   decipher.setAuthTag(tag);
-    //   decipher.setAAD(aad, {
-    //     plaintextLength: ciphertext.length
-    //   });
-    //   const receivedPlaintext = decipher.update(ciphertext, null, 'utf8');
-      
-    //   try {
-    //     decipher.final();
-    //   } catch (err) {
-    //     console.error('Authentication failed!');
-    //     return;
-    //   }
-      
-      console.log("hello");
-      return ciphertext.toString("hex")
-}
-
 function generatePIN(n = 4) {
     const add = 1
     let max = 12 - add
@@ -81,7 +35,6 @@ function generatePIN(n = 4) {
 
 export default {
     computePersistedPIN,
-    encryptPass,
     generatePIN,
     isValidPin
 }

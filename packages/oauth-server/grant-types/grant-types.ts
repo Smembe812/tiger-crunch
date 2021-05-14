@@ -47,6 +47,24 @@ export default function ({client=null, jwt, keys}){
                     expiresIn: 60 * 10 
                 }
             );
+            async function createAccessToken(){
+                const {
+                    createECDH
+                  } = await import('crypto');
+                  // Generate Alice's keys...
+                  const alice = createECDH('secp521r1');
+                  const aliceKey = alice.generateKeys();
+                  
+                  // Generate Bob's keys...
+                  const bob = createECDH('secp521r1');
+                  const bobKey = bob.generateKeys();
+                  
+                  // Exchange and generate the secret...
+                  const aliceSecret = alice.computeSecret(bobKey);
+                  const bobSecret = bob.computeSecret(aliceKey);
+                  
+                return toBase64Url(bobKey)
+            }
             token = {
                 access_token,
                 token_type: "Bearer",
@@ -64,24 +82,6 @@ export default function ({client=null, jwt, keys}){
         const base64url = toBase64Url(Buffer.from(access_token))
         const at_hash = base64url.slice(0,(base64url.length/2))
         return {access_token, at_hash}
-    }
-    async function createAccessToken(){
-        const {
-            createECDH
-          } = await import('crypto');
-          // Generate Alice's keys...
-          const alice = createECDH('secp521r1');
-          const aliceKey = alice.generateKeys();
-          
-          // Generate Bob's keys...
-          const bob = createECDH('secp521r1');
-          const bobKey = bob.generateKeys();
-          
-          // Exchange and generate the secret...
-          const aliceSecret = alice.computeSecret(bobKey);
-          const bobSecret = bob.computeSecret(aliceKey);
-          
-        return toBase64Url(bobKey)
     }
     function toBase64Url(word){
         return word.toString('base64').split('+').join("-").split('/').join("_")
