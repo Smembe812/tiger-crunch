@@ -12,7 +12,7 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
         const {secret:cs, ...newClient} = await dataSource.insert({...client, secret})
         return {...newClient, client_key}
     }
-    async function verifyClient(params){
+    async function verifyClientBySecret(params){
         const {client_key, id} = params
         const {secret} = await dataSource.get(id)
         let isValid;
@@ -28,6 +28,15 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
             throw error
         }
         return isValid
+    }
+    async function verifyClientByDomain(params:{id:string, origin:string}):Promise<boolean>{
+        const {id, origin} = params
+        try {
+            const client = await dataSource.get(id)
+            return (client.id === id && client.domain === origin)
+        } catch (error) {
+            throw new Error("could not verify client")
+        }
     }
     async function getClient(params){
         const {id} = params
@@ -51,8 +60,9 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
     }
     return {
         registerClient,
-        verifyClient,
+        verifyClientBySecret,
         getClient,
-        deleteClient
+        deleteClient,
+        verifyClientByDomain
     }
 }

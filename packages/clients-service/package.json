@@ -2,7 +2,7 @@
   "name": "@tiger-crunch/clients-service",
   "version": "0.0.1",
   "description": "clients service for tc",
-  "main": "./lib/index.js",
+  "main": "./lib/",
   "scripts": {
     "dev": "tsc -b tsconfig.json -w",
     "start": "yarn run build && nodemon ./lib/server/server.js serve 4433",

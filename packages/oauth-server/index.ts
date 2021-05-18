@@ -20,6 +20,8 @@ import { v4 as uuidv4 } from 'uuid';
 import User from '@tiger-crunch/user-service'
 import Client from "@tiger-crunch/clients-service"
 import AuthGrants from "./grant-types/grant-types"
+import { URL } from 'url';
+const grantTypes = AuthGrants({jwt, keys})
 const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
 const app = express()
@@ -40,7 +42,6 @@ app.use(async (req, res, next) =>{
 
 app.get('/', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
-    console.log(access_token)
     const host = req.get('host')
     const origin = req.get('origin')
     const fingerprint = req['browserHash']
@@ -57,6 +58,12 @@ app.get('/ua-integrity', async (req, res, next) => {
 app.post('/auth', async(req, res, next) => {
     const uaid = req['browserHash']
     const {claims} = req.body
+    const {cb} = req.body
+    console.log(cb)
+    let cb_params;
+    if(cb){
+        cb_params = jwt.verify({token:cb, key:AUTH_PUB_KEY})
+    } 
     const isAuthentic = await isAuthenticated({claims})
     if (isAuthentic){
         console.time('encrypt')
@@ -81,7 +88,10 @@ app.post('/auth', async(req, res, next) => {
             httpOnly: true,
             signed: true,
             domain: '.tiger-crunch.com'
-          })
+        })
+        if (cb_params){
+            return res.redirect(`/auth/code`)
+        }
         return res.json({access_token: serviceToken})
     }
     return res.json({message: "wrong pin or email"})
@@ -117,17 +127,40 @@ app.post('/auth/2fa/verify', async (req, res, next) => {
         success: isUser
     })
 })
-app.post('/auth/code', async(req, res, next) => {
+app.get('/auth/code', async(req, res, next) => {
     //verify client
     //verify user scope
     //check/verify user
     //redirect with code
+    const raw_query = require("url").parse(req.url).query
     const {response_type,scope,client_id,state,redirect_uri} = req.query
-    if(response_type === "code"){
-        const code = await generateRandomCode()
-        return res.redirect(`${redirect_uri}?code=${code}&state=${state}`)
+    const origin = req.get('origin')
+    const access_token = req.signedCookies['access_token']
+    if(access_token){
+        const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
+        if (!sub){
+            const cb_token = jwt.sign({raw_query},{expiresIn:60*5})
+            return res.redirect(`/auth?cb=${cb_token}`)
+        }
+        try {
+            const redirectUri = await grantTypes.codeGrant({
+                origin,
+                response_type,
+                scope,
+                client_id,
+                state,
+                redirect_uri,
+                sub
+            })
+            return res.redirect(redirectUri)
+            
+        } catch (error) {
+            logger.error(error)
+            return res.json({error: error.message})
+        }
     }
-    return res.redirect(`${redirect_uri}?error=invalid_request&error_description=Unsupported%20response_type%20value&state=${state}`)
+    const cb_token = jwt.sign({raw_query},{expiresIn:60*5})
+    return res.redirect(`${process.env.AUTH_APP_URL}/auth?cb=${cb_token}`)
 })
 app.post('/auth/token/', async(req, res, next) => {
     // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
@@ -139,7 +172,7 @@ app.post('/auth/token/', async(req, res, next) => {
     const {grant_type,code,redirect_uri} = req.query
     res.set({'Cache-Control':'no-store'})
     res.set({'Pragma': 'no-cache'})
-    const token = await AuthGrants({jwt, keys}).tokenGrant({grant_type,code,redirect_uri})
+    const token = await grantTypes.tokenGrant({grant_type,code,redirect_uri})
     return res.json(token)
 })
 app.get('/auth/implicit/', async(req, res, next) => {
@@ -154,7 +187,7 @@ app.get('/auth/implicit/', async(req, res, next) => {
     const params = {redirect_uri,response_type,client_id,scope,state,nonce}
     res.set({'Cache-Control':'no-store'})
     res.set({'Pragma': 'no-cache'})
-    const token = await AuthGrants({jwt, keys}).implicitFlow({...params})
+    const token = await grantTypes.implicitFlow({...params})
     return res.redirect(`${token.redirect_uri}?access_token=${token.access_token}&state=${token.state}&token_type=${token.token_type}&id_token=${token.id_token}&expires_in=${token.expires_in}`)
 })
 app.post('/clients', async (req, res) => {
@@ -164,7 +197,7 @@ app.post('/clients', async (req, res) => {
 })
 app.get('/clients/verify', async (req, res) => {
     const {id, client_key} = req.body
-    const client = await clientUseCases.verifyClient({id, client_key})
+    const client = await clientUseCases.verifyClientBySecret({id, client_key})
     console.log(client)
     return res.json({...client})
 })

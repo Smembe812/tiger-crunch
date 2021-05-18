@@ -61,9 +61,9 @@ content-type: application/json
     "client_key": "LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
 }
 
-## OAuth grnnt routes
+## OAuth grant routes
 ### request code 
-POST https://tiger-crunch.com:4433/auth/code
+GET https://tiger-crunch.com:4433/auth/code
 ?response_type=code
 &scope=openid%20profile%20email
 &client_id=s6BhdRkqt3

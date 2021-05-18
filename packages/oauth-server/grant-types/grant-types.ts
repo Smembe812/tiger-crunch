@@ -1,9 +1,17 @@
-export default function ({client=null, jwt, keys}){
+import Client from "@tiger-crunch/clients-service"
+export default function ({client=null, jwt, keys, datasource=null}){
+    const clientUseCases = Client.useCases
     async function codeGrant(params){
-        const {response_type,scope,client_id,state,redirect_uri} = params
-        if(response_type === "code"){
-            const code = await generateRandomCode()
-            return `${redirect_uri}?code=${code}&state=${state}`
+        //TODO: verify scope
+        const {response_type,scope,client_id,state,redirect_uri, origin} = params
+        try {
+            const validClient = await clientUseCases.verifyClientByDomain({id:client_id, origin})
+            if(validClient && response_type === "code"){
+                const code = await generateRandomCode()
+                return `${redirect_uri}?code=${code}&state=${state}`
+            }
+        } catch (error) {
+            throw error
         }
         return `${redirect_uri}?error=invalid_request&error_description=Unsupported%20response_type%20value&state=${state}`
     }
@@ -36,8 +44,7 @@ export default function ({client=null, jwt, keys}){
             const {access_token, at_hash} = await generateAccessToken()
             const id_token = jwt.sign(
                 {
-                    uuid: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-                    sub: "claims.email",
+                    sub: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
                     iss:'https://auth.tiger-crunch.com',
                     aud: redirect_uri,
                     auth_time: + new Date(),
@@ -47,24 +54,6 @@ export default function ({client=null, jwt, keys}){
                     expiresIn: 60 * 10 
                 }
             );
-            async function createAccessToken(){
-                const {
-                    createECDH
-                  } = await import('crypto');
-                  // Generate Alice's keys...
-                  const alice = createECDH('secp521r1');
-                  const aliceKey = alice.generateKeys();
-                  
-                  // Generate Bob's keys...
-                  const bob = createECDH('secp521r1');
-                  const bobKey = bob.generateKeys();
-                  
-                  // Exchange and generate the secret...
-                  const aliceSecret = alice.computeSecret(bobKey);
-                  const bobSecret = bob.computeSecret(aliceKey);
-                  
-                return toBase64Url(bobKey)
-            }
             token = {
                 access_token,
                 token_type: "Bearer",

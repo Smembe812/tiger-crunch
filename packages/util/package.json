@@ -2,7 +2,7 @@
   "name": "@tiger-crunch/util",
   "version": "0.0.1",
   "description": "utility functions",
-  "main": "./lib/index.js",
+  "main": "./lib/",
   "scripts": {
     "dev": "tsc -b tsconfig.json -w",
     "start": "yarn run build && nodemon ./lib/index.js",
