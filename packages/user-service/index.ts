@@ -1,10 +1,10 @@
-import validators from "./validators"
+import validators from "@tiger-crunch/util/validators"
 import makeUserEntity from "./user.entity"
 import identityManager from "./idmanager"
 import DataSource from "./user.datasource"
 import makeUserUseCases from "./user.use-cases"
-import MailManager from './mail'
-import otpService from './otp-service'
+import MailManager from '@tiger-crunch/util/mail'
+import otpService from '@tiger-crunch/util/otp-service'
 const create = makeUserEntity({validators, identityManager})
 const dataSource = new DataSource("users")
 const mailManager = new MailManager({

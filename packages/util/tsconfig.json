@@ -1,0 +1,12 @@
+{ 
+  "extends":"../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib",
+    "rootDir": "."
+  },
+  "references": [],
+  "include": ["**/*", "**/*.d.ts", "global.d.ts"],
+  "ts-node": {
+    "files":true
+  }
+}
