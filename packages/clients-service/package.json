@@ -53,11 +53,15 @@
     "lib": "lib",
     "test": "__tests__"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Smembe812/tiger-crunch.git"
+  },
   "files": [
     "lib"
   ],
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "4a0ee262cd296adfeda89e79184be7beee6fb576"
+  "gitHead": "27abe6b77aed7234e8dd21a403130fa3f3803bf6"
 }
