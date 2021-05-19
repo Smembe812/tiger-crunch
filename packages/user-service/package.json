@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/user-service",
-    "version": "0.0.16",
+    "version": "0.0.17",
     "description": "user service for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -80,5 +80,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "27abe6b77aed7234e8dd21a403130fa3f3803bf6"
+    "gitHead": "79471b9fefdb28518403d1e466f731ec09bbd80b"
 }
