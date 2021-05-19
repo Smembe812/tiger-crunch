@@ -11,10 +11,10 @@ import { hash, user as userMock, user2fa, userAuthCred, userWithout2fa, userWith
 import makeUserEntity from "../../user.entity";
 import makeUserUseCases from "../../user.use-cases"
 import identityManager from "../../idmanager"
-import validators from "@tiger-crunch/util/validators"
+import validators from "@smembe812/util/validators"
 import DataSource from "../../user.datasource"
-import MailManager from '@tiger-crunch/util/mail'
-import otpService from "@tiger-crunch/util/otp-service"
+import MailManager from '@smembe812/util/mail'
+import otpService from "@smembe812/util/otp-service"
 describe('UserUseCases', function() {
     const {proposedPIN, ...userEntityOutPut} = userMock
     const mailManager = new MailManager({

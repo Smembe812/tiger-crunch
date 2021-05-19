@@ -1,12 +1,14 @@
 {
     "name": "root",
-    "private": false,
+    "private": true,
     "scripts": {
         "publish": "lerna publish --force-publish",
         "test": "lerna run test",
         "clean": "rm -rf ./packages/*/node_modules && rm -rf node_modules",
         "clean-locks": "rm -rf ./packages/*/yarn.lock && rm -rf yarn.lock",
-        "reset": "yarn clean && yarn clean-locks && lerna bootstrap"
+        "reset": "yarn clean && yarn clean-locks && lerna bootstrap",
+        "link": "lerna link && yarn install",
+        "build": "yarn run build"
     },
     "dependencies": {
         "winston": "^3.3.3",

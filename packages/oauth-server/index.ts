@@ -1,6 +1,7 @@
+//setup environment variables
+import path from 'path'
 require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
-var fs = require('fs'); 
-import * as crypto from 'crypto';
+//configure jwt
 import JWT from "./jwt-wrapper"
 import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
 const jwt = new JWT({
@@ -8,21 +9,25 @@ const jwt = new JWT({
     signer:{key:AUTH_SIGNER_KEY, passphrase:""},
     verifier:AUTH_PUB_KEY
 })
+// server config
 export const options = { 
     key: keys.SEVER_KEY, 
     cert: keys.SEVER_CRT
 };
-import logger from "./logger"
-import path from 'path'
+// express middlewares
 import express from 'express'
 import helmet from 'helmet'
 import uaParser from 'ua-parser-js'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import bodyParser from 'body-parser'
+
 import { v4 as uuidv4 } from 'uuid';
-import User from '@tiger-crunch/user-service'
-import Client from "@tiger-crunch/clients-service"
+import * as crypto from 'crypto';
+import logger from "./logger"
+
+import User from '@smembe812/user-service'
+import Client from "@smembe812/clients-service"
 import AuthGrants from "./grant-types/grant-types"
 
 const grantTypes = AuthGrants({jwt, keys})

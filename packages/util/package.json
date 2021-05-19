@@ -3,15 +3,7 @@
   "version": "0.0.19",
   "description": "utility functions",
   "main": "./lib/",
-  "scripts": {
-    "dev": "tsc -b tsconfig.json -w",
-    "start": "yarn run build && nodemon ./lib/index.js",
-    "compile": "tsc -b",
-    "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
-    "build": "npm run clean && npm run compile",
-    "test": "yarn run test:unit && yarn run test:e2e",
-    "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'"
-  },
+  "scripts": {},
   "dependencies": {
     "dotenv": "^8.2.0",
     "nodemailer": "^6.6.0",

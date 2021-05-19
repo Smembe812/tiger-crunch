@@ -1,4 +1,4 @@
-import Client from "@tiger-crunch/clients-service"
+import Client from "@smembe812/clients-service"
 export default function ({client=null, jwt, keys, datasource=null}){
     const clientUseCases = Client.useCases
     async function codeGrant(params){

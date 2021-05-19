@@ -20,6 +20,7 @@ lib
 ## yarn
 .yarn
 yarn.lock
+.yarnrc.yml
 
 ## ts
 *.tsbuildinfo
