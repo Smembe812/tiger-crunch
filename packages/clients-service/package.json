@@ -1,6 +1,6 @@
 {
   "name": "@tiger-crunch/clients-service",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "clients service for tc",
   "main": "./lib/",
   "scripts": {
@@ -14,7 +14,7 @@
     "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
   },
   "dependencies": {
-    "@tiger-crunch/user-service": "^0.0.4",
+    "@tiger-crunch/user-service": "^0.0.5",
     "dotenv": "^9.0.2",
     "jsonwebtoken": "^8.5.1",
     "level": "^7.0.0",
