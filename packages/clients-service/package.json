@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/clients-service",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "description": "clients service for tc",
   "main": "./lib/",
   "scripts": {
@@ -63,5 +63,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "79471b9fefdb28518403d1e466f731ec09bbd80b"
+  "gitHead": "98e27f40ada968ec3698ec003b91d6407ab1e9df"
 }
