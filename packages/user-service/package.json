@@ -75,5 +75,6 @@
     ],
     "installConfig": {
         "hoistingLimits": "none"
-    }
+    },
+    "gitHead": "f1f2e5b3b527a5b97e31d62213d25b83e1ead44c"
 }
