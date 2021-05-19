@@ -17,8 +17,6 @@ lerna-debug.log*
 node_modules
 lib
 
-users
-
 ## yarn
 .yarn
 yarn.lock
@@ -29,3 +27,8 @@ yarn.lock
 ## ca-db
 *-database.txt
 *-database.txt.*
+
+## level db
+*.ldb
+users
+clients
