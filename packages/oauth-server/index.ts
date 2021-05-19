@@ -1,3 +1,4 @@
+require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 var fs = require('fs'); 
 import * as crypto from 'crypto';
 import JWT from "./jwt-wrapper"
@@ -13,7 +14,6 @@ export const options = {
 };
 import logger from "./logger"
 import path from 'path'
-require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 import express from 'express'
 import helmet from 'helmet'
 import uaParser from 'ua-parser-js'
@@ -24,7 +24,7 @@ import { v4 as uuidv4 } from 'uuid';
 import User from '@tiger-crunch/user-service'
 import Client from "@tiger-crunch/clients-service"
 import AuthGrants from "./grant-types/grant-types"
-import { URL } from 'url';
+
 const grantTypes = AuthGrants({jwt, keys})
 const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
