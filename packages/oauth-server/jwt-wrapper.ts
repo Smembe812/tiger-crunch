@@ -3,10 +3,12 @@ export default class JWT{
     #signer={key:null, passphrase:""};
     #algo;
     #jwt;
-    constructor({algo, signer}){
+    #verifier;
+    constructor({algo, signer, verifier}){
         this.#jwt = jwt
         this.setSigner(signer)
         this.setAlgorithm(algo)
+        this.setVerifier(verifier)
     }
     setSigner(signer){
         if(signer?.key){
@@ -23,10 +25,18 @@ export default class JWT{
         }
         return this
     }
+    setVerifier(verifier){
+        if(verifier)
+            this.#verifier = verifier
+        return this
+    }
     sign(payload, options=null){
         return this.#jwt.sign({...payload}, this.#signer, {...options, ...this.#algo})
     }
-    verify({token, key}){
-        return this.#jwt.verify(token,key)
+    verify({token, key=null}){
+        if(key)
+            return this.#jwt.verify(token,key)
+        else
+            return this.#jwt.verift(token, this.#verifier)
     }
 }
