@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/clients-service",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "description": "clients service for tc",
   "main": "./lib/",
   "scripts": {
