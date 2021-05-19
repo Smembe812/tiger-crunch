@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/user-service",
-    "version": "0.0.17",
+    "version": "0.0.18",
     "description": "user service for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
