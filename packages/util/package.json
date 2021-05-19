@@ -1,6 +1,6 @@
 {
   "name": "@tiger-crunch/util",
-  "version": "0.0.10",
+  "version": "0.0.11",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {
@@ -53,5 +53,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "3668456d28543fc5fc3c714149f96b105d23e800"
+  "gitHead": "f582fa8dfcd5be862e2c1e28b177dc3a924967bd"
 }
