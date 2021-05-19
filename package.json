@@ -4,7 +4,6 @@
     "scripts": {
         "publish": "lerna publish --force-publish",
         "test": "lerna run test",
-        "ds": "lerna --scope=@wibbly-storm/storybook-native",
         "clean": "rm -rf ./packages/*/node_modules && rm -rf node_modules",
         "clean-locks": "rm -rf ./packages/*/yarn.lock && rm -rf yarn.lock",
         "reset": "yarn clean && yarn clean-locks && lerna bootstrap"
@@ -41,5 +40,8 @@
     "installConfig": {
         "hoistingLimits": "dependencies",
         "nodeLinker": "node-modules"
+    },
+    "publishConfig": {
+        "registry": "https://npm.pkg.github.com"
     }
 }
