@@ -2,7 +2,11 @@ var fs = require('fs');
 import * as crypto from 'crypto';
 import JWT from "./jwt-wrapper"
 import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
-const jwt = new JWT({algo:'RS256', signer:{key:AUTH_SIGNER_KEY, passphrase:""}})
+const jwt = new JWT({
+    algo:'RS256', 
+    signer:{key:AUTH_SIGNER_KEY, passphrase:""},
+    verifier:AUTH_PUB_KEY
+})
 export const options = { 
     key: keys.SEVER_KEY, 
     cert: keys.SEVER_CRT
