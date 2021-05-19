@@ -1,6 +1,6 @@
 {
-  "name": "@tiger-crunch/util",
-  "version": "0.0.12",
+  "name": "@smembe812/util",
+  "version": "0.0.13",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {
@@ -57,5 +57,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "30ed0805902d999409e39fba5fcdd05488489d32"
+  "gitHead": "64b5e54514ee515175f6e9e3d21155520c82dfaf"
 }
