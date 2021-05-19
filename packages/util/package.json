@@ -1,6 +1,6 @@
 {
   "name": "@tiger-crunch/util",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {
@@ -41,6 +41,10 @@
   "keywords": [
     "utility"
   ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Smembe812/tiger-crunch.git"
+  },
   "author": "Paul Sembereka <psemberekajr@gmail.com>",
   "license": "ISC",
   "directories": {
@@ -53,5 +57,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "f582fa8dfcd5be862e2c1e28b177dc3a924967bd"
+  "gitHead": "30ed0805902d999409e39fba5fcdd05488489d32"
 }

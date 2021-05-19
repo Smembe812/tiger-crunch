@@ -1,6 +1,6 @@
 {
     "name": "@tiger-crunch/oauth-server",
-    "version": "0.0.11",
+    "version": "0.0.12",
     "description": "outh server for project tiger-crunch",
     "main": "./lib/index.js",
     "types": "./index.d.ts",
@@ -15,8 +15,8 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@tiger-crunch/clients-service": "^0.0.11",
-        "@tiger-crunch/user-service": "^0.0.11",
+        "@tiger-crunch/clients-service": "^0.0.12",
+        "@tiger-crunch/user-service": "^0.0.12",
         "@types/graphql": "^14.5.0",
         "apollo-server": "^2.20.0",
         "apollo-server-types": "^0.6.3",
@@ -77,5 +77,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "f582fa8dfcd5be862e2c1e28b177dc3a924967bd"
+    "gitHead": "30ed0805902d999409e39fba5fcdd05488489d32"
 }
