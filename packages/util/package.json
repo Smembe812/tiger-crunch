@@ -1,6 +1,6 @@
 {
   "name": "@tiger-crunch/util",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {
