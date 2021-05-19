@@ -1,6 +1,6 @@
 {
     "name": "@tiger-crunch/user-service",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "user service for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@tiger-crunch/util": "^0.0.6",
+        "@tiger-crunch/util": "^0.0.7",
         "@types/graphql": "^14.5.0",
         "apollo-server": "^2.20.0",
         "apollo-server-types": "^0.6.3",
@@ -76,5 +76,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "eeb01d343fb193b38ffab8988d5bea0ca85bd0ce"
+    "gitHead": "9bf74716842c8db3210cbd95db0ba0caeede55eb"
 }
