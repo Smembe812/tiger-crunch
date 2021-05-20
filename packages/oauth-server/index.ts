@@ -78,7 +78,7 @@ app.post('/auth', async(req, res, next) => {
     try {
         isAuthentic = await isAuthenticated({claims})
         if (isAuthentic){
-            const user = await userUseCases.getUser(claims.email)
+            const user = await userUseCases.getUser(claims)
             const client = {domain:cb_params.redirect_uri}
             const id_token = await generateIdToken({
                 user,
