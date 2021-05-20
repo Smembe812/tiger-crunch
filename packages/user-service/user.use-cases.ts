@@ -95,10 +95,18 @@ export default function ({
             throw error
         }
     }
+    async function getUser({email}){
+        try {
+            return await dataSource.get(email)
+        } catch (error) {
+            throw error
+        }
+    }
     return {
         createNewUser,
         verifyUser,
         setUp2FA,
-        verify2faSetup
+        verify2faSetup,
+        getUser
     }
 }

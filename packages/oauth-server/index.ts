@@ -78,23 +78,16 @@ app.post('/auth', async(req, res, next) => {
     try {
         isAuthentic = await isAuthenticated({claims})
         if (isAuthentic){
-            console.time('encrypt')
-            const serviceToken = jwt.sign(
-                {
-                    uaid,
-                    uuid: uuidv4(), // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-                    sub: claims.email,
-                    iss:'https://auth.tiger-crunch.com',
-                    aud: "client-id/domain",
-                    auth_time: + new Date()
-                }, 
-                { 
-                    expiresIn: 60 * 60 
-                }
-            );
-            console.timeEnd("encrypt")
+            const user = await userUseCases.getUser(claims.email)
+            const client = {domain:cb_params.redirect_uri}
+            const id_token = await generateIdToken({
+                user,
+                client
+            },{
+                expires_in: 60 * 60
+            })
             res.set({'Cache-Control':'no-store'})
-            res.cookie('access_token', serviceToken, {
+            res.cookie('access_token', id_token, {
                 expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
                 secure: true,
                 httpOnly: true,
@@ -104,7 +97,7 @@ app.post('/auth', async(req, res, next) => {
             if (cb_params){
                 return res.redirect(`/auth/code?${cb_params.raw_query}`)
             }
-            return res.json({access_token: serviceToken})
+            return res.json({access_token: id_token})
         }
     } catch (error) {
         return res.json({message: "wrong pin or email"})
@@ -273,5 +266,15 @@ async function isAuthenticated(user, agent=null) : Promise<boolean>{
     }
 }
 
+async function generateIdToken({user, client}, options){
+    const {expires_in} = options
+    return jwt.sign({
+        sub: user.id,
+        aud: client.domain,
+        iss:'https://auth.tiger-crunch.com'
+    },
+    {expiresIn:expires_in}
+    )
+}
 
 export default app

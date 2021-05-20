@@ -165,4 +165,21 @@ describe('UserUseCases', function() {
             ).to.be.rejectedWith("Testing error")
         });
     })
+    describe("#getUser",()=>{
+        it("should get user by email", async () => {
+            const {proposedPIN, ...userEntityOutPut} = userMock
+                sinon.stub(dataSource, "get").resolves({
+                    ...userWithout2fa
+                })
+                const user = await userUseCase.getUser(userEntityOutPut)
+                expect(user).to.be.eql(userWithout2fa)
+        })
+        it("can fail to get user by email", async () => {
+            const {proposedPIN, ...userEntityOutPut} = userMock
+                sinon.stub(dataSource, "get").callsFake(()=>{throw new Error("Testing error")})
+                await expect(
+                    userUseCase.getUser(userEntityOutPut)
+                ).to.be.rejectedWith("Testing error")
+        })
+    }) 
 });
