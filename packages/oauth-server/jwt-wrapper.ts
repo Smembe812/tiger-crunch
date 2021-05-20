@@ -37,6 +37,6 @@ export default class JWT{
         if(key)
             return this.#jwt.verify(token,key)
         else
-            return this.#jwt.verift(token, this.#verifier)
+            return this.#jwt.verify(token, this.#verifier)
     }
 }

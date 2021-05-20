@@ -38,6 +38,9 @@
                 if(response?.message){
                     error_span.innerHTML = response.message
                 }
+                // if(response?.access_token){
+                //     window.location.replace(`https://tiger-crunch.com:4433/auth/code?${response.cb_params}`)
+                // }
                     console.log(response)
             } catch (error) {
                 console.log(error)
@@ -55,7 +58,8 @@
                     'Content-Type': 'application/json'
                 },
                 mode: 'cors',
-                credentials: 'same-origin',
+                redirect: 'follow',
+                credentials: 'include',
             })
         return response.json()
     }
