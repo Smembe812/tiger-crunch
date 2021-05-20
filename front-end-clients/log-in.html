@@ -1,0 +1,62 @@
+<form class="login-form">
+    <div>
+        <label for="email">Email</label>
+        <input type="text" name="email" id="email_input">
+    </div>
+    <div>
+        <label for="pin">PIN</label>
+        <input type="password" name="pin" id="pin_input">
+    </div>
+    <div>
+        <label for="otp">OTP</label>
+        <input type="text" name="otp" id="otp_input">
+    </div>
+    <button id="on_login">Log In</button>
+    <span id="error"></span>
+</form>
+<script>
+    (function (){
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const cb_token = urlParams.get('cb')
+        on_login.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const error_span = document.querySelector("#error")
+            const email = document.querySelector("#email_input").value
+            const pin = document.querySelector("#pin_input").value
+            const otp = document.querySelector("#otp_input").value
+            const payload = {
+                claims:{
+                    email,
+                    otp,
+                    proposedPIN: pin}
+            }
+            try {
+                const response = await authenticateUser(
+                    `https://tiger-crunch.com:4433/auth?cb_token=${cb_token}`,
+                    payload)
+                if(response?.message){
+                    error_span.innerHTML = response.message
+                }
+                    console.log(response)
+            } catch (error) {
+                console.log(error)
+                error_span.innerHTML = error.message
+            }
+        })
+    })()
+
+    async function authenticateUser(url, payload){
+        const response = await fetch(url,
+            {
+                method:"POST",
+                body: JSON.stringify(payload),
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                mode: 'cors',
+                credentials: 'same-origin',
+            })
+        return response.json()
+    }
+</script>

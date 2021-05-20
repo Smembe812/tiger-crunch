@@ -37,7 +37,8 @@ const app = express()
 const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex')
 app.use(helmet())
 app.use(cors({
-    origin: ['tiger-crunch.com', 'https://tiger-crunch.com:8000'],
+    origin: ['tiger-crunch.com', 'https://tiger-crunch.com:8000', "https://auth.tiger-crunch.com:3000"],
+    // origin: "*",
     credentials: true
 }))
 app.use(bodyParser.json())
@@ -65,49 +66,55 @@ app.get('/ua-integrity', async (req, res, next) => {
 })
 
 app.post('/auth', async(req, res, next) => {
+    console.log(req.hostname, req.get("origin"))
+    let isAuthentic;
     const uaid = req['browserHash']
     const {claims} = req.body
-    const {cb} = req.body
-    console.log(cb)
+    const {cb_token} = req.query
     let cb_params;
-    if(cb){
-        cb_params = jwt.verify({token:cb, key:AUTH_PUB_KEY})
-    } 
-    const isAuthentic = await isAuthenticated({claims})
-    if (isAuthentic){
-        console.time('encrypt')
-        const serviceToken = jwt.sign(
-            {
-                uaid,
-                uuid: uuidv4(), // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-                sub: claims.email,
-                iss:'https://auth.tiger-crunch.com',
-                aud: "client-id/domain",
-                auth_time: + new Date()
-            }, 
-            { 
-                expiresIn: 60 * 60 
+    if(cb_token){
+        cb_params = jwt.verify({token:cb_token, key:AUTH_PUB_KEY})
+    }
+    try {
+        isAuthentic = await isAuthenticated({claims})
+        if (isAuthentic){
+            console.time('encrypt')
+            const serviceToken = jwt.sign(
+                {
+                    uaid,
+                    uuid: uuidv4(), // ⇨ '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
+                    sub: claims.email,
+                    iss:'https://auth.tiger-crunch.com',
+                    aud: "client-id/domain",
+                    auth_time: + new Date()
+                }, 
+                { 
+                    expiresIn: 60 * 60 
+                }
+            );
+            console.timeEnd("encrypt")
+            res.set({'Cache-Control':'no-store'})
+            res.cookie('access_token', serviceToken, {
+                expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
+                secure: true,
+                httpOnly: true,
+                signed: true,
+                domain: '.tiger-crunch.com'
+            })
+            if (cb_params){
+                return res.redirect(`/auth/code?${cb_params.raw_query}`)
             }
-        );
-        console.timeEnd("encrypt")
-        res.set({'Cache-Control':'no-store'})
-        res.cookie('access_token', serviceToken, {
-            expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
-            secure: true,
-            httpOnly: true,
-            signed: true,
-            domain: '.tiger-crunch.com'
-        })
-        if (cb_params){
-            return res.redirect(`/auth/code`)
+            return res.json({access_token: serviceToken})
         }
-        return res.json({access_token: serviceToken})
+    } catch (error) {
+        return res.json({message: "wrong pin or email"})
     }
     return res.json({message: "wrong pin or email"})
 })
 
 app.post('/users', async (req, res, next) => {
     try {
+        console.log(req.hostname, req.get("origin"))
         const userInput = req.body
         const userResponse = await userUseCases.createNewUser(userInput)
         res.status(201)
@@ -148,7 +155,7 @@ app.get('/auth/code', async(req, res, next) => {
     if(access_token){
         const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
         if (!sub){
-            const cb_token = jwt.sign({raw_query},{expiresIn:60*5})
+            const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
             return res.redirect(`/auth?cb=${cb_token}`)
         }
         try {
@@ -168,8 +175,8 @@ app.get('/auth/code', async(req, res, next) => {
             return res.json({error: error.message})
         }
     }
-    const cb_token = jwt.sign({raw_query},{expiresIn:60*5})
-    return res.redirect(`${process.env.AUTH_APP_URL}/auth?cb=${cb_token}`)
+    const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+    return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
 app.post('/auth/token/', async(req, res, next) => {
     // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
@@ -259,7 +266,11 @@ function logConnections(req, res, next){
 }
 
 async function isAuthenticated(user, agent=null) : Promise<boolean>{
-    return await userUseCases.verifyUser(user.claims)
+    try {
+        return await userUseCases.verifyUser(user.claims)
+    } catch (error) {
+        throw error
+    }
 }
 
 

@@ -35,21 +35,25 @@ export default function ({
         return userResponse
     }
     async function verifyUser({proposedPIN,otp, email}):Promise<boolean>{
-        const {pin:storedPin, ...persisedUser} = await dataSource.get(email)
-        const isPinValid = await identityManager.isValidPin({
-            proposedPIN, 
-            salt: storedPin.salt, 
-            iterations:storedPin.iterations,
-            hash: storedPin.hash
-        })
-        if(persisedUser.twoFactor){
-            const verified = await verifyOTP({
-                user:{secret:persisedUser.twoFactor.secret},
-                token:otp
+        try{
+            const {pin:storedPin, ...persisedUser} = await dataSource.get(email)
+            const isPinValid = await identityManager.isValidPin({
+                proposedPIN, 
+                salt: storedPin.salt, 
+                iterations:storedPin.iterations,
+                hash: storedPin.hash
             })
-            return isPinValid && verified
+            if(persisedUser.twoFactor){
+                const verified = await verifyOTP({
+                    user:{secret:persisedUser.twoFactor.secret},
+                    token:otp
+                })
+                return isPinValid && verified
+            }
+            return isPinValid
+        }catch (error){
+            throw error
         }
-        return isPinValid
     }
     async function verifyOTP({user, token}):Promise<boolean>{
         const verified = otpService.verify({
