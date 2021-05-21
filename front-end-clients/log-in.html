@@ -41,26 +41,33 @@
                 // if(response?.access_token){
                 //     window.location.replace(`https://tiger-crunch.com:4433/auth/code?${response.cb_params}`)
                 // }
-                    console.log(response)
+                console.log(response)
             } catch (error) {
-                console.log(error)
                 error_span.innerHTML = error.message
             }
         })
+        window.onerror = function(message, source, lineno, colno, error) { 
+            console.log(message, source, lineno, colno, error)
+        };
     })()
 
     async function authenticateUser(url, payload){
-        const response = await fetch(url,
-            {
-                method:"POST",
-                body: JSON.stringify(payload),
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                mode: 'cors',
-                redirect: 'follow',
-                credentials: 'include',
-            })
-        return response.json()
+        try {
+            const response = await fetch(url,
+                {
+                    method:"POST",
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    mode: 'cors',
+                    redirect: 'follow',
+                    credentials: 'include',
+                })
+            return response.json()
+        } catch (error) {
+            console.error(error)
+            throw error
+        }
     }
 </script>

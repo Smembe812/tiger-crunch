@@ -37,7 +37,7 @@ const app = express()
 const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex')
 app.use(helmet())
 app.use(cors({
-    origin: ['tiger-crunch.com', 'https://tiger-crunch.com:4433', "https://auth.tiger-crunch.com:3000"],
+    origin: ['https://findyourcat.com','tiger-crunch.com', 'https://tiger-crunch.com:4433', "https://auth.tiger-crunch.com:3000"],
     credentials: true
 }))
 app.use(bodyParser.json())
@@ -78,7 +78,6 @@ app.post('/auth', async(req, res, next) => {
             id_token_params.client = {domain: require("url").parse(cb_params.redirect_uri).host}
         }
         isAuthentic = await isAuthenticated({claims})
-        // console.log(res)
         if (isAuthentic){
             const user = await userUseCases.getUser(claims)
             id_token_params.user = user
@@ -98,15 +97,8 @@ app.post('/auth', async(req, res, next) => {
                 signed: true,
                 domain: '.tiger-crunch.com'
             })
-            res.header('Access-Control-Allow-Credentials',"true");
             if (cb_params){
-                // res.removeHeader('Content-Type');
-                // res.setHeader("X-DNS-Prefetch-Control", "on")
-                // res.setHeader("Referrer-Policy", "unsafe-url")
-                // res.removeHeader("Access-Control-Allow-Headers")
-                // console.log(res)
                 return res.redirect(`/auth/code?${cb_params.raw_query}`)
-                // return res.json({access_token: id_token, cb_params:cb_params.raw_query})
             }
             return res.json({access_token: id_token})
         }
@@ -173,8 +165,8 @@ app.get('/auth/code', async(req, res, next) => {
                 redirect_uri,
                 sub
             })
-            return res.redirect(303,redirectUri)
-            
+            res.setHeader("Access-Control-Allow-Origin", `https://${origin}`)
+            return res.redirect(308,redirectUri)
         } catch (error) {
             logger.error(error)
             return res.json({error: error.message})
