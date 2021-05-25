@@ -3,9 +3,9 @@ export default function ({client=null, jwt, keys, datasource=null}){
     const clientUseCases = Client.useCases
     async function codeGrant(params){
         //TODO: verify scope
-        const {response_type,scope,client_id,state,redirect_uri, origin} = params
+        const {response_type,scope,client_id,state,redirect_uri, domain} = params
         try {
-            const validClient = await clientUseCases.verifyClientByDomain({id:client_id, origin})
+            const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
             if(validClient && response_type === "code"){
                 const code = await generateRandomCode()
                 return `${redirect_uri}?code=${code}&state=${state}`

@@ -29,11 +29,11 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
         }
         return isValid
     }
-    async function verifyClientByDomain(params:{id:string, origin:string}):Promise<boolean>{
-        const {id, origin} = params
+    async function verifyClientByDomain(params:{id:string, domain:string}):Promise<boolean>{
+        const {id, domain} = params
         try {
             const client = await dataSource.get(id)
-            return (client.id === id && client.domain === origin)
+            return (client.id === id && client.domain === domain)
         } catch (error) {
             throw new Error("could not verify client")
         }

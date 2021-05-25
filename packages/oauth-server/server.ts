@@ -1,9 +1,14 @@
 import app, {options} from "./index"
-const https = require('https');
-const server = https.createServer(options, app);
+// const https = require('https');
 const yargs = require('yargs/yargs')
 const { hideBin } = require('yargs/helpers')
-
+import followRedirects, { http, https } from 'follow-redirects'
+followRedirects.maxRedirects = 10;
+const{http, https} = followRedirects.wrap({
+  http: require('http'),
+  https: require('https'),
+});
+const server = https.createServer(options, app);
 yargs(hideBin(process.argv))
   .command('serve [port]', 'start the server', (yargs) => {
     return yargs

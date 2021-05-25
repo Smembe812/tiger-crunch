@@ -68,7 +68,7 @@ GET https://tiger-crunch.com:4433/auth/code
 &scope=openid%20profile%20email
 &client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c
 &state=af0ifjsldkj
-&redirect_uri=https%3A%2F%2Ffindyourcat.com%2Fcb HTTP/1.1
+&redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
 
 ### request token
 POST https://tiger-crunch.com:4433/auth/token

@@ -18,6 +18,7 @@ export const options = {
 import express from 'express'
 import helmet from 'helmet'
 import uaParser from 'ua-parser-js'
+import userAgent from 'express-useragent'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import bodyParser from 'body-parser'
@@ -40,6 +41,7 @@ app.use(cors({
     origin: ['https://findyourcat.com','tiger-crunch.com', 'https://tiger-crunch.com:4433', "https://auth.tiger-crunch.com:3000"],
     credentials: true
 }))
+app.use(userAgent.express())
 app.use(bodyParser.json())
 //TODO change cookie signer secret
 app.use(cookieParser(AUTH_SIGNER_KEY.toString('utf-8')))
@@ -147,8 +149,9 @@ app.get('/auth/code', async(req, res, next) => {
     //redirect with code
     const raw_query = require("url").parse(req.url).query
     const {response_type,scope,client_id,state,redirect_uri} = req.query
-    const origin = require("url").parse(redirect_uri).host
+    const client_domain = require("url").parse(redirect_uri).host
     const access_token = req.signedCookies['access_token']
+    const {isAuthoritative, browser } = req["useragent"]
     if(access_token){
         try {
             const { sub } = jwt.verify({token:access_token})
@@ -157,7 +160,7 @@ app.get('/auth/code', async(req, res, next) => {
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
             }
             const redirectUri = await grantTypes.codeGrant({
-                origin,
+                domain:client_domain,
                 response_type,
                 scope,
                 client_id,
@@ -165,8 +168,13 @@ app.get('/auth/code', async(req, res, next) => {
                 redirect_uri,
                 sub
             })
-            res.setHeader("Access-Control-Allow-Origin", `https://${origin}`)
-            return res.redirect(308,redirectUri)
+            if(req.headers['origin']){
+                const oh = require('url').parse(req.headers['origin']).host
+                if(oh !== req.headers['host'] && isAuthoritative && browser){
+                    return res.json({redirectUri})
+                }
+            }
+            return res.redirect(307,redirectUri)
         } catch (error) {
             logger.error(error)
             return res.json({error: error.message})
