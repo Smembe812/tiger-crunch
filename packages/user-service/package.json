@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/user-service",
-    "version": "0.0.24",
+    "version": "0.0.25",
     "description": "user service for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/util": "^0.0.24",
+        "@smembe812/util": "^0.0.25",
         "@types/graphql": "^14.5.0",
         "apollo-server": "^2.20.0",
         "apollo-server-types": "^0.6.3",
@@ -80,5 +80,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "58cb99545d2af8989c0c358e4e1edf21d352c13f"
+    "gitHead": "ad6e743ca635372716b79b64f4bf65f151611b52"
 }
