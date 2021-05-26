@@ -1,4 +1,4 @@
-export default function ({clientUseCases, dataSource}){
+export default function ({clientUseCases, dataSource, util}){
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
@@ -6,7 +6,7 @@ export default function ({clientUseCases, dataSource}){
             try {
                 const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
                 if(validClient && response_type === "code"){
-                    const code = await generateRandomCode()
+                    const code = await util.generateRandomCode()
                     return `${redirect_uri}?code=${code}&state=${state}`
                 }
             } catch (error) {
@@ -56,7 +56,7 @@ export default function ({clientUseCases, dataSource}){
                 token = {
                     access_token,
                     token_type: "Bearer",
-                    refresh_token: await generateRandomCode(),
+                    refresh_token: await util.generateRandomCode(),
                     expires_in: 60 * 10,
                     id_token
                 }
@@ -65,6 +65,12 @@ export default function ({clientUseCases, dataSource}){
             }
             return token
         }
+        async function generateAccessToken(){
+           const access_token = await util.generateRandomCode()
+           const base64url = toBase64Url(Buffer.from(access_token))
+           const at_hash = base64url.slice(0,(base64url.length/2))
+           return {access_token, at_hash}
+       }
         return {
             codeGrant,
             implicitFlow,
@@ -72,12 +78,6 @@ export default function ({clientUseCases, dataSource}){
         }
     }
     
-     async function generateAccessToken(){
-        const access_token = await generateRandomCode()
-        const base64url = toBase64Url(Buffer.from(access_token))
-        const at_hash = base64url.slice(0,(base64url.length/2))
-        return {access_token, at_hash}
-    }
     function toBase64Url(word){
         return word.toString('base64').split('+').join("-").split('/').join("_")
     }
@@ -86,15 +86,5 @@ export default function ({clientUseCases, dataSource}){
         const hash = createHash(alg)
         hash.update(word)
         return hash.digest("base64")
-    }
-    async function generateRandomCode():Promise<string>{
-        const {randomFill} = await import('crypto');
-        return new Promise((resolve, reject) => {
-            const buf = Buffer.alloc(10);
-            randomFill(buf, (err, buf) => {
-            if (err) throw err;
-                resolve(buf.toString('hex'))
-            });
-        })
     }
 }
