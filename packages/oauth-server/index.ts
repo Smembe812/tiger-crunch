@@ -2,7 +2,7 @@
 import path from 'path'
 require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 //configure jwt
-import JWT from "./jwt-wrapper"
+import JWT from "@smembe812/util/lib/jwt-wrapper"
 import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
 const jwt = new JWT({
     algo:'RS256', 
@@ -29,9 +29,8 @@ import logger from "./logger"
 
 import User from '@smembe812/user-service'
 import Client from "@smembe812/clients-service"
-import AuthGrants from "./grant-types/grant-types"
-
-const grantTypes = AuthGrants({jwt, keys})
+import makeGrantTypes from "@smembe812/grant-types-service/"
+const grantTypes = makeGrantTypes.GrantTypes({jwt, keys})
 const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
 const app = express()

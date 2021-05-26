@@ -3,9 +3,16 @@
   "version": "0.0.27",
   "description": "utility functions",
   "main": "./lib/",
-  "scripts": {},
+  "scripts": {
+    "compile": "tsc -b",
+    "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
+    "build": "npm run clean && npm run compile",
+    "test": "yarn run test:unit && yarn run test:e2e",
+    "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'"
+  },
   "dependencies": {
     "dotenv": "^8.2.0",
+    "jsonwebtoken": "^8.5.1",
     "nodemailer": "^6.6.0",
     "qrcode": "^1.4.4",
     "speakeasy": "^2.0.0",
