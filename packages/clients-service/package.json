@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/clients-service",
-  "version": "0.0.26",
+  "version": "0.0.27",
   "description": "clients service for tc",
   "main": "./lib/",
   "scripts": {
@@ -14,7 +14,7 @@
     "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
   },
   "dependencies": {
-    "@smembe812/user-service": "^0.0.26",
+    "@smembe812/user-service": "^0.0.27",
     "dotenv": "^9.0.2",
     "jsonwebtoken": "^8.5.1",
     "level": "^7.0.0",
@@ -63,5 +63,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "ad6e743ca635372716b79b64f4bf65f151611b52"
+  "gitHead": "b7229f279c771db4a6aa23c1711ec4387b64a748"
 }
