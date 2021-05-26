@@ -10,9 +10,11 @@ export default function ({clientUseCases, dataSource, util}){
                     return `${redirect_uri}?code=${code}&state=${state}`
                 }
             } catch (error) {
+                if (error.message === "invalid_request"){
+                    return `${redirect_uri}?error=invalid_request&error_description=unauthorized_client&state=${state}`
+                }
                 throw error
             }
-            return `${redirect_uri}?error=invalid_request&error_description=Unsupported%20response_type%20value&state=${state}`
         }
         async function implicitFlow(params) {
             const {redirect_uri,response_type,client_id,scope,state,nonce} = params
