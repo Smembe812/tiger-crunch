@@ -33,7 +33,10 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
         const {id, domain} = params
         try {
             const client = await dataSource.get(id)
-            return (client.id === id && client.domain === domain)
+            if (client.id === id && client.domain === domain){
+                return true
+            }
+            throw new Error("could not verify client")
         } catch (error) {
             throw new Error("could not verify client")
         }

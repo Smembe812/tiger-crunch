@@ -74,13 +74,13 @@ describe("UserRequests",()=>{
                             expect(isLocation).to.be.false
                             expect(isRedirectText).to.be.false
                         })
-                        done()
+                    done()
                 })
 
             })
             describe("on invalid client", async () => {
                 const invalid_client_query = `?response_type=code&scope=openid%20profile%20email&client_id='CLIENTID'&state=af0ifjsldkj&redirect_uri='REDIRECT_URI'`
-                it("can fail on invalid client_id", async (done) => {
+                it("can fail with error, on invalid client_id", async (done) => {
                     const invalid_client_id = "03dcbb26-f7c9-44a9-a8c0-bdc50d157a65"
                     const valid_redirect_uri = "https://findyourcat.com"
                     const query = invalid_client_query
@@ -93,7 +93,22 @@ describe("UserRequests",()=>{
                             const responseBody = response.body
                             expect(responseBody).to.be.eql({ error: 'could not verify client' })
                         })
-                        done()
+                    done()
+                })
+                it('can fail with error, on invalid domain', async (done) => {
+                    const valid_client_id = "8b3692a8-4108-40d8-a6c3-dfccca3dd12c"
+                    const invalid_redirect_uri = "https://invalid.example.com"
+                    const query = invalid_client_query
+                                    .replace("'CLIENTID'", valid_client_id)
+                                    .replace("'REDIRECT_URI'", invalid_redirect_uri)
+                    request(app)
+                        .get(`/auth/code${query}`)
+                        .set('Cookie', signedCookieMock)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.eql({ error: 'could not verify client' })
+                        })
+                    done()
                 })
             })
         })
