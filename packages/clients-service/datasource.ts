@@ -13,7 +13,11 @@ export default class ClientDBPool {
         }
     }
     async get(id){
-        return await this.pool.get(id)
+        try {
+            return await this.pool.get(id)
+        } catch (error) {
+            throw error
+        }
     }
     async delete (id){
         return await this.pool.delete(id)
