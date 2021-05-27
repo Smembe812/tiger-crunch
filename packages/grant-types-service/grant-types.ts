@@ -45,7 +45,7 @@ export default function ({clientUseCases, dataSource, util}){
             try {
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
                 if(validClient && grant_type === "authorization_code"){
-                    const sub = await dataSource.get("e015310f01eafc0eb3fd")
+                    const sub = await dataSource.get(code)
                     const {access_token, at_hash} = await generateAccessToken()
                     const id_token = jwt.sign(
                         {
