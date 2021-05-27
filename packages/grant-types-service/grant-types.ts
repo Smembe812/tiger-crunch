@@ -70,7 +70,10 @@ export default function ({clientUseCases, dataSource, util}){
                         id_token
                     }
                 }else{
-                    token = {error: "invalid_request"}
+                    if (!validClient){
+                        throw new Error("wrong client_id or client_key provided")
+                    }
+                    throw new Error("invalid_request")
                 }
                 return token
             } catch (error) {

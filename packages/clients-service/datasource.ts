@@ -16,6 +16,9 @@ export default class ClientDBPool {
         try {
             return await this.pool.get(id)
         } catch (error) {
+            if(error.message.includes("Key not found in database")){
+                throw new Error('wrong client_id or client_key provided')
+            }
             throw error
         }
     }

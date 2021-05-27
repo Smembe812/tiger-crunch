@@ -112,15 +112,13 @@ describe("UserRequests",()=>{
             })
         })
     })
-
-
     describe("TOKEN flow", async () => {
         describe("POST /auth/token", async () => {
-            const validClientCredentials = {
-                client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
-                client_key:"Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs="
-            }
             describe("valid client", async () => {
+                const validClientCredentials = {
+                    client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
+                    client_key:"Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs="
+                }
                 const valid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${validClientCredentials.client_id}&client_key=${validClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can redeem athorization code through token", async (done) => {
                     request(app)
@@ -150,6 +148,41 @@ describe("UserRequests",()=>{
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
                             expect(responseBody.error).to.eql("invalid_request")
+                        })
+                    done()
+                })
+            })
+            describe("invalid client", async () => {
+                const invalidClientCredentials = {
+                    client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
+                    client_key:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
+                }
+                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_key=${invalidClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                it("can get invalid client credentials error", async (done) => {
+                    request(app)
+                        .post(`/auth/token${invalid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'wrong client_id or client_key provided' })
+                        })
+                    done()
+                })
+            })
+            describe("no client credentals provided", async () => {
+                const invalidClientCredentials = {
+                    client_id:"",
+                    client_key:""
+                }
+                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_key=${invalidClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                it("can get invalid client credentials error", async (done) => {
+                    request(app)
+                        .post(`/auth/token${invalid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            console.log(responseBody)
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'client credentials not provided' })
                         })
                     done()
                 })
