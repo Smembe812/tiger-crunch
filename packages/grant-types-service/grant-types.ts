@@ -42,6 +42,9 @@ export default function ({clientUseCases, dataSource, util}){
         async function tokenGrant(params){
             let token;
             const {grant_type,code,redirect_uri, client_id, client_key} = params
+            if(!client_id || !client_key){
+                throw new Error("client credentials not provided")
+            }
             try {
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
                 if(validClient && grant_type === "authorization_code"){

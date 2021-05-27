@@ -67,7 +67,6 @@ describe("UserRequests",()=>{
                             const headers = response.header
                             const location = headers.location
                             const text = response.text
-                            const contentLength = headers['content-length']
                             const isLocation = location.includes(redirectUriMock)
                             const isRedirectText = text.includes(redirectURITextMock)
                             expect(location).to.be.a.string
@@ -107,6 +106,38 @@ describe("UserRequests",()=>{
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.eql({ error: 'could not verify client' })
+                        })
+                    done()
+                })
+            })
+        })
+    })
+
+
+    describe("TOKEN flow", async () => {
+        describe("POST /auth/token", async () => {
+            const validClientCredentials = {
+                client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
+                client_key:"Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs="
+            }
+            describe("valid client", async () => {
+                const valid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${validClientCredentials.client_id}&client_key=${validClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                it("can redeem athorization code through token", async (done) => {
+                    request(app)
+                        .post(`/auth/token${valid_client_query}`)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const responseBody = response.body
+                            const cacheControl = headers['cache-control']
+                            const pragma = headers['pragma']
+                            const contentLength = headers['content-length']
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody.id_token).to.be.a.string
+                            expect(responseBody.access_token).to.be.a.string
+                            expect(responseBody.expires_in).to.eql(600)
+                            expect(cacheControl).to.eql('no-store')
+                            expect(pragma).to.eql('no-cache')
+                            expect(contentLength).to.eql('782')
                         })
                     done()
                 })
