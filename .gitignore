@@ -33,3 +33,4 @@ yarn.lock
 *.ldb
 users
 clients
+level-*
