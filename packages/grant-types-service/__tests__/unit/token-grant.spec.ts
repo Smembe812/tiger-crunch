@@ -44,4 +44,15 @@ describe("Token-grant",()=>{
         const response = await grantTypes.tokenGrant({...tokenInputMock})
         expect(response).to.be.eql(expected_token)
    })
+   it('handles exception', async () => {
+    sinon.stub(util, "generateRandomCode")
+        .onFirstCall().throwsException(new Error("Testing error"))
+        .onSecondCall().resolves(refresh_token_mock)
+    sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
+    sinon.stub(jwt, "sign").returns(id_token_mock)
+    sinon.stub(dataSource, "get").resolves(userIdMock)
+    await expect(
+        grantTypes.tokenGrant({...tokenInputMock})
+    ).to.be.rejectedWith("Testing error")
+   })
 })

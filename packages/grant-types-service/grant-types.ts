@@ -42,33 +42,37 @@ export default function ({clientUseCases, dataSource, util}){
         async function tokenGrant(params){
             let token;
             const {grant_type,code,redirect_uri, client_id, client_key} = params
-            const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
-            if(validClient && grant_type === "authorization_code"){
-                const sub = await dataSource.get("e015310f01eafc0eb3fd")
-                const {access_token, at_hash} = await generateAccessToken()
-                const id_token = jwt.sign(
-                    {
-                        sub,
-                        iss:'https://auth.tiger-crunch.com',
-                        aud: redirect_uri,
-                        auth_time: + new Date(),
-                        at_hash
-                    }, 
-                    { 
-                        expiresIn: 60 * 10 
+            try {
+                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
+                if(validClient && grant_type === "authorization_code"){
+                    const sub = await dataSource.get("e015310f01eafc0eb3fd")
+                    const {access_token, at_hash} = await generateAccessToken()
+                    const id_token = jwt.sign(
+                        {
+                            sub,
+                            iss:'https://auth.tiger-crunch.com',
+                            aud: redirect_uri,
+                            auth_time: + new Date(),
+                            at_hash
+                        }, 
+                        { 
+                            expiresIn: 60 * 10 
+                        }
+                    );
+                    token = {
+                        access_token,
+                        token_type: "Bearer",
+                        refresh_token: await util.generateRandomCode(),
+                        expires_in: 60 * 10,
+                        id_token
                     }
-                );
-                token = {
-                    access_token,
-                    token_type: "Bearer",
-                    refresh_token: await util.generateRandomCode(),
-                    expires_in: 60 * 10,
-                    id_token
+                }else{
+                    token = {error: "invalid_request"}
                 }
-            }else{
-                token = {error: "invalid_request"}
+                return token
+            } catch (error) {
+                throw error
             }
-            return token
         }
         async function generateAccessToken(){
            const access_token = await util.generateRandomCode()
