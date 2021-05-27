@@ -6,7 +6,7 @@ export default class GrantsPool {
     }
     async insert(obj){
         try {
-            await this.pool.put(obj.code, obj.id)
+            await this.pool.put(obj.code, obj.sub)
             return await this.get(obj.code)
         } catch (error) {
             throw error   
@@ -17,5 +17,8 @@ export default class GrantsPool {
     }
     async delete (code){
         return await this.pool.delete(code)
+    }
+    close(){
+        return this.pool.close()
     }
 }

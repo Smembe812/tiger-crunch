@@ -2,11 +2,12 @@ export default function ({clientUseCases, dataSource, util}){
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
-            const {response_type,scope,client_id,state,redirect_uri, domain} = params
+            const {response_type,scope,client_id,state,redirect_uri, domain, sub} = params
             try {
                 const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
                 if(validClient && response_type === "code"){
                     const code = await util.generateRandomCode()
+                    await dataSource.insert({code,sub})
                     return `${redirect_uri}?code=${code}&state=${state}`
                 }
             } catch (error) {
@@ -40,12 +41,14 @@ export default function ({clientUseCases, dataSource, util}){
         }
         async function tokenGrant(params){
             let token;
-            const {grant_type,code,redirect_uri} = params
-            if(grant_type === "authorization_code"){
+            const {grant_type,code,redirect_uri, client_id, client_key} = params
+            const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
+            if(validClient && grant_type === "authorization_code"){
+                const sub = await dataSource.get("e015310f01eafc0eb3fd")
                 const {access_token, at_hash} = await generateAccessToken()
                 const id_token = jwt.sign(
                     {
-                        sub: "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
+                        sub,
                         iss:'https://auth.tiger-crunch.com',
                         aud: redirect_uri,
                         auth_time: + new Date(),

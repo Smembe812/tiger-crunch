@@ -7,19 +7,33 @@ chai.use(chaiAsPromised);
 const fs = require("fs")
 const URL = require('url')
 import sinon from "sinon";
-import makeGrantTypes from "../../index"
+import makeGrantTypes from "../../grant-types"
 import { mockCode, mockInput } from "../data/grant-code";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 const clientUseCases = Client.useCases
-const grantTypes = makeGrantTypes.GrantTypes({jwt:null, keys:null})
+import DataSource from "../../datasource"
 describe("Grant-code",()=>{
-    afterEach(function() {
+    let dataSource, GrantTypes, grantTypes;
+    beforeEach(async () => {
+        // not really using the database at all.
+        // proper instatiation of datasorce required before tests run
+        dataSource = new DataSource("level-oauth-grants")
+        GrantTypes = makeGrantTypes({
+            clientUseCases: Client.useCases,
+            dataSource,
+            util
+        })
+        grantTypes = GrantTypes({jwt:null, keys:null})
+    })
+    afterEach(async function() {
         sinon.restore();
+        await dataSource.close()
     });
     it("can return redirect_uri with code and state on success", async () => {
         sinon.stub(util, "generateRandomCode").resolves(mockCode)    
         sinon.stub(clientUseCases, "verifyClientByDomain").resolves(true)
+        sinon.stub(dataSource, "insert").resolves(true)
         const redirectUri = await grantTypes.codeGrant({...mockInput})
         const parseduri = URL.parse(redirectUri)
         const uriHasCode = parseduri.query.includes(`code=${mockCode}`)

@@ -148,7 +148,6 @@ app.get('/auth/code', async(req, res, next) => {
     //redirect with code
     const raw_query = require("url").parse(req.url).query
     const {response_type,scope,client_id,state,redirect_uri} = req.query
-    console.log({response_type,scope,client_id,state,redirect_uri})
     const client_domain = require("url").parse(redirect_uri).host
     const access_token = req.signedCookies['access_token']
     const {isAuthoritative, browser } = req["useragent"]
