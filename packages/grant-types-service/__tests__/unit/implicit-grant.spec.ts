@@ -39,7 +39,7 @@ describe("Implicit-flow",()=>{
         await dataSource.close()
         await nonceManager.close()
     });
-    it("can returns a token response", async () => {
+    it("can returns a token response_uri", async () => {
         sinon.stub(util, "generateRandomCode")
             .onFirstCall().resolves(access_token_mock)
             .onSecondCall().resolves(refresh_token_mock)
@@ -60,15 +60,15 @@ describe("Implicit-flow",()=>{
         expect(uriHasAccessToken).to.be.true
         expect(uriHasBeaerTokenType).to.be.true
    })
-//    it('handles exception', async () => {
-//     sinon.stub(util, "generateRandomCode")
-//         .onFirstCall().throwsException(new Error("Testing error"))
-//         .onSecondCall().resolves(refresh_token_mock)
-//     sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
-//     sinon.stub(jwt, "sign").returns(id_token_mock)
-//     sinon.stub(dataSource, "get").resolves(userIdMock)
-//     await expect(
-//         grantTypes.tokenGrant({...tokenInputMock})
-//     ).to.be.rejectedWith("Testing error")
-//    })
+   it('handles exception', async () => {
+    sinon.stub(util, "generateRandomCode")
+        .onFirstCall().throwsException(new Error("Testing error"))
+        .onSecondCall().resolves(refresh_token_mock)
+    sinon.stub(Client.useCases, "verifyClientByDomain").resolves(true)
+    sinon.stub(jwt, "sign").returns(id_token_mock)
+    sinon.stub(dataSource, "get").resolves(userIdMock)
+    await expect(
+        grantTypes.implicitFlow({...mockImplicitInput})
+    ).to.be.rejectedWith("Testing error")
+   })
 })
