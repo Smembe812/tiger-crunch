@@ -13,22 +13,26 @@ import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 const clientUseCases = Client.useCases
 import DataSource from "../../datasource"
+import NonceManager from "../../nonce-manager"
 describe("Grant-code",()=>{
-    let dataSource, GrantTypes, grantTypes;
+    let dataSource, GrantTypes, grantTypes, nonceManager;
     beforeEach(async () => {
         // not really using the database at all.
         // proper instatiation of datasorce required before tests run
         dataSource = new DataSource("level-oauth-grants")
+        nonceManager = new NonceManager('implicit-nonce')
         GrantTypes = makeGrantTypes({
             clientUseCases: Client.useCases,
             dataSource,
-            util
+            util,
+            nonceManager
         })
         grantTypes = GrantTypes({jwt:null, keys:null})
     })
     afterEach(async function() {
         sinon.restore();
         await dataSource.close()
+        await nonceManager.close()
     });
     it("can return redirect_uri with code and state on success", async () => {
         sinon.stub(util, "generateRandomCode").resolves(mockCode)    

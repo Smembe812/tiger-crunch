@@ -144,7 +144,6 @@ describe("UserRequests",()=>{
                     request(app)
                         .post(`/auth/token${invalid_request}`)
                         .end((error, response) => {
-                            const headers = response.header
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
                             expect(responseBody.error).to.eql("invalid_request")

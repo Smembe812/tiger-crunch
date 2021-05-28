@@ -1,4 +1,4 @@
-export default function ({clientUseCases, dataSource, util}){
+export default function ({clientUseCases, dataSource, util, nonceManager}){
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
@@ -18,26 +18,42 @@ export default function ({clientUseCases, dataSource, util}){
             }
         }
         async function implicitFlow(params) {
-            const {redirect_uri,response_type,client_id,scope,state,nonce} = params
-            console.log(response_type)
+            const {redirect_uri,response_type,client_id,scope,state,nonce, domain, sub} = params
             const {access_token, at_hash} = await generateAccessToken()
-            const expires_in = 60 * 5
-            const id_token = jwt.sign(
-                {
-                    uuid: '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d',
-                    sub: "claims.email",
-                    iss:'https://auth.tiger-crunch.com',
-                    aud: redirect_uri,
-                    auth_time: + new Date(),
-                    at_hash,
-                    nonce
-                }, 
-                { 
-                    expiresIn: expires_in
+            const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
+            if(validClient){
+                const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
+                if(!isAuthenticNonce){
+                    throw new Error("nonce not unique")
                 }
-            );
-            const token_type="bearer"
-            return {id_token, expires_in, access_token, state, token_type,redirect_uri}
+                await nonceManager.persistNonce({
+                    nonce,
+                    sub,
+                    redirect_uri,
+                    state,
+                    client_id,
+                    response_type,
+                    scope
+                })
+                const expires_in = 60 * 5
+                const id_token = jwt.sign(
+                    {
+                        sub,
+                        iss:'https://auth.tiger-crunch.com',
+                        aud: redirect_uri,
+                        auth_time: + new Date(),
+                        at_hash,
+                        nonce
+                    }, 
+                    { 
+                        expiresIn: expires_in
+                    }
+                );
+                const token_type="bearer"
+                const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}`
+                return response_url
+                // return {id_token, expires_in, access_token, state, token_type,redirect_uri}
+            }
         }
         async function tokenGrant(params){
             let token;

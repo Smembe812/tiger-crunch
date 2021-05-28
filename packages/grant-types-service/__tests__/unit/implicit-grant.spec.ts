@@ -13,12 +13,13 @@ import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 import DataSource from "../../datasource"
 import NonceManager from "../../nonce-manager"
+import { expectedImpResponse, mockImplicitInput, token } from "../data/implicit-flow";
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
     verifier:process.env.AUTH_PUB_KEY
 })
-describe("Token-grant",()=>{
+describe("Implicit-flow",()=>{
     let dataSource, GrantTypes, grantTypes, nonceManager;
     beforeEach(async () => {
         // not really using the database at all.
@@ -42,21 +43,32 @@ describe("Token-grant",()=>{
         sinon.stub(util, "generateRandomCode")
             .onFirstCall().resolves(access_token_mock)
             .onSecondCall().resolves(refresh_token_mock)
-        sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
+        sinon.stub(Client.useCases, "verifyClientByDomain").resolves(true)
         sinon.stub(jwt, "sign").returns(id_token_mock)
         sinon.stub(dataSource, "get").resolves(userIdMock)
-        const response = await grantTypes.tokenGrant({...tokenInputMock})
-        expect(response).to.be.eql(expected_token)
+        sinon.stub(nonceManager, "isAuthenticNonce").resolves(true)
+        sinon.stub(nonceManager, "persistNonce").resolves(mockImplicitInput.nonce)
+        const response = await grantTypes.implicitFlow({...mockImplicitInput})
+        const parseduri = URL.parse(response)
+        const uriHasIdToken = parseduri.query.includes(`id_token=${token.id_token}`)
+        const uriHasState = parseduri.query.includes(`state=${token.state}`)
+        const uriHasAccessToken = parseduri.query.includes(`access_token=${token.access_token}`)
+        const uriHasBeaerTokenType = parseduri.query.includes(`token_type=${token.token_type}`)
+        expect(response).to.eql(expectedImpResponse)
+        expect(uriHasIdToken).to.be.true
+        expect(uriHasState).to.be.true
+        expect(uriHasAccessToken).to.be.true
+        expect(uriHasBeaerTokenType).to.be.true
    })
-   it('handles exception', async () => {
-    sinon.stub(util, "generateRandomCode")
-        .onFirstCall().throwsException(new Error("Testing error"))
-        .onSecondCall().resolves(refresh_token_mock)
-    sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
-    sinon.stub(jwt, "sign").returns(id_token_mock)
-    sinon.stub(dataSource, "get").resolves(userIdMock)
-    await expect(
-        grantTypes.tokenGrant({...tokenInputMock})
-    ).to.be.rejectedWith("Testing error")
-   })
+//    it('handles exception', async () => {
+//     sinon.stub(util, "generateRandomCode")
+//         .onFirstCall().throwsException(new Error("Testing error"))
+//         .onSecondCall().resolves(refresh_token_mock)
+//     sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
+//     sinon.stub(jwt, "sign").returns(id_token_mock)
+//     sinon.stub(dataSource, "get").resolves(userIdMock)
+//     await expect(
+//         grantTypes.tokenGrant({...tokenInputMock})
+//     ).to.be.rejectedWith("Testing error")
+//    })
 })
