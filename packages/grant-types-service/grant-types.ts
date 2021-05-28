@@ -50,7 +50,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                     }
                 );
                 const token_type="bearer"
-                const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}`
+                const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}&expires_in=${expires_in}`
                 return response_url
                 // return {id_token, expires_in, access_token, state, token_type,redirect_uri}
             }

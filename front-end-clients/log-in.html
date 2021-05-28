@@ -58,7 +58,8 @@
                     method:"POST",
                     body: JSON.stringify(payload),
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-Auth-Client': 'true'
                     },
                     mode: 'cors',
                     redirect: 'follow',

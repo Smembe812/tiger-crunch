@@ -207,13 +207,44 @@ app.get('/auth/implicit/', async(req, res, next) => {
     // If possible, verify that the Authorization Code has not been previously used.
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
-    
+    const raw_query = require("url").parse(req.url).query
     const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
-    const params = {redirect_uri,response_type,client_id,scope,state,nonce}
-    res.set({'Cache-Control':'no-store'})
-    res.set({'Pragma': 'no-cache'})
-    const token = await grantTypes.implicitFlow({...params})
-    return res.redirect(`${token.redirect_uri}?access_token=${token.access_token}&state=${token.state}&token_type=${token.token_type}&id_token=${token.id_token}&expires_in=${token.expires_in}`)
+    const client_domain = require("url").parse(redirect_uri).host
+    const access_token = req.signedCookies['access_token']
+    const {isAuthoritative, browser } = req["useragent"]
+    if(access_token){
+        try {
+            const { sub } = jwt.verify({token:access_token})
+            if (!sub){
+                const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+                return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
+            }
+            const redirectUri = await grantTypes.implicitFlow({
+                domain:client_domain,
+                response_type,
+                scope,
+                client_id,
+                state,
+                redirect_uri,
+                sub,
+                nonce
+            })
+            if(req.headers['origin']){
+                const oh = require('url').parse(req.headers['origin']).host
+                if(oh !== req.headers['host'] && isAuthoritative && browser){
+                    return res.json({redirectUri})
+                }
+            }
+            res.set({'Cache-Control':'no-store'})
+            res.set({'Pragma': 'no-cache'})
+            return res.redirect(307,redirectUri)
+        } catch (error) {
+            logger.error(error)
+            return res.json({error: error.message})
+        }
+    }
+    const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+    return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
 app.post('/clients', async (req, res) => {
     const {email, project_name, domain} = req.body

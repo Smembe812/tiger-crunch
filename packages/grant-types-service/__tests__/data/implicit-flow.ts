@@ -15,4 +15,4 @@ export const token = {
     token_type: 'bearer',
     redirect_uri: 'https://findyourcat.com'
   }
-export const expectedImpResponse = `${token.redirect_uri}?id_token=${token.id_token}&access_token=${token.access_token}&token_type=${token.token_type}&state=${token.state}`
+export const expectedImpResponse = `${token.redirect_uri}?id_token=${token.id_token}&access_token=${token.access_token}&token_type=${token.token_type}&state=${token.state}&expires_in=300`

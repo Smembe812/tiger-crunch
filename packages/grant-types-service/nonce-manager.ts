@@ -7,7 +7,7 @@ export default class NonceManager extends DataSource{
     }
     async persistNonce(obj){
         const {nonce, ...rest} = obj
-        return await this.pool.insert(nonce, rest)
+        return await this.pool.put(nonce, rest)
     }
     async isAuthenticNonce(nonce){
         try {

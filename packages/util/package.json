@@ -7,8 +7,7 @@
     "compile": "tsc -b",
     "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
     "build": "npm run clean && npm run compile",
-    "test": "yarn run test:unit && yarn run test:e2e",
-    "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'"
+    "test": "yarn run test:unit && yarn run test:e2e"
   },
   "dependencies": {
     "dotenv": "^8.2.0",

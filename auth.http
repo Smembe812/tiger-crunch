@@ -73,7 +73,8 @@ GET https://tiger-crunch.com:4433/auth/code
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
-&code=SplxlOBeZQQYbYS6WxSbIA
+&code=e015310f01eafc0eb3fd
+&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
 
 ### implicit flow
