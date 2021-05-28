@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/util",
-  "version": "0.0.35",
+  "version": "0.0.36",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {
@@ -55,5 +55,5 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "7156fab575c383100b972917d28c98da0150ac8b"
+  "gitHead": "b32f93278898e3e520988463b4d8b43fb265700c"
 }
