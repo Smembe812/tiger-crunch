@@ -35,7 +35,7 @@ describe("Grant-code",()=>{
         await nonceManager.close()
     });
     it("can return redirect_uri with code and state on success", async () => {
-        sinon.stub(util, "generateRandomCode").resolves(mockCode)    
+        sinon.stub(util, "generateRandomCode").resolves({code:mockCode, c_hash:null})    
         sinon.stub(clientUseCases, "verifyClientByDomain").resolves(true)
         sinon.stub(dataSource, "insert").resolves(true)
         const redirectUri = await grantTypes.codeGrant({...mockInput})
@@ -48,7 +48,7 @@ describe("Grant-code",()=>{
         expect(uriHasState).to.be.true
    })
    it("can fail with error and error description", async () => {
-        sinon.stub(util, "generateRandomCode").resolves(mockCode)    
+        sinon.stub(util, "generateRandomCode").resolves({code:mockCode, c_hash:null})    
         sinon.stub(clientUseCases, "verifyClientByDomain").throws(new Error("invalid_request"))
         const redirectUri = await grantTypes.codeGrant({...mockInput})
         const parseduri = URL.parse(redirectUri)

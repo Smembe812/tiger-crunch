@@ -13,13 +13,13 @@ import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 import DataSource from "../../datasource"
 import NonceManager from "../../nonce-manager"
-import { expectedImpResponse, mockImplicitInput, mockRedirectError, token } from "../data/implicit-flow";
+import { expectedHyResponse, mockHybridInput, mockRedirectError, token, mockCode } from "../data/hybrid-flow";
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
     verifier:process.env.AUTH_PUB_KEY
 })
-describe("Implicit-flow",()=>{
+describe("hybrid-flow",()=>{
     let dataSource, GrantTypes, grantTypes, nonceManager;
     beforeEach(async () => {
         // not really using the database at all.
@@ -39,26 +39,23 @@ describe("Implicit-flow",()=>{
         await dataSource.close()
         await nonceManager.close()
     });
-    it("returns a token, id_token response_uri", async () => {
-        sinon.stub(util, "generateRandomCode")
-            .onFirstCall().resolves({code:access_token_mock, c_hash:null})
-            .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
+    it("returns a token_id, code response_uri", async () => {
         sinon.stub(Client.useCases, "verifyClientByDomain").resolves(true)
+        sinon.stub(util, "generateRandomCode")
+            .resolves().resolves({code:mockCode, c_hash:refresh_token_mock})
         sinon.stub(jwt, "sign").returns(id_token_mock)
-        sinon.stub(dataSource, "get").resolves(userIdMock)
+        sinon.stub(dataSource, "insert").resolves(true)
         sinon.stub(nonceManager, "isAuthenticNonce").resolves(true)
-        sinon.stub(nonceManager, "persistNonce").resolves(mockImplicitInput.nonce)
-        const response = await grantTypes.implicitFlow({...mockImplicitInput})
+        sinon.stub(nonceManager, "persistNonce").resolves(mockHybridInput.nonce)
+        const response = await grantTypes.hybridFlow({...mockHybridInput})
         const parseduri = URL.parse(response)
         const uriHasIdToken = parseduri.query.includes(`id_token=${token.id_token}`)
         const uriHasState = parseduri.query.includes(`state=${token.state}`)
-        const uriHasAccessToken = parseduri.query.includes(`access_token=${token.access_token}`)
-        const uriHasBeaerTokenType = parseduri.query.includes(`token_type=${token.token_type}`)
-        expect(response).to.eql(expectedImpResponse)
+        const uriHasCode = parseduri.query.includes(`code=${mockCode}`)
+        expect(response).to.eql(expectedHyResponse)
         expect(uriHasIdToken).to.be.true
         expect(uriHasState).to.be.true
-        expect(uriHasAccessToken).to.be.true
-        expect(uriHasBeaerTokenType).to.be.true
+        expect(uriHasCode).to.be.true
    })
    it('creates redirect error', async () => {
     sinon.stub(util, "generateRandomCode")
@@ -67,7 +64,7 @@ describe("Implicit-flow",()=>{
     sinon.stub(Client.useCases, "verifyClientByDomain").throwsException(new Error("Testing_error"))
     sinon.stub(jwt, "sign").throwsException(new Error("Testing_error"))
     sinon.stub(dataSource, "get").throwsException(new Error("Testing_error"))
-    const redirectUri = await grantTypes.implicitFlow({...mockImplicitInput})
+    const redirectUri = await grantTypes.hybridFlow({...mockHybridInput})
     expect(
         redirectUri
     ).to.eql(mockRedirectError)

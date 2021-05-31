@@ -7,7 +7,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             try {
                 const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
                 if(validClient && response_type === "code"){
-                    const code = await util.generateRandomCode()
+                    const {code} = await util.generateRandomCode()
                     await dataSource.insert({code,sub})
                     return `${redirect_uri}?code=${code}&state=${state}`
                 }
@@ -66,6 +66,49 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
+        async function hybridFlow(params):Promise<string>{
+            const {redirect_uri,response_type,client_id,scope,state,nonce, domain, sub} = params
+            try {
+                const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
+                const {code, c_hash} = await util.generateRandomCode()
+                await dataSource.insert({code,sub})
+                if(validClient){
+                    const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
+                    if(!isAuthenticNonce){
+                        throw new ErrorWrapper(
+                            "nonce not unique",
+                            "GrantTypes.hybridFlow"
+                        )
+                    }
+                    await nonceManager.persistNonce({
+                        nonce,
+                        sub,
+                        state,
+                        client_id,
+                        response_type,
+                        scope
+                    })
+                    const expires_in = 60 * 5
+                    const id_token = jwt.sign(
+                        {
+                            sub,
+                            iss:'https://auth.tiger-crunch.com',
+                            aud: client_id,
+                            auth_time: + new Date(),
+                            c_hash,
+                            nonce
+                        }, 
+                        { 
+                            expiresIn: expires_in
+                        }
+                    );
+                    const response_url = `${redirect_uri}?id_token=${id_token}&code=${code}&state=${state}`
+                    return response_url
+                }
+            } catch (error) {
+                return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
+            }
+        }
         async function tokenGrant(params){
             let token;
             const {grant_type,code,redirect_uri, client_id, client_key} = params
@@ -81,7 +124,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                         {
                             sub,
                             iss:'https://auth.tiger-crunch.com',
-                            aud: redirect_uri,
+                            aud: client_id,
                             auth_time: + new Date(),
                             at_hash
                         }, 
@@ -89,10 +132,11 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                             expiresIn: 60 * 10 
                         }
                     );
+                    const refresh_token = await util.generateRandomCode()
                     token = {
                         access_token,
                         token_type: "Bearer",
-                        refresh_token: await util.generateRandomCode(),
+                        refresh_token: refresh_token.code,
                         expires_in: 60 * 10,
                         id_token
                     }
@@ -108,21 +152,21 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
         }
         async function generateAccessToken(){
-           const access_token = await util.generateRandomCode()
-           const base64url = toBase64Url(Buffer.from(access_token))
-           const at_hash = base64url.slice(0,(base64url.length/2))
+           const {
+               code:access_token, 
+               c_hash:at_hash
+            } = await util.generateRandomCode()
            return {access_token, at_hash}
        }
         return {
             codeGrant,
             implicitFlow,
-            tokenGrant
+            tokenGrant,
+            hybridFlow
         }
     }
     
-    function toBase64Url(word){
-        return word.toString('base64').split('+').join("-").split('/').join("_")
-    }
+    
     async function createShaHash(alg, word){
         const {createHash} = await import("crypto")
         const hash = createHash(alg)

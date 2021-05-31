@@ -40,8 +40,8 @@ describe("Token-grant",()=>{
     });
     it("can returns a token response", async () => {
         sinon.stub(util, "generateRandomCode")
-            .onFirstCall().resolves(access_token_mock)
-            .onSecondCall().resolves(refresh_token_mock)
+            .onFirstCall().resolves({code:access_token_mock, c_hash:null})
+            .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
         sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
         sinon.stub(jwt, "sign").returns(id_token_mock)
         sinon.stub(dataSource, "get").resolves(userIdMock)
@@ -51,7 +51,7 @@ describe("Token-grant",()=>{
    it('handles exception', async () => {
     sinon.stub(util, "generateRandomCode")
         .onFirstCall().throwsException(new Error("Testing error"))
-        .onSecondCall().resolves(refresh_token_mock)
+        .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
     sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
     sinon.stub(jwt, "sign").returns(id_token_mock)
     sinon.stub(dataSource, "get").resolves(userIdMock)

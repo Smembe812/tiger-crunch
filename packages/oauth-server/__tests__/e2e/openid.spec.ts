@@ -76,7 +76,7 @@ describe("UserRequests",()=>{
                         expect(location).to.be.a.string
                         expect(isLocation).to.be.true
                         expect(isRedirectText).to.be.true
-                        expect(contentLength).to.eql('102')
+                        expect(contentLength).to.eql('126')
                     })
                     done()
                 })
@@ -156,7 +156,7 @@ describe("UserRequests",()=>{
                             expect(responseBody.expires_in).to.eql(600)
                             expect(cacheControl).to.eql('no-store')
                             expect(pragma).to.eql('no-cache')
-                            expect(contentLength).to.eql('782')
+                            expect(contentLength).to.eql('870')
                         })
                     done()
                 })

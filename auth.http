@@ -73,8 +73,9 @@ GET https://tiger-crunch.com:4433/auth/code
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
-&code=e015310f01eafc0eb3fd
-&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c
+&code=F3bSi2ap1WNbFysrqJhYpZtRKvLdBkq0da3USBJDpds=
+&client_id=fdd885ee-e6fe-4ffa-b679-beb7766c187a
+&client_key=Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs=
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
 
 ### implicit flow
@@ -85,3 +86,12 @@ GET https://tiger-crunch.com:4433/auth/implicit
 &scope=openid%20profile
 &state=af0ifjsldkj
 &nonce=n-0S6_WzA2Mj HTTP/1.1
+
+### hybrid flow
+GET https://tiger-crunch.com:4433/auth/authorize
+?response_type=code%20id_token
+&client_id=s6BhdRkqt3
+&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb
+&scope=openid%20profile%20email
+&nonce=n-0S6_WzA2Mj
+&state=af0ifjsldkj HTTP/1.1
