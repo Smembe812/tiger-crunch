@@ -137,8 +137,8 @@ describe("UserRequests",()=>{
         describe("POST /auth/token", async () => {
             describe("valid client", async () => {
                 const validClientCredentials = {
-                    client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
-                    client_key:"Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs="
+                    client_id:"1236ae98-88d5-443a-91b4-23bd8ae58d7f",
+                    client_key:"_vHpMZXThAwrqoFUcEotBqXg3kEpIFZ2DZOormFuPyY="
                 }
                 const valid_client_query = `?grant_type=authorization_code&code=${CODE}&client_id=${validClientCredentials.client_id}&client_key=${validClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can redeem athorization code through token", async (done) => {
@@ -174,7 +174,7 @@ describe("UserRequests",()=>{
             })
             describe("invalid client", async () => {
                 const invalidClientCredentials = {
-                    client_id:"fdd885ee-e6fe-4ffa-b679-beb7766c187a",
+                    client_id:"1236ae98-88d5-443a-91b4-23bd8ae58d7f",
                     client_key:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
                 }
                 const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_key=${invalidClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`

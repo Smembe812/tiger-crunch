@@ -294,7 +294,7 @@ app.get('/auth/hybrid/', async(req, res, next) => {
 })
 app.post('/clients', async (req, res) => {
     const {email, project_name, domain} = req.body
-    const client = await clientUseCases.registerClient({email, project_name, domain})
+    const client = await clientUseCases.registerClient({email, projectName:project_name, domain})
     return res.json({...client})
 })
 app.get('/clients/verify', async (req, res) => {

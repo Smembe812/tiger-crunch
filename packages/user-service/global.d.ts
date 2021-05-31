@@ -25,13 +25,9 @@ interface UserProfile{
     phone: string
     DoB?:string
 }
-
 interface UserEntityInput extends Omit<User, "twoFactor"|"pin"> {
     proposedPIN:string
 }
-
-
-
 type UserInput = Omit<UserEntityInput, 'uuid' >
 
 type UserResponse = Omit<UserEntityInput, 'proposedPIN' >

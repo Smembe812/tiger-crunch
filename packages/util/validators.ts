@@ -22,11 +22,18 @@ export const isPIN = (pin:string):boolean => {
     }
     return (validator.isNumeric(pin))
 }
-
+export const isURL = (url:string):boolean => {
+    return validator.isURL(url)
+}
+export const isBase64 = (base64String:string):boolean => {
+    return validator.isBase64(base64String)
+}
 export default {
     isName,
     isEmail,
     isPhoneNumber,
     isUUID,
-    isPIN
+    isPIN,
+    isURL,
+    isBase64
 }

@@ -10,10 +10,12 @@
     "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
     "build": "npm run clean && npm run compile",
     "test": "yarn run test:unit && yarn run test:e2e",
+    "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'",
     "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
   },
   "dependencies": {
     "@smembe812/user-service": "^0.0.38",
+    "@smembe812/util": "^0.0.38",
     "dotenv": "^9.0.2",
     "jsonwebtoken": "^8.5.1",
     "level": "^7.0.0",
