@@ -6,3 +6,5 @@ export const redirectUriMock="https://findyourcat.com?code"
 export const redirectURITextMock="Temporary Redirect. Redirecting to https://findyourcat.com?code"
 export const impRedirectUriMock='https://findyourcat.com?id_token'
 export const impRedirectURITextMock="Temporary Redirect. Redirecting to https://findyourcat.com?id_token"
+export const impRedirectErrorMock ="https://findyourcat.com?error"
+export const impRedirectErrorText="Temporary Redirect. Redirecting to https://findyourcat.com?error="

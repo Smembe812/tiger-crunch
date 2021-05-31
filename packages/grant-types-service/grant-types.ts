@@ -1,4 +1,5 @@
 export default function ({clientUseCases, dataSource, util, nonceManager}){
+    const ErrorWrapper = util.ErrorWrapper
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
@@ -17,42 +18,52 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 throw error
             }
         }
-        async function implicitFlow(params) {
+        async function implicitFlow(params) : Promise <string>{
             const {redirect_uri,response_type,client_id,scope,state,nonce, domain, sub} = params
-            const {access_token, at_hash} = await generateAccessToken()
-            const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
-            if(validClient){
-                const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
-                if(!isAuthenticNonce){
-                    throw new Error("nonce not unique")
-                }
-                await nonceManager.persistNonce({
-                    nonce,
-                    sub,
-                    redirect_uri,
-                    state,
-                    client_id,
-                    response_type,
-                    scope
-                })
-                const expires_in = 60 * 5
-                const id_token = jwt.sign(
-                    {
-                        sub,
-                        iss:'https://auth.tiger-crunch.com',
-                        aud: redirect_uri,
-                        auth_time: + new Date(),
-                        at_hash,
-                        nonce
-                    }, 
-                    { 
-                        expiresIn: expires_in
+            try {
+                const {access_token, at_hash} = await generateAccessToken()
+                const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
+                if(validClient){
+                    const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
+                    if(!isAuthenticNonce){
+                        throw new ErrorWrapper(
+                            "nonce not unique",
+                            "GrantTypes.implicitFlow"
+                        )
                     }
-                );
-                const token_type="bearer"
-                const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}&expires_in=${expires_in}`
-                return response_url
-                // return {id_token, expires_in, access_token, state, token_type,redirect_uri}
+                    await nonceManager.persistNonce({
+                        nonce,
+                        sub,
+                        redirect_uri,
+                        state,
+                        client_id,
+                        response_type,
+                        scope
+                    })
+                    const expires_in = 60 * 5
+                    const id_token = jwt.sign(
+                        {
+                            sub,
+                            iss:'https://auth.tiger-crunch.com',
+                            aud: redirect_uri,
+                            auth_time: + new Date(),
+                            at_hash,
+                            nonce
+                        }, 
+                        { 
+                            expiresIn: expires_in
+                        }
+                    );
+                    const token_type="bearer"
+                    const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}&expires_in=${expires_in}`
+                    return response_url
+                }
+            } catch (error) {
+                // console.log(
+                //     "GrantTypes.implicitFlow",
+                //     error
+                // )
+                return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
         async function tokenGrant(params){

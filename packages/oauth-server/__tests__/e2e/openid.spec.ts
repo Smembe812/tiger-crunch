@@ -5,7 +5,17 @@ const chaiAsPromised = require("chai-as-promised");
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 import app, {options} from "../../index"
-import { impRedirectUriMock, impRedirectURITextMock, locationMock, redirectionTextMock, redirectUriMock, redirectURITextMock, signedCookieMock } from "../data/openid";
+import { 
+    impRedirectErrorMock, 
+    impRedirectErrorText, 
+    impRedirectUriMock, 
+    impRedirectURITextMock, 
+    locationMock, 
+    redirectionTextMock, 
+    redirectUriMock, 
+    redirectURITextMock, 
+    signedCookieMock 
+} from "../data/openid";
 const https = require('https');
 const fs = require("fs")
 const request = require('supertest')
@@ -243,15 +253,21 @@ describe("UserRequests",()=>{
                         })
                         done()
                 })
-                it("throws error on nonce replay", async (done) => {
+                it("redirects with error on nonce replay", async (done) => {
                     const with_invalid_nonce = valid_client_query.split("nonce")[0]+"nonce=n-0S6_WzA2Mj"
                     request(app)
                     .get(`/auth/implicit${with_invalid_nonce}`)
                         .set('Cookie', signedCookieMock)
                         .end((error, response) => {
                             const headers = response.header
-                            const responseBody = response.body
-                            expect(responseBody).to.be.eql({ error: 'nonce not unique' })
+                            const location = headers.location
+                            const text = response.text
+                            console.log(text)
+                            const isLocation = location.includes(impRedirectErrorMock)
+                            const isRedirectText = text.includes(impRedirectErrorText)
+                            expect(location).to.be.a.string
+                            expect(isLocation).to.be.true
+                            expect(isRedirectText).to.be.true
                         })
                     done()
                 })

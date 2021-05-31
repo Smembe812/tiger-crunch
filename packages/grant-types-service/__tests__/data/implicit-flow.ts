@@ -16,3 +16,4 @@ export const token = {
     redirect_uri: 'https://findyourcat.com'
   }
 export const expectedImpResponse = `${token.redirect_uri}?id_token=${token.id_token}&access_token=${token.access_token}&token_type=${token.token_type}&state=${token.state}&expires_in=300`
+export const mockRedirectError = "https://findyourcat.com?error=invalid_request&error_description=unauthorized_client&state=af0ifjsldkj"

@@ -13,7 +13,7 @@ import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 import DataSource from "../../datasource"
 import NonceManager from "../../nonce-manager"
-import { expectedImpResponse, mockImplicitInput, token } from "../data/implicit-flow";
+import { expectedImpResponse, mockImplicitInput, mockRedirectError, token } from "../data/implicit-flow";
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
@@ -60,15 +60,27 @@ describe("Implicit-flow",()=>{
         expect(uriHasAccessToken).to.be.true
         expect(uriHasBeaerTokenType).to.be.true
    })
-   it('handles exception', async () => {
+   it('creates redirect error', async () => {
     sinon.stub(util, "generateRandomCode")
         .onFirstCall().throwsException(new Error("Testing error"))
-        .onSecondCall().resolves(refresh_token_mock)
-    sinon.stub(Client.useCases, "verifyClientByDomain").resolves(true)
-    sinon.stub(jwt, "sign").returns(id_token_mock)
-    sinon.stub(dataSource, "get").resolves(userIdMock)
-    await expect(
-        grantTypes.implicitFlow({...mockImplicitInput})
-    ).to.be.rejectedWith("Testing error")
-   })
+        .onSecondCall().throwsException(new Error("Testing error"))
+    sinon.stub(Client.useCases, "verifyClientByDomain").throwsException(new Error("Testing error"))
+    sinon.stub(jwt, "sign").throwsException(new Error("Testing error"))
+    sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+    const redirectUri = await grantTypes.implicitFlow({...mockImplicitInput})
+    expect(
+        redirectUri
+    ).to.eql(mockRedirectError)
+})
+//    it('handles exception', async () => {
+//         sinon.stub(util, "generateRandomCode")
+//             .onFirstCall().throwsException(new Error("Testing error"))
+//             .onSecondCall().throwsException(new Error("Testing error"))
+//         sinon.stub(Client.useCases, "verifyClientByDomain").throwsException(new Error("Testing error"))
+//         sinon.stub(jwt, "sign").throwsException(new Error("Testing error"))
+//         sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+//         await expect(
+//             grantTypes.implicitFlow({...mockImplicitInput})
+//         ).to.be.rejectedWith("Testing error")
+//    })
 })
