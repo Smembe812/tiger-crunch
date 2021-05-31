@@ -156,7 +156,7 @@ describe("UserRequests",()=>{
                             expect(responseBody.expires_in).to.eql(600)
                             expect(cacheControl).to.eql('no-store')
                             expect(pragma).to.eql('no-cache')
-                            expect(contentLength).to.eql('870')
+                            expect(contentLength).to.eql('887')
                         })
                     done()
                 })
@@ -257,6 +257,72 @@ describe("UserRequests",()=>{
                     const with_invalid_nonce = valid_client_query.split("nonce")[0]+"nonce=n-0S6_WzA2Mj"
                     request(app)
                     .get(`/auth/implicit${with_invalid_nonce}`)
+                        .set('Cookie', signedCookieMock)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const location = headers.location
+                            const text = response.text
+                            console.log(text)
+                            const isLocation = location.includes(impRedirectErrorMock)
+                            const isRedirectText = text.includes(impRedirectErrorText)
+                            expect(location).to.be.a.string
+                            expect(isLocation).to.be.true
+                            expect(isRedirectText).to.be.true
+                        })
+                    done()
+                })
+            })
+        })
+    })
+    describe("HYBRID flow", () => {
+        describe("GET /auth/hybrid/", () => {
+            describe("on valid client", async () => {
+                let valid_client_query;
+                beforeEach(async () => {
+                    const crypto = require('crypto');
+                    let nonce = crypto.randomBytes(16)
+                        .toString('base64')
+                        .split('+').join("-").split('/').join("_")
+                    valid_client_query = `?response_type=id_token%20token&scope=openid%20profile%20email&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c&state=af0ifjsldkj&redirect_uri=https%3A%2F%2Ffindyourcat.com&nonce=${nonce}`
+                })
+                it("can redirect to login server when user not logged in", async (done) => {
+                    request(app)
+                        .get(`/auth/hybrid${valid_client_query}`)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const location = headers.location
+                            const text = response.text
+                            const contentLength = headers['content-length']
+                            const isLocation = location.includes(locationMock)
+                            const isRedirectText = text.includes(redirectionTextMock)
+                            expect(location).to.be.a.string
+                            expect(isLocation).to.be.true
+                            expect(isRedirectText).to.be.true
+                            expect(contentLength).to.eql('828')
+                        })
+                    done()
+                })
+                it("can redirect to client's redirect_uri with token when end user logged in", async (done) => {
+                    request(app)
+                        .get(`/auth/hybrid${valid_client_query}`)
+                        .set('Cookie', signedCookieMock)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const location = headers.location
+                            const text = response.text
+                            const contentLength = headers['content-length']
+                            const isLocation = location.includes(impRedirectUriMock)
+                            const isRedirectText = text.includes(impRedirectURITextMock)
+                            expect(location).to.be.a.string
+                            expect(isLocation).to.be.true
+                            expect(isRedirectText).to.be.true
+                        })
+                        done()
+                })
+                it("redirects with error on nonce replay", async (done) => {
+                    const with_invalid_nonce = valid_client_query.split("nonce")[0]+"nonce=n-0S6_WzA2Mj"
+                    request(app)
+                    .get(`/auth/hybrid${with_invalid_nonce}`)
                         .set('Cookie', signedCookieMock)
                         .end((error, response) => {
                             const headers = response.header
