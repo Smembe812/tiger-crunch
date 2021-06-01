@@ -20,6 +20,7 @@ const https = require('https');
 const fs = require("fs")
 const request = require('supertest')
 import GTS from "@smembe812/grant-types-service"
+import util from "@smembe812/util"
 describe("UserRequests",()=>{
     const server = https.createServer(options, app);
     const testPort="5500"
@@ -111,7 +112,7 @@ describe("UserRequests",()=>{
                         .set('Cookie', signedCookieMock)
                         .end((error, response) => {
                             const responseBody = response.body
-                            expect(responseBody).to.be.eql({ error: 'could not verify client' })
+                            expect(responseBody).to.be.eql({ error: "wrong client_id or client_key provided" })
                         })
                     done()
                 })
@@ -144,7 +145,7 @@ describe("UserRequests",()=>{
                 it("can redeem athorization code through token", async (done) => {
                     request(app)
                         .post(`/auth/token${valid_client_query}`)
-                        .end((error, response) => {
+                        .end(async (error, response) => {
                             const headers = response.header
                             const responseBody = response.body
                             const cacheControl = headers['cache-control']

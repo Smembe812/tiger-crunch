@@ -23,8 +23,6 @@ import userAgent from 'express-useragent'
 import cookieParser from 'cookie-parser'
 import cors from 'cors'
 import bodyParser from 'body-parser'
-
-import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import logger from "./logger"
 
@@ -304,16 +302,6 @@ app.get('/clients/verify', async (req, res) => {
     console.log(client)
     return res.json({...client})
 })
-async function generateRandomCode(){
-    const {randomFill,} = await import('crypto');
-    return new Promise((resolve, reject) => {
-        const buf = Buffer.alloc(10);
-        randomFill(buf, (err, buf) => {
-        if (err) throw err;
-            resolve(buf.toString('hex'))
-        });
-    })
-}
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash
     const access_token = req.signedCookies['access_token']
@@ -351,7 +339,6 @@ function logConnections(req, res, next){
     req.method+' '+req.url)
     next()
 }
-
 async function isAuthenticated(user, agent=null) : Promise<boolean>{
     try {
         return await userUseCases.verifyUser(user.claims)
@@ -359,16 +346,4 @@ async function isAuthenticated(user, agent=null) : Promise<boolean>{
         throw error
     }
 }
-
-async function generateIdToken({user, client}, options):Promise<string>{
-    const {expires_in} = options
-    const token = jwt.sign({
-        sub: user.uuid,
-        aud: !client ? "tiger-crunch.com": client.domain,
-        iss:'https://auth.tiger-crunch.com'
-    },
-    {expiresIn:expires_in})
-    return token
-}
-
 export default app
