@@ -8,7 +8,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
                 if(validClient && response_type === "code"){
                     const {code} = await util.generateRandomCode()
-                    await dataSource.insert({code,sub})
+                    await dataSource.insert({code,client_id,sub})
                     return `${redirect_uri}?code=${code}&state=${state}`
                 }
             } catch (error) {
@@ -71,7 +71,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             try {
                 const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
                 const {code, c_hash} = await util.generateRandomCode()
-                await dataSource.insert({code,sub})
+                await dataSource.insert({code,client_id,sub})
                 if(validClient){
                     const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
                     if(!isAuthenticNonce){
@@ -118,7 +118,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             try {
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
                 if(validClient && grant_type === "authorization_code"){
-                    const sub = await dataSource.get(code)
+                    const {sub} = await dataSource.get(code)
                     const {access_token, at_hash} = await generateAccessToken()
                     const id_token = jwt.sign(
                         {
@@ -164,13 +164,5 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             tokenGrant,
             hybridFlow
         }
-    }
-    
-    
-    async function createShaHash(alg, word){
-        const {createHash} = await import("crypto")
-        const hash = createHash(alg)
-        hash.update(word)
-        return hash.digest("base64")
     }
 }

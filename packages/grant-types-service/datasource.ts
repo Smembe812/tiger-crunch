@@ -2,11 +2,11 @@ import level from "level"
 export default class GrantsPool {
     pool
     constructor(name){
-        this.pool = level(name)
+        this.pool = level(name, { valueEncoding: 'json' })
     }
     async insert(obj){
         try {
-            await this.pool.put(obj.code, obj.sub)
+            await this.pool.put(obj.code, obj)
             return await this.get(obj.code)
         } catch (error) {
             throw error   

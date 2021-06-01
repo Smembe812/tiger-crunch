@@ -8,7 +8,7 @@ const fs = require("fs")
 const URL = require('url')
 import sinon from "sinon";
 import makeGrantTypes from "../../grant-types"
-import { access_token_mock, expected_token, id_token_mock, refresh_token_mock, tokenInputMock, userIdMock} from "../data/token-grant";
+import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, tokenInputMock, userIdMock} from "../data/token-grant";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 import DataSource from "../../datasource"
@@ -44,7 +44,7 @@ describe("Token-grant",()=>{
             .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
         sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
         sinon.stub(jwt, "sign").returns(id_token_mock)
-        sinon.stub(dataSource, "get").resolves(userIdMock)
+        sinon.stub(dataSource, "get").resolves(dataSourceRes)
         const response = await grantTypes.tokenGrant({...tokenInputMock})
         expect(response).to.be.eql(expected_token)
    })
@@ -54,7 +54,7 @@ describe("Token-grant",()=>{
         .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
     sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
     sinon.stub(jwt, "sign").returns(id_token_mock)
-    sinon.stub(dataSource, "get").resolves(userIdMock)
+    sinon.stub(dataSource, "get").resolves(dataSourceRes)
     await expect(
         grantTypes.tokenGrant({...tokenInputMock})
     ).to.be.rejectedWith("Testing error")
