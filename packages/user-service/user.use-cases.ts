@@ -13,13 +13,13 @@ export default function ({
     httpUser=null, 
     mailManager, 
     identityManager,
-    otpService
+    otpService,
+    util
 }){
     async function createNewUser(userFields: UserInput) : Promise<UserResponse>{
-        const {v4:uuidv4} = await import("uuid")
         let userResponse;
         try {
-            const uuid = uuidv4()
+            const uuid = await util.uuidV4()
             const newUser = await userEntity.create({...userFields, uuid})
             const {pin, ...user} = await dataSource.insert(newUser)
             userResponse = user

@@ -1,6 +1,5 @@
-import validators from "@smembe812/util/lib/validators"
-import MailManager from '@smembe812/util/lib/mail'
-import otpService from '@smembe812/util/lib/otp-service'
+import util from "@smembe812/util"
+const {MailManager,otpService, validators} = util
 import makeUserEntity from "./user.entity"
 import identityManager from "./idmanager"
 import DataSource from "./user.datasource"
@@ -16,7 +15,8 @@ const userUseCases = makeUserUseCases({
     dataSource, 
     mailManager, 
     identityManager,
-    otpService
+    otpService,
+    util
 })
 export default {
     userEntity:create,

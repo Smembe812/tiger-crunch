@@ -6,12 +6,11 @@ const expect = chai.expect;
 // const should = chai.should
 chai.use(chaiAsPromised);
 import sinon from "sinon";
-import fs from "fs"
+import util from "@smembe812/util"
 import { hash, user as userMock, user2fa, userAuthCred, userWithout2fa, userWithoutPPIN } from "../data/user";
 import makeUserEntity from "../../user.entity";
 import makeUserUseCases from "../../user.use-cases"
 import identityManager from "../../idmanager"
-import validators from "@smembe812/util/validators"
 import DataSource from "../../user.datasource"
 import MailManager from '@smembe812/util/mail'
 import otpService from "@smembe812/util/otp-service"
@@ -21,9 +20,9 @@ describe('UserUseCases', function() {
         client: process.env.NODEMAILER_OAUTH_CLIENT, 
         service:"noreply@idmanager"
     })
-    const userEntity = {create: makeUserEntity({identityManager, validators})}
+    const userEntity = {create: makeUserEntity({identityManager, validators:util.validators})}
     const dataSource = new DataSource("users")
-    const userUseCase = makeUserUseCases({otpService,userEntity, dataSource, mailManager, identityManager})
+    const userUseCase = makeUserUseCases({otpService,userEntity, dataSource, mailManager, identityManager, util})
     afterEach(function() {
         sinon.restore();
     });

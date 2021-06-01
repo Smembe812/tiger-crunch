@@ -1,8 +1,7 @@
 export default function makeUseCases({clientManager, clientEntity, dataSource, util}){
     async function registerClient(params){
-        const {v4:uuidv4} = await import("uuid")
         const {projectName, domain, email} = params
-        const uuid = uuidv4()
+        const uuid = await util.uuidV4()
         const client_key_base64 = await clientManager.generateSecretKey()
         const client = await clientEntity.create({id:uuid, projectName, domain, email, key:client_key_base64})
         const client_key_base64_uri = util.toBase64Url(client_key_base64)

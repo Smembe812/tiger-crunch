@@ -15,6 +15,7 @@
     "nodemailer": "^6.6.0",
     "qrcode": "^1.4.4",
     "speakeasy": "^2.0.0",
+    "uuid": "^8.3.2",
     "validator": "^13.6.0"
   },
   "devDependencies": {

@@ -1,4 +1,5 @@
 import {createHash, randomBytes, createHmac} from 'crypto';
+import {v4 as uuidv4} from "uuid"
 export async function generateRandomCode():Promise<{code:string, c_hash:string}>{
     try {
         const random_buffer = await generateRandomBytes(256)
@@ -19,11 +20,14 @@ export async function generateRandomCode():Promise<{code:string, c_hash:string}>
 export function toBase64Url(word):string{
     return word.toString('base64').split('+').join("-").split('/').join("_")
 }
-export function generateHmac(random){
-    const hmac = createHmac('sha256', random);
+export async function generateHmac(random){
+    const hmac = await createHmac('sha256', random);
     return hmac.digest("base64")
 }
 export async function generateRandomBytes(bytes:number):Promise<Buffer>{
     const random_buffer = await randomBytes(bytes)
     return random_buffer
+}
+export async function uuidV4(){
+    return await uuidv4()
 }
