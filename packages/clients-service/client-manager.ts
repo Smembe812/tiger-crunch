@@ -1,8 +1,10 @@
 import crypto from "crypto"
+import util from "@smembe812/util"
 export default function makeClientManager(){
-    async function generateSecretKey(random){
-        const hmac = crypto.createHmac('sha256', random);
-        return hmac.digest("base64")
+    async function generateSecretKey():Promise<string>{
+        const buf = await util.generateRandomBytes(256)
+        const hmac_base64 = await util.generateHmac(buf)
+        return hmac_base64
     }
     async function computePersistedSecretKey(secreteKey){
         const salt = await crypto.randomBytes(128).toString('base64');

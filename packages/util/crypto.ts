@@ -1,7 +1,7 @@
-import {createHash, randomBytes} from 'crypto';
+import {createHash, randomBytes, createHmac} from 'crypto';
 export async function generateRandomCode():Promise<{code:string, c_hash:string}>{
     try {
-        const random_buffer = await randomBytes(256)
+        const random_buffer = await generateRandomBytes(256)
         const hash = await createHash("sha256")
         const c_hash = await createHash("sha256")
         hash.update(random_buffer)
@@ -18,4 +18,12 @@ export async function generateRandomCode():Promise<{code:string, c_hash:string}>
 }
 export function toBase64Url(word):string{
     return word.toString('base64').split('+').join("-").split('/').join("_")
+}
+export function generateHmac(random){
+    const hmac = createHmac('sha256', random);
+    return hmac.digest("base64")
+}
+export async function generateRandomBytes(bytes:number):Promise<Buffer>{
+    const random_buffer = await randomBytes(bytes)
+    return random_buffer
 }

@@ -1,12 +1,11 @@
-export default function makeUseCases({clientManager, clientEntity, dataSource}){
+export default function makeUseCases({clientManager, clientEntity, dataSource, util}){
     async function registerClient(params){
         const {v4:uuidv4} = await import("uuid")
         const {projectName, domain, email} = params
         const uuid = uuidv4()
-        const random = await generateRandomCode()
-        const client_key_base64 = await clientManager.generateSecretKey(random)
+        const client_key_base64 = await clientManager.generateSecretKey()
         const client = await clientEntity.create({id:uuid, projectName, domain, email, key:client_key_base64})
-        const client_key_base64_uri = client_key_base64.split('+').join('-').split('/').join('_')
+        const client_key_base64_uri = util.toBase64Url(client_key_base64)
         const client_key = client_key_base64_uri
         const {key, ...newClient} = await dataSource.insert({...client})
         return {...newClient, client_key}
@@ -49,16 +48,6 @@ export default function makeUseCases({clientManager, clientEntity, dataSource}){
         const {id} = params
         const deleted = await dataSource.delete(id)
         return deleted
-    }
-    async function generateRandomCode():Promise<string>{
-        const {randomFill} = await import('crypto');
-        return new Promise((resolve, reject) => {
-            const buf = Buffer.alloc(10);
-            randomFill(buf, (err, buf) => {
-            if (err) throw err;
-                resolve(buf.toString('hex'))
-            });
-        })
     }
     return {
         registerClient,

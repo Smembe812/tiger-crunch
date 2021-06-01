@@ -2,7 +2,8 @@
 import path from 'path'
 require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 //configure jwt
-import JWT from "@smembe812/util/lib/jwt-wrapper"
+import util from "@smembe812/util"
+const JWT = util.JWT
 import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
 const jwt = new JWT({
     algo:'RS256', 
