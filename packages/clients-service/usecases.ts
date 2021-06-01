@@ -36,12 +36,12 @@ export default function makeUseCases({clientManager, clientEntity, dataSource, u
             }
             throw new Error("could not verify client")
         } catch (error) {
-            throw new Error("could not verify client")
+            throw error
         }
     }
     async function getClient(params){
         const {id} = params
-        const client = await dataSource.get(id)
+        const {key, ...client} = await dataSource.get(id)
         return client
     }
     async function deleteClient(params){

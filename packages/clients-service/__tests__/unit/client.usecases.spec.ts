@@ -47,4 +47,83 @@ describe('Client.UseCases', function() {
             ).to.be.rejectedWith("Testing error")
         });
     })
+    describe("#verifyClientBySecret",()=>{
+        it("returns true on valid client credentials", async ()=> {
+            sinon.stub(dataSource, "get").resolves({
+                ...clientWithoutKey,
+                key: hashedKey
+            })
+            sinon.stub(clientManager, "validateClientKey").resolves(true)
+            const isValidClient = await useCases.verifyClientBySecret({
+                client_id: clientMock.id,
+                client_key: clientMock.key
+            })
+            expect(isValidClient).to.true
+        });
+        it("handles exception", async () => {
+            sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+            sinon.stub(clientManager, "validateClientKey").throws("Testing error")
+            await expect(
+                useCases.verifyClientBySecret({
+                    id: clientMock.id,
+                    client_key: clientMock.key
+                })
+            ).to.be.rejectedWith("Testing error")
+        });
+    })
+    describe("#verifyClientByDomain",()=>{
+        it("returns true on valid client credentials", async ()=> {
+            sinon.stub(dataSource, "get").resolves({
+                ...clientWithoutKey,
+                key: hashedKey
+            })
+            const isValidClient = await useCases.verifyClientByDomain({
+                id: clientMock.id,
+                domain: clientMock.domain
+            })
+            expect(isValidClient).to.true
+        });
+        it("handles exception", async () => {
+            sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+            await expect(
+                useCases.verifyClientByDomain({
+                    id: clientMock.id,
+                    domain: clientMock.domain
+                })
+            ).to.be.rejectedWith("Testing error")
+        });
+    })
+    describe("#getClient",()=>{
+        it("should get client by id", async () => {
+            sinon.stub(dataSource, "get").resolves({
+                ...clientWithoutKey,
+                key: hashedKey
+            })
+            const client = await useCases.getClient({
+                id:clientMock.id
+            })
+            expect(client).to.be.eql(clientWithoutKey)
+        })
+        it("handles exception", async () => {
+            sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+            await expect(
+                useCases.getClient({id:clientMock.id})
+            ).to.be.rejectedWith("Testing error")
+        })
+    })
+    describe("#deleteClient",()=>{
+        it("deletes client", async () => {
+            sinon.stub(dataSource, "delete").resolves(true)
+            const isDeleted = await useCases.deleteClient({
+                id:clientMock.id
+            })
+            expect(isDeleted).to.be.true
+        })
+        it("handles exception", async () => {
+            sinon.stub(dataSource, "delete").throwsException(new Error("Testing error"))
+            await expect(
+                useCases.deleteClient({id:clientMock.id})
+            ).to.be.rejectedWith("Testing error")
+        })
+    })
 });
