@@ -3,7 +3,7 @@ export const tokenInputMock = {
     code:"SplxlOBeZQQYbYS6WxSbIA",
     redirect_uri:"https%3A%2F%2Fclient.example.org%2Fcb",
     client_id:"dee68621-0071-41ec-a2c6-641328ef5cc5",
-    client_key:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
+    client_secret:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
 }
 export const userIdMock = "8b3692a8-4108-40d8-a6c3-dfccca3dd12c"
 export const access_token_mock = "7d87af57ce8f555baf1e"

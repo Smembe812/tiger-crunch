@@ -49,7 +49,7 @@ content-type: application/json
 {
     "email":"findyourcat@app.com",
     "project_name":"findyourcat",
-    "domain":"findyourcat.com"
+    "domain":"https://findyourcat.com/v1/callback"
 }
 
 ### verify client
@@ -57,8 +57,8 @@ GET https://tiger-crunch.com:4433/clients/verify HTTP/1.1
 content-type: application/json
 
 {
-    "id": "dee68621-0071-41ec-a2c6-641328ef5cc5",
-    "client_key": "LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
+    "client_id": "9a5d0ad6-92e7-4b1c-8c2f-81854bc0dba9",
+    "client_secret": "sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw="
 }
 
 ## OAuth grant routes
@@ -66,7 +66,7 @@ content-type: application/json
 GET https://tiger-crunch.com:4433/auth/code
 ?response_type=code
 &scope=openid%20profile%20email
-&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c
+&client_id=fdd885ee-e6fe-4ffa-b679-beb7766c187a
 &state=af0ifjsldkj
 &redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
 
@@ -75,7 +75,7 @@ POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
 &code=F3bSi2ap1WNbFysrqJhYpZtRKvLdBkq0da3USBJDpds=
 &client_id=fdd885ee-e6fe-4ffa-b679-beb7766c187a
-&client_key=Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs=
+&client_secret=Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs=
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
 
 ### implicit flow
@@ -88,7 +88,7 @@ GET https://tiger-crunch.com:4433/auth/implicit
 &nonce=n-0S6_WzA2Mj HTTP/1.1
 
 ### hybrid flow
-GET https://tiger-crunch.com:4433/auth/authorize
+GET https://tiger-crunch.com:4433/auth/hybrid
 ?response_type=code%20id_token
 &client_id=s6BhdRkqt3
 &redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb

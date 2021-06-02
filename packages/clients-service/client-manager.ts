@@ -16,9 +16,9 @@ export default function makeClientManager(){
             })
         })
     }
-    async function validateClientKey({clientKey, salt, iterations, hash}){
+    async function validateClientSecret({clientSecret, salt, iterations, hash}){
         return new Promise((resolve, reject) => {
-            crypto.pbkdf2(clientKey, salt, iterations, 64, 'sha512', (error, key) => {
+            crypto.pbkdf2(clientSecret, salt, iterations, 64, 'sha512', (error, key) => {
                 if(error) throw error;
                 return resolve(key.toString("hex") === hash);
             })
@@ -26,7 +26,7 @@ export default function makeClientManager(){
     }
     return {
         generateSecretKey,
-        validateClientKey,
+        validateClientSecret,
         computePersistedSecretKey
     }
 }

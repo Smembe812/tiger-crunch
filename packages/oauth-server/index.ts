@@ -189,8 +189,8 @@ app.post('/auth/token/', async(req, res, next) => {
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
     try {
-        const {grant_type,code,redirect_uri, client_id, client_key} = req.query
-        const token = await grantTypes.tokenGrant({grant_type,code,redirect_uri, client_id, client_key})
+        const {grant_type,code,redirect_uri, client_id, client_secret} = req.query
+        const token = await grantTypes.tokenGrant({grant_type,code,redirect_uri, client_id, client_secret})
         res.set({'Cache-Control':'no-store'})
         res.set({'Pragma': 'no-cache'})
         return res.json(token)
@@ -297,10 +297,10 @@ app.post('/clients', async (req, res) => {
     return res.json({...client})
 })
 app.get('/clients/verify', async (req, res) => {
-    const {id, client_key} = req.body
-    const client = await clientUseCases.verifyClientBySecret({id, client_key})
-    console.log(client)
-    return res.json({...client})
+    const {client_id, client_secret} = req.body
+    const client = await clientUseCases.verifyClientBySecret({client_id, client_secret})
+    const resp = await clientUseCases.getClient({id:client_id})
+    return res.json({...resp})
 })
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash

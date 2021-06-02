@@ -7,7 +7,7 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 import sinon from "sinon";
 import fs from "fs"
-import { hash, client as clientMock, clientOutPut, client_key_base64_fake, clientWithoutKey, hashedKey, clientWithoutId } from "../data/client";
+import { hash, client as clientMock, clientOutPut, client_secret_base64_fake, clientWithoutSecret, hashedSecret, clientWithoutId } from "../data/client";
 import makeClientEntity from "../../client.entity";
 import makeUseCases from "../../usecases"
 import makeClientManager from "../../client-manager"
@@ -23,16 +23,16 @@ describe('Client.UseCases', function() {
         sinon.restore();
     });
     describe("#registerClient",()=>{
-        it("should return valid client with client_key", async ()=> {
+        it("should return valid client with client_secret", async ()=> {
             sinon.stub(clientEntity, "create").resolves({
-                ...clientWithoutKey,
-                key: hashedKey
+                ...clientWithoutSecret,
+                secret: hashedSecret
             })
             sinon.stub(dataSource, "insert").resolves({
-                ...clientWithoutKey,
-                key: hashedKey
+                ...clientWithoutSecret,
+                secret: hashedSecret
             })
-            sinon.stub(clientManager,"generateSecretKey").resolves(client_key_base64_fake)
+            sinon.stub(clientManager,"generateSecretKey").resolves(client_secret_base64_fake)
             const validClient = await useCases.registerClient(clientWithoutId)
             expect(validClient).to.eql({
                 ...clientOutPut
@@ -50,23 +50,23 @@ describe('Client.UseCases', function() {
     describe("#verifyClientBySecret",()=>{
         it("returns true on valid client credentials", async ()=> {
             sinon.stub(dataSource, "get").resolves({
-                ...clientWithoutKey,
-                key: hashedKey
+                ...clientWithoutSecret,
+                secret: hashedSecret
             })
-            sinon.stub(clientManager, "validateClientKey").resolves(true)
+            sinon.stub(clientManager, "validateClientSecret").resolves(true)
             const isValidClient = await useCases.verifyClientBySecret({
-                client_id: clientMock.id,
-                client_key: clientMock.key
+                id: clientMock.id,
+                secret: clientMock.secret
             })
             expect(isValidClient).to.true
         });
         it("handles exception", async () => {
             sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
-            sinon.stub(clientManager, "validateClientKey").throws("Testing error")
+            sinon.stub(clientManager, "validateClientSecret").throws("Testing error")
             await expect(
                 useCases.verifyClientBySecret({
                     id: clientMock.id,
-                    client_key: clientMock.key
+                    secret: clientMock.secret
                 })
             ).to.be.rejectedWith("Testing error")
         });
@@ -74,8 +74,8 @@ describe('Client.UseCases', function() {
     describe("#verifyClientByDomain",()=>{
         it("returns true on valid client credentials", async ()=> {
             sinon.stub(dataSource, "get").resolves({
-                ...clientWithoutKey,
-                key: hashedKey
+                ...clientWithoutSecret,
+                secret: hashedSecret
             })
             const isValidClient = await useCases.verifyClientByDomain({
                 id: clientMock.id,
@@ -96,13 +96,13 @@ describe('Client.UseCases', function() {
     describe("#getClient",()=>{
         it("should get client by id", async () => {
             sinon.stub(dataSource, "get").resolves({
-                ...clientWithoutKey,
-                key: hashedKey
+                ...clientWithoutSecret,
+                secret: hashedSecret
             })
             const client = await useCases.getClient({
                 id:clientMock.id
             })
-            expect(client).to.be.eql(clientWithoutKey)
+            expect(client).to.be.eql(clientWithoutSecret)
         })
         it("handles exception", async () => {
             sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))

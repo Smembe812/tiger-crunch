@@ -30,7 +30,8 @@ describe("UserRequests",()=>{
         try {
             await codeDataSource.insert({
                 code:CODE,
-                sub:"8b3692a8-4108-40d8-a6c3-dfccca3dd12c"
+                sub:"8b3692a8-4108-40d8-a6c3-dfccca3dd12c",
+                client_id:"a06293a0-e307-45b2-91b8-7be165f010b7"
             })
         } catch (error) {
             console.log(error)
@@ -45,7 +46,7 @@ describe("UserRequests",()=>{
     describe("CODE flow", async () => {
         describe("GET /auth/code", async () => {
             describe("on valid client", async () => {
-                const valid_client_query = `?response_type=code&scope=openid%20profile%20email&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c&state=af0ifjsldkj&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const valid_client_query = `?response_type=code&scope=openid%20profile%20email&client_id=a06293a0-e307-45b2-91b8-7be165f010b7&state=af0ifjsldkj&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can redirect to login server when user not logged in", async (done) => {
                     request(app)
                         .get(`/auth/code${valid_client_query}`)
@@ -112,7 +113,7 @@ describe("UserRequests",()=>{
                         .set('Cookie', signedCookieMock)
                         .end((error, response) => {
                             const responseBody = response.body
-                            expect(responseBody).to.be.eql({ error: "wrong client_id or client_key provided" })
+                            expect(responseBody).to.be.eql({ error: "wrong client_id or client_secret provided" })
                         })
                     done()
                 })
@@ -138,10 +139,10 @@ describe("UserRequests",()=>{
         describe("POST /auth/token", async () => {
             describe("valid client", async () => {
                 const validClientCredentials = {
-                    client_id:"1236ae98-88d5-443a-91b4-23bd8ae58d7f",
-                    client_key:"_vHpMZXThAwrqoFUcEotBqXg3kEpIFZ2DZOormFuPyY="
+                    client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
+                    client_secret:"lUpPp37TjOwzP4VnvIiedWTzqltqrsOdXk011UA15MI="
                 }
-                const valid_client_query = `?grant_type=authorization_code&code=${CODE}&client_id=${validClientCredentials.client_id}&client_key=${validClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const valid_client_query = `?grant_type=authorization_code&code=${CODE}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can redeem athorization code through token", async (done) => {
                     request(app)
                         .post(`/auth/token${valid_client_query}`)
@@ -175,17 +176,17 @@ describe("UserRequests",()=>{
             })
             describe("invalid client", async () => {
                 const invalidClientCredentials = {
-                    client_id:"1236ae98-88d5-443a-91b4-23bd8ae58d7f",
-                    client_key:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
+                    client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
+                    client_secret:"sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw="
                 }
-                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_key=${invalidClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can get invalid client credentials error", async (done) => {
                     request(app)
                         .post(`/auth/token${invalid_client_query}`)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
-                            expect(responseBody).to.be.eql({ error: 'wrong client_id or client_key provided' })
+                            expect(responseBody).to.be.eql({ error: 'wrong client_id or client_secret provided' })
                         })
                     done()
                 })
@@ -193,9 +194,9 @@ describe("UserRequests",()=>{
             describe("no client credentals provided", async () => {
                 const invalidClientCredentials = {
                     client_id:"",
-                    client_key:""
+                    client_secret:""
                 }
-                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_key=${invalidClientCredentials.client_key}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can get invalid client credentials error", async (done) => {
                     request(app)
                         .post(`/auth/token${invalid_client_query}`)
@@ -263,7 +264,6 @@ describe("UserRequests",()=>{
                             const headers = response.header
                             const location = headers.location
                             const text = response.text
-                            console.log(text)
                             const isLocation = location.includes(impRedirectErrorMock)
                             const isRedirectText = text.includes(impRedirectErrorText)
                             expect(location).to.be.a.string
@@ -329,7 +329,6 @@ describe("UserRequests",()=>{
                             const headers = response.header
                             const location = headers.location
                             const text = response.text
-                            console.log(text)
                             const isLocation = location.includes(impRedirectErrorMock)
                             const isRedirectText = text.includes(impRedirectErrorText)
                             expect(location).to.be.a.string

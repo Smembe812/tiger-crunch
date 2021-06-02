@@ -1,24 +1,31 @@
 export default function makeUseCases({clientManager, clientEntity, dataSource, util}){
     async function registerClient(params){
         const {projectName, domain, email} = params
+        const client_domain = require('url').parse(domain).host
         const uuid = await util.uuidV4()
-        const client_key_base64 = await clientManager.generateSecretKey()
-        const client = await clientEntity.create({id:uuid, projectName, domain, email, key:client_key_base64})
-        const client_key_base64_uri = util.toBase64Url(client_key_base64)
-        const client_key = client_key_base64_uri
-        const {key, ...newClient} = await dataSource.insert({...client})
-        return {...newClient, client_key}
+        const client_secret_base64 = await clientManager.generateSecretKey()
+        const client = await clientEntity.create({
+            id:uuid, 
+            projectName, 
+            domain:client_domain, 
+            email, 
+            secret:client_secret_base64
+        })
+        const client_secret_base64_uri = util.toBase64Url(client_secret_base64)
+        const client_secret = client_secret_base64_uri
+        const {secret, ...newClient} = await dataSource.insert({...client})
+        return {...newClient, client_secret}
     }
     async function verifyClientBySecret(params){
-        const {client_key, id} = params
-        const {key} = await dataSource.get(id)
+        const {secret, id} = params
+        const {secret:secretHash} = await dataSource.get(id)
         let isValid;
         try {
-            isValid = await clientManager.validateClientKey({
-                clientKey:client_key.split('-').join('+').split('_').join('/'),
-                salt: key.salt,
-                iterations: key.iterations,
-                hash: key.hash
+            isValid = await clientManager.validateClientSecret({
+                clientSecret:secret.split('-').join('+').split('_').join('/'),
+                salt: secretHash.salt,
+                iterations: secretHash.iterations,
+                hash: secretHash.hash
             })
         } catch (error) {
             console.log(error)
@@ -40,7 +47,7 @@ export default function makeUseCases({clientManager, clientEntity, dataSource, u
     }
     async function getClient(params){
         const {id} = params
-        const {key, ...client} = await dataSource.get(id)
+        const {secret, ...client} = await dataSource.get(id)
         return client
     }
     async function deleteClient(params){

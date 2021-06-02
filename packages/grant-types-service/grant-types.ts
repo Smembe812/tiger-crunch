@@ -111,12 +111,12 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
         }
         async function tokenGrant(params){
             let token;
-            const {grant_type,code,redirect_uri, client_id, client_key} = params
-            if(!client_id || !client_key){
+            const {grant_type,code,redirect_uri, client_id, client_secret} = params
+            if(!client_id || !client_secret){
                 throw new Error("client credentials not provided")
             }
             try {
-                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, client_key})
+                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
                 if(validClient && grant_type === "authorization_code"){
                     const {sub} = await dataSource.get(code)
                     const {access_token, at_hash} = await generateAccessToken()
@@ -142,7 +142,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                     }
                 }else{
                     if (!validClient){
-                        throw new Error("wrong client_id or client_key provided")
+                        throw new Error("wrong client_id or client_secret provided")
                     }
                     throw new Error("invalid_request")
                 }

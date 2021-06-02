@@ -33,14 +33,14 @@ function validateClient(client, validators){
             }
             return {id}
         },
-        function validateKey({key}:{key:string}):{ key:string } {
-            if(!key){
-                throw new Error("key not provided")
+        function validateSecret({secret}:{secret:string}):{ secret:string } {
+            if(!secret){
+                throw new Error("client_secret not provided")
             }
-            if(!validators.isBase64(key)){
-                throw new Error("key must be in base64")
+            if(!validators.isBase64(secret)){
+                throw new Error("client_secret must be in base64")
             }
-            return {key}
+            return {secret}
         }
     ]
     const validFields = validations.map(validation => {
@@ -55,12 +55,12 @@ function validateClient(client, validators){
 }
 export default function makeClient({validators, clientManager}){
     return {
-        async create({domain, projectName, email, id, key}) : Promise<ClientInput>{
-            const params = {domain, projectName, email, id, key}
+        async create({domain, projectName, email, id, secret}) : Promise<ClientInput>{
+            const params = {domain, projectName, email, id, secret}
             try {
                 const validatedClient = validateClient(params, validators)
-                const persistedKey = await clientManager.computePersistedSecretKey(validatedClient.key)
-                return Object.freeze({id, domain,projectName, email, key:persistedKey})
+                const persistedKey = await clientManager.computePersistedSecretKey(validatedClient.secret)
+                return Object.freeze({id, domain,projectName, email, secret:persistedKey})
             } catch (error) {
                 throw error
             }

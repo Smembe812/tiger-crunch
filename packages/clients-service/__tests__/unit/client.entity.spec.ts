@@ -82,26 +82,26 @@ describe('clientEntity', function() {
             ).to.be.rejectedWith("invalid id")
         });
     })
-    describe("#key", () => {
+    describe("#secret", () => {
         it('should fail if not provided', async () => {
             await expect(
                 client.create({
                     ...clientMock,
-                    key:null
+                    secret:null
                 })
-            ).to.be.rejectedWith("key not provided")
+            ).to.be.rejectedWith("client_secret not provided")
         });
         it('should fail if invalid: not base64', async () => {
             await expect(
                 client.create({
                     ...clientMock,
-                    key:"40000"
+                    secret:"40000"
                 })
-            ).to.be.rejectedWith("key must be in base64")
+            ).to.be.rejectedWith("client_secret must be in base64")
         });
     })
     it("should create valid user object", async ()=> {
-        const {key, ...clientEntityOutPut} = clientMock
+        const {secret, ...clientEntityOutPut} = clientMock
         const mock = sinon.mock(clientManager)
         mock.expects("computePersistedSecretKey")
             .once()
@@ -111,7 +111,7 @@ describe('clientEntity', function() {
         const validClient = await client.create(clientMock)
         expect(validClient).to.eql({
             ...clientEntityOutPut,
-            key:{hash, salt:"randomsalt", iterations:10000}
+            secret:{hash, salt:"randomsalt", iterations:10000}
         })
         mock.verify()
     });
