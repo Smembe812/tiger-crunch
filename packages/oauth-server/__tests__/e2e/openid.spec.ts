@@ -14,6 +14,7 @@ import {
     redirectionTextMock, 
     redirectUriMock, 
     redirectURITextMock, 
+    refreshIdToken, 
     signedCookieMock 
 } from "../data/openid";
 const https = require('https');
@@ -204,6 +205,106 @@ describe("UserRequests",()=>{
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
                             expect(responseBody).to.be.eql({ error: 'client credentials not provided' })
+                        })
+                    done()
+                })
+            })
+        })
+    })
+    describe("REFRESH-TOKEN flow", () => {
+        describe("POST /auth/refresh-token", () => {
+            describe("valid client", () => {
+                const validClientCredentials = {
+                    client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+                    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
+                    refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
+                    id_token:refreshIdToken
+                }
+                const valid_client_query = `?grant_type=refresh_token&id_token=${validClientCredentials.id_token}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
+                it("can redeem athorization code through token", (done) => {
+                    request(app)
+                        .post(`/auth/refresh-token${valid_client_query}`)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const responseBody = response.body
+                            const cacheControl = headers['cache-control']
+                            const pragma = headers['pragma']
+                            const contentLength = headers['content-length']
+                            expect(responseBody.id_token).to.be.a.string
+                            expect(responseBody.access_token).to.be.a.string
+                            expect(responseBody.expires_in).to.eql(600)
+                            expect(cacheControl).to.eql('no-store')
+                            expect(pragma).to.eql('no-cache')
+                            expect(contentLength).to.be.eql('963')
+                            expect(responseBody).to.be.an('object')
+                        })
+                        done()
+                })
+                it("can get error response on invalid request", (done) => {
+                    const invalid_request = valid_client_query.replace("refresh_token", "unsupported_grant")
+                    request(app)
+                        .post(`/auth/refresh-token${invalid_request}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody.error).to.eql("invalid grant type")
+                        })
+                    done()
+                })
+            })
+            describe("invalid client", async () => {
+                const invalidClientCredentials = {
+                    client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
+                    client_secret:"sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw=",
+                    refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
+                    id_token:refreshIdToken
+                }
+                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
+                it("can get invalid client credentials error", async (done) => {
+                    request(app)
+                        .post(`/auth/token${invalid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'wrong client_id or client_secret provided' })
+                        })
+                    done()
+                })
+            })
+            describe("no client credentals provided", async () => {
+                const invalidClientCredentials = {
+                    client_id:"",
+                    client_secret:"",
+                    refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
+                    id_token:refreshIdToken
+                }
+                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
+                it("can get invalid client credentials error", async (done) => {
+                    request(app)
+                        .post(`/auth/refresh-token${invalid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'client credentials not provided' })
+                        })
+                    done()
+                })
+            })
+            describe("wrong refresh token", async () => {
+                const invalidClientCredentials = {
+                    client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+                    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
+                    refresh_token:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
+                    id_token:refreshIdToken
+                }
+                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
+                it("can get invalid client credentials error", async (done) => {
+                    request(app)
+                        .post(`/auth/refresh-token${invalid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'invalid refresh_token provided' })
                         })
                     done()
                 })

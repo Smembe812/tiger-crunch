@@ -57,8 +57,8 @@ GET https://tiger-crunch.com:4433/clients/verify HTTP/1.1
 content-type: application/json
 
 {
-    "client_id": "9a5d0ad6-92e7-4b1c-8c2f-81854bc0dba9",
-    "client_secret": "sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw="
+    "client_id": "bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+    "client_secret": "p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0="
 }
 
 ## OAuth grant routes
@@ -66,17 +66,17 @@ content-type: application/json
 GET https://tiger-crunch.com:4433/auth/code
 ?response_type=code
 &scope=openid%20profile%20email
-&client_id=fdd885ee-e6fe-4ffa-b679-beb7766c187a
+&client_id=bd7e5e97-afe4-4796-b757-690ddc79ebb2
 &state=af0ifjsldkj
 &redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
 
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
-&code=F3bSi2ap1WNbFysrqJhYpZtRKvLdBkq0da3USBJDpds=
-&client_id=fdd885ee-e6fe-4ffa-b679-beb7766c187a
-&client_secret=Fya8B-GYzW9pbMHCBGT85_yRnsi9DlRBzvQ2R6yKYWs=
-&redirect_uri=https%3A%2F%2Fclient.example.org%2Fcb HTTP/1.1
+&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=
+&client_id=bd7e5e97-afe4-4796-b757-690ddc79ebb2
+&client_secret=p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
+&redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
 
 ### implicit flow
 GET https://tiger-crunch.com:4433/auth/implicit
@@ -95,3 +95,12 @@ GET https://tiger-crunch.com:4433/auth/hybrid
 &scope=openid%20profile%20email
 &nonce=n-0S6_WzA2Mj
 &state=af0ifjsldkj HTTP/1.1
+
+### refresh token
+POST https://tiger-crunch.com:4433/auth/refresh-token
+?client_id=bd7e5e97-afe4-4796-b757-690ddc79ebb2
+&client_secret=p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
+&grant_type=refresh_token
+&id_token=eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlYzZhZDRmNy1kOWYyLTRkYmUtYjQzZi0zNzEzZjcyMjdkNzgiLCJpc3MiOiJodHRwczovL2F1dGgudGlnZXItY3J1bmNoLmNvbSIsImF1ZCI6ImJkN2U1ZTk3LWFmZTQtNDc5Ni1iNzU3LTY5MGRkYzc5ZWJiMiIsImF1dGhfdGltZSI6MTYyMjY1NzEwNDcyNCwiYXRfaGFzaCI6Imt3amlReFdPdnA4bVRQTG4xeDZsT1hzUHBjRGUwbXFCaXA2TVhNWUlGX0U9IiwicnRfaGFzaCI6IndYUk53ZDRzSDBDcWZVLTBaZTBrbEJieFZoUEVaV2YyLWlkRzJZcUx4dWc9IiwiaWF0IjoxNjIyNjU3MTA0LCJleHAiOjE2MjI2NTc3MDR9.LYkYL50fiC_2Mfyofo5bxPtSyYBfoy_mJ8OQysx29-FFQHNtBmZ4KulfcMKeM6RMYyu_5TGmlo5WoLUBWxvRn5X7Vco5LpnFBGQpWPNIMDBKi6DwW-V3iEwihl6DOJunuSvtalUGl5liz1DcPb6II-43uX25mjU9cgh7RfQVPIBWLyNAAYTkyDX-DdUrz3ey83IU4Fveg6Vz-eHWOJ8U4ftLpWn0uWPx8rt-W_rx0IqfehpS7FQTrMG9hi9KS8wVIVSatx9AQhktuNtBwYjpuMivOLrOWn9XTEW2cuaUOMdjKXRLNxqjNA5eb9xZU7x5oQQwyxJs2mWZYAPLcouzCA
+&refresh_token=4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=
+&scope=openid%20profile HTTP/1.1

@@ -33,10 +33,10 @@ export default class JWT{
     sign(payload, options=null){
         return this.#jwt.sign({...payload}, this.#signer, {...options, ...this.#algo})
     }
-    verify({token, key=null}){
+    verify({token, key=null, options=null}){
         if(key)
-            return this.#jwt.verify(token,key)
+            return this.#jwt.verify(token,key,options)
         else
-            return this.#jwt.verify(token, this.#verifier)
+            return this.#jwt.verify(token, this.#verifier, options)
     }
 }

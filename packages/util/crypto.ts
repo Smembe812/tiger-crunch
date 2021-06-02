@@ -21,11 +21,12 @@ export async function verifyCode(code, code_hash):Promise<boolean>{
     const code_buf= Buffer.from(toBase64(code))
     const leftMostOctets = code_buf.slice(0,(code_buf.length/2))
     const calculated_c_hash = await generateHash(leftMostOctets)
+    const calculated_c_hash_buf =  Buffer.from(calculated_c_hash.digest('base64'))
     const bufferDifference = Buffer.compare(
         c_hash_buff,
-        Buffer.from(calculated_c_hash.digest('base64'))
+        calculated_c_hash_buf
     )
-    return bufferDifference === 0 ? true : false
+    return bufferDifference === 0
 }
 export function toBase64Url(word):string{
     return word.toString('base64').split('+').join("-").split('/').join("_")

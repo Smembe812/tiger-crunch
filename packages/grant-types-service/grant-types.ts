@@ -112,10 +112,8 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
         async function tokenGrant(params){
             let token;
             const {grant_type,code,redirect_uri, client_id, client_secret} = params
-            if(!client_id || !client_secret){
-                throw new Error("client credentials not provided")
-            }
             try {
+                await hasClientCredentials({client_id,client_secret})
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
                 if(validClient && grant_type === "authorization_code"){
                     const {sub, ...authorization_code} = await dataSource.get(code)
@@ -162,6 +160,64 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 throw error
             }
         }
+        async function refreshTokenGrant(params){
+            const {client_id, client_secret, grant_type, refresh_token, scope, id_token} = params
+            let token;
+            try {
+                await hasClientCredentials({client_id,client_secret})
+                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
+                //TODO: verify if client owns refresh_token
+                if(validClient && grant_type === "refresh_token"){
+                    const validExpiredToken = jwt.verify({
+                        token:id_token,
+                        options:{ ignoreExpiration: true}
+                    })
+                    const {
+                        sub,iss, aud,auth_time,rt_hash
+                    } = validExpiredToken
+                    const isValidRefreshToken = await util.verifyCode(refresh_token,rt_hash)
+                    if (isValidRefreshToken){
+                        const {
+                            access_token, 
+                            at_hash,
+                            refresh_token,
+                            rt_hash
+                        } = await generateAccessToken({withRefreshToken:true})
+                        const id_token = jwt.sign(
+                            {
+                                sub,
+                                iss,
+                                aud,
+                                auth_time,
+                                at_hash,
+                                rt_hash
+                            }, 
+                            { 
+                                expiresIn: 60 * 10 
+                            }
+                        );
+                        token = {
+                            access_token,
+                            token_type: "Bearer",
+                            refresh_token,
+                            expires_in: 60 * 10,
+                            id_token
+                        }
+                        return token
+                    }
+                    throw new Error("invalid refresh_token provided")
+                }
+                if(!validClient){
+                    throw new Error("wrong client_id or client_secret provided")
+                }
+                throw new ErrorWrapper(
+                    "invalid grant type",
+                    "GrantTypes.refreshTokenGrant"
+                )
+            } catch (error) {
+                throw error
+            }
+        }
         async function generateAccessToken(options=null){
             let tokens, rt={};
             if (options?.withRefreshToken === true){
@@ -182,11 +238,19 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
            const {client, authorization_code} = params
            return (client.id === authorization_code.client_id && client.code === authorization_code.code)
         }
+        async function hasClientCredentials(credentials):Promise<boolean>{
+            const {client_secret,client_id} = credentials
+            if(!client_id || !client_secret){
+                throw new Error("client credentials not provided")
+            }
+            return true
+        }
         return {
             codeGrant,
             implicitFlow,
             tokenGrant,
-            hybridFlow
+            hybridFlow,
+            refreshTokenGrant
         }
     }
 }
