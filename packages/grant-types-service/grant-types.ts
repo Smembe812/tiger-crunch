@@ -118,25 +118,36 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             try {
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
                 if(validClient && grant_type === "authorization_code"){
-                    const {sub} = await dataSource.get(code)
-                    const {access_token, at_hash} = await generateAccessToken()
+                    const {sub, ...authorization_code} = await dataSource.get(code)
+                    if (!isCodeOwner({client:{id:client_id, code},authorization_code})){
+                        throw new ErrorWrapper(
+                            "audience and code mismatch",
+                            "GrantTypes.tokenGrant"
+                        )
+                    }
+                    const {
+                        access_token, 
+                        at_hash,
+                        refresh_token,
+                        rt_hash
+                    } = await generateAccessToken({withRefreshToken:true})
                     const id_token = jwt.sign(
                         {
                             sub,
                             iss:'https://auth.tiger-crunch.com',
                             aud: client_id,
                             auth_time: + new Date(),
-                            at_hash
+                            at_hash,
+                            rt_hash
                         }, 
                         { 
                             expiresIn: 60 * 10 
                         }
                     );
-                    const refresh_token = await util.generateRandomCode()
                     token = {
                         access_token,
                         token_type: "Bearer",
-                        refresh_token: refresh_token.code,
+                        refresh_token: refresh_token,
                         expires_in: 60 * 10,
                         id_token
                     }
@@ -151,13 +162,26 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 throw error
             }
         }
-        async function generateAccessToken(){
-           const {
+        async function generateAccessToken(options=null){
+            let tokens, rt={};
+            if (options?.withRefreshToken === true){
+                const {
+                    code:refresh_token, 
+                    c_hash:rt_hash
+                 } = await util.generateRandomCode()
+                rt = {refresh_token, rt_hash}
+            }
+            const {
                code:access_token, 
                c_hash:at_hash
             } = await util.generateRandomCode()
-           return {access_token, at_hash}
-       }
+            tokens = {...rt, access_token, at_hash}
+            return tokens
+        }
+        function isCodeOwner(params){
+           const {client, authorization_code} = params
+           return (client.id === authorization_code.client_id && client.code === authorization_code.code)
+        }
         return {
             codeGrant,
             implicitFlow,

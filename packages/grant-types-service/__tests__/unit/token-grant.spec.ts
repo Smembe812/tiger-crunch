@@ -38,10 +38,10 @@ describe("Token-grant",()=>{
         await dataSource.close()
         await nonceManager.close()
     });
-    it("can returns a token response", async () => {
+    it("returns a token response", async () => {
         sinon.stub(util, "generateRandomCode")
-            .onFirstCall().resolves({code:access_token_mock, c_hash:null})
-            .onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
+            .onFirstCall().resolves({code:refresh_token_mock, c_hash:null})
+            .onSecondCall().resolves({code:access_token_mock, c_hash:null})
         sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
         sinon.stub(jwt, "sign").returns(id_token_mock)
         sinon.stub(dataSource, "get").resolves(dataSourceRes)

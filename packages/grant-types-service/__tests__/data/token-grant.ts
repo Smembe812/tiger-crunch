@@ -1,6 +1,6 @@
 export const tokenInputMock = {
     grant_type:"authorization_code",
-    code:"SplxlOBeZQQYbYS6WxSbIA",
+    code:"F3bSi2ap1WNbFysrqJhYpZtRKvLdBkq0da3USBJDpds=",
     redirect_uri:"https%3A%2F%2Fclient.example.org%2Fcb",
     client_id:"dee68621-0071-41ec-a2c6-641328ef5cc5",
     client_secret:"LEM6Bm-QLPIr0QUkv5S71tkQ7dDIKxAyWlFpSFRfHnQ="
