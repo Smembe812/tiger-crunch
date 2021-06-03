@@ -37,43 +37,16 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
         }
         async function hybridFlow(params):Promise<string>{
             const {redirect_uri,response_type,client_id,scope,state,nonce, domain, sub} = params
+            
             try {
-                const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
-                const {code, c_hash} = await util.generateRandomCode()
-                await dataSource.insert({code,client_id,sub})
-                if(validClient){
-                    const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
-                    if(!isAuthenticNonce){
-                        throw new ErrorWrapper(
-                            "nonce not unique",
-                            "GrantTypes.hybridFlow"
-                        )
-                    }
-                    await nonceManager.persistNonce({
-                        nonce,
-                        sub,
-                        state,
-                        client_id,
-                        response_type,
-                        scope
-                    })
-                    const expires_in = 60 * 5
-                    const id_token = jwt.sign(
-                        {
-                            sub,
-                            iss:'https://auth.tiger-crunch.com',
-                            aud: client_id,
-                            auth_time: + new Date(),
-                            c_hash,
-                            nonce
-                        }, 
-                        { 
-                            expiresIn: expires_in
-                        }
-                    );
-                    const response_url = `${redirect_uri}?id_token=${id_token}&code=${code}&state=${state}`
-                    return response_url
-                }
+                const hybridFlow = new HybridFlow(params)
+                await hybridFlow.verify()
+                await hybridFlow.generateAccessToken()
+                await hybridFlow.generateCode()
+                hybridFlow.generateIdToken()
+                hybridFlow.processResponse()
+                const response = hybridFlow.getResponse()
+                return response
             } catch (error) {
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
@@ -248,6 +221,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 })
                 return isUnique
             }
+            
             this.generateAccessToken = async function(){
                 const {
                     access_token, 
@@ -280,6 +254,100 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             this.processResponse = function(){
                 const response = new GrantResponse({token:this.token,...this.params})
                 this.response = response.getImplicitFLowRedirectUri()
+                return this
+            }
+            this.getResponse = function (){
+                return this.response
+            }
+        }
+        function HybridFlow(params){
+            this.params = params
+            this.isValidClient=false
+            this.isValidResponseType=false
+            this.code=null
+            this.responseType=null
+            this.response=null
+            this.verify = async function(){
+                if(!this.isValidResponseType()){
+                    throw new ErrorWrapper(
+                        "invalid_request", 
+                        "invalid response type for hybrid flow"
+                    )
+                }
+                const nonceIsAuthentic = await this.isAuthenticNonce() 
+                if(!nonceIsAuthentic){
+                    throw new ErrorWrapper(
+                        "nonce not unique",
+                        "GrantTypes.hybridFlow"
+                    )
+                }
+                try {
+                    await this.verifyClient()
+                    return this
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyClient = async function(){
+                const client = new ClientAuthenticity(this.params)
+                this.isValidClient = await client.verifyByDomain()
+                return this
+            }
+            this.isValidResponseType = function (){
+                const responseType = new ResponseType(this.params)
+                return this.isValidResponseType = responseType.isCodeIdToken()
+            }
+            this.isAuthenticNonce = async function(){
+                const isUnique = await nonceManager.isAuthenticNonce(this.params.nonce)
+                await nonceManager.persistNonce({
+                    nonce:this.params.nonce,
+                    sub:this.params.sub,
+                    state:this.params.state,
+                    client_id:this.params.client_id,
+                    response_type:this.params.response_type,
+                    scope:this.params.scope
+                })
+                return isUnique
+            }
+            this.generateCode = async function(){
+                const code = new AuthorizationCode(this.params)
+                await code.makeCode()
+                await code.persist()
+                this.code = code.get()
+                return this
+            }
+            this.generateAccessToken = async function(){
+                const {
+                    access_token, 
+                    at_hash
+                } = await generateAccessToken()
+                this.token = {
+                    access_token, 
+                    at_hash
+                }
+                return this
+            }
+            this.generateIdToken = function(){
+                const {at_hash} = this.token
+                const expiresIn = 60 * 5
+                const id_token = jwt.sign(
+                    {
+                        sub:this.params.sub,
+                        iss:'https://auth.tiger-crunch.com',
+                        aud: this.params.client_id,
+                        auth_time: + new Date(),
+                        at_hash,
+                    }, 
+                    { 
+                        expiresIn
+                    }
+                );
+                this.token = {id_token, ...this.token, expiresIn, token_type:"bearer"}
+                return this
+            }
+            this.processResponse = function(){
+                const response = new GrantResponse({token:this.token,code:this.code,...this.params})
+                this.response = response.getHybridFlowRedirectUri()
                 return this
             }
             this.getResponse = function (){
@@ -494,11 +562,15 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             const {redirect_uri, code, state,token} = params
             this.params = {redirect_uri, code, state, token}
             this.token = this.params.token
+            this.code = this.params.code
             this.getAuthorizationCodeRedirectUri = function(){
                 return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
             }
             this.getImplicitFLowRedirectUri = function (){
                 return `${redirect_uri}?id_token=${this.token.id_token}&access_token=${this.token.access_token}&token_type=${this.token.token_type}&state=${state}&expires_in=${this.token.expiresIn}`
+            }
+            this.getHybridFlowRedirectUri = function (){
+                return `${redirect_uri}?id_token=${this.token.id_token}&code=${this.code}&state=${this.params.state}`
             }
             this.setToken = function (){
                 const {
@@ -524,6 +596,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 this.setToken()
                 return this.token
             }
+            
         }
         function AuthorizationCode(params){
             const {client_id,sub} = params
@@ -556,6 +629,9 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
             this.isIdTokenToken = function (){
                 return this.params.response_type = "id_token token"
+            }
+            this.isCodeIdToken = function (){
+                return this.params.response_type = "code id_token"
             }
         }
         function ClientAuthenticity(params){
