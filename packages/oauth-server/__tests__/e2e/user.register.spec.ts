@@ -21,7 +21,7 @@ describe("UserRequests",()=>{
     });
     describe("as ID bot", async () => {
         describe("POST /users", async () => {
-            it("can register new user", async (done) => {
+            it("can register new user", () => {
                 request(app)
                     .post("/users")
                     .send({
@@ -40,9 +40,8 @@ describe("UserRequests",()=>{
                             phone:"12345678"
                         })
                     })
-                    done()
             })
-            it("can fail", async (done) => {
+            it("can fail", () => {
                 request(app)
                     .post("/users")
                     .send({
@@ -56,7 +55,6 @@ describe("UserRequests",()=>{
                         expect(response.statusCode).to.be.eql(422) 
                         expect(actual).to.eql({ error: 'invalid phone number' })
                     })
-                    done()
             })
         })
     })

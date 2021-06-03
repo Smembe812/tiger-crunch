@@ -126,65 +126,14 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
         }
         async function refreshTokenGrant(params){
-            const {client_id, client_secret, grant_type, refresh_token, scope, id_token} = params
-            let token;
             try {
-                await hasClientCredentials({client_id,client_secret})
-                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
-                const validExpiredToken = jwt.verify({
-                    token:id_token,
-                    options:{ ignoreExpiration: true}
-                })
-                //TODO: verify if client owns refresh_token
-                if(client_id !== validExpiredToken.aud){
-                    throw new ErrorWrapper(
-                        "client does not own the id_token",
-                        `${ErrorScope}.refreshTokenGrant`
-                        )
-                }
-                if(validClient && grant_type === "refresh_token"){
-                    const {
-                        sub,iss, aud,auth_time,rt_hash
-                    } = validExpiredToken
-                    const isValidRefreshToken = await util.verifyCode(refresh_token,rt_hash)
-                    if (isValidRefreshToken){
-                        const {
-                            access_token, 
-                            at_hash,
-                            refresh_token,
-                            rt_hash
-                        } = await generateAccessToken({withRefreshToken:true})
-                        const id_token = jwt.sign(
-                            {
-                                sub,
-                                iss,
-                                aud,
-                                auth_time,
-                                at_hash,
-                                rt_hash
-                            }, 
-                            { 
-                                expiresIn: 60 * 10 
-                            }
-                        );
-                        token = {
-                            access_token,
-                            token_type: "Bearer",
-                            refresh_token,
-                            expires_in: 60 * 10,
-                            id_token
-                        }
-                        return token
-                    }
-                    throw new Error("invalid refresh_token provided")
-                }
-                if(!validClient){
-                    throw new Error("wrong client_id or client_secret provided")
-                }
-                throw new ErrorWrapper(
-                    "invalid grant type",
-                    "GrantTypes.refreshTokenGrant"
-                )
+                const refreshTokenFlow = new RefreshTokenGrant(params)
+                await refreshTokenFlow.verify()
+                await refreshTokenFlow.generateAccessToken()
+                refreshTokenFlow.generateIdToken()
+                refreshTokenFlow.processResponse()
+                const response = refreshTokenFlow.getResponse()
+                return response
             } catch (error) {
                 throw error
             }
@@ -298,12 +247,6 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                         "invalid response type for token grant"
                     )
                 }
-                if(!this.isCodeOwner()){
-                    throw new ErrorWrapper(
-                        "audience and code mismatch",
-                        "GrantTypes.tokenGrant"
-                    )
-                }
                 try {
                     await this.verifyClient()
                     return this
@@ -314,16 +257,27 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             this.verifyClient = async function(){
                 const client = new ClientAuthenticity(this.params)
                 this.isValidClient = await client.verifyBySecret()
+                if(!(await this.isCodeOwner())){
+                    throw new ErrorWrapper(
+                        "audience and code mismatch",
+                        "GrantTypes.tokenGrant"
+                    )
+                }
                 return this
             }
             this.isCodeOwner = async function(){
                 const {sub, ...authorization_code} = await dataSource.get(this.params.code)
                 this.sub = sub
-                return isCodeOwner({client:{id:this.params.client_id}, authorization_code})
+                return isCodeOwner({
+                    client:{
+                        id:this.params.client_id,
+                        code:this.params.code},
+                    authorization_code
+                })
             }
             this.isValidResponseType = function (){
                 const responseType = new ResponseType(this.params)
-                return this.isValidResponseType = responseType.isTokenGrant()
+                return responseType.isTokenGrant()
             }
             this.generateAccessToken = async function(){
                 const {
@@ -344,7 +298,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 const {at_hash,rt_hash} = this.token
                 const id_token = jwt.sign(
                     {
-                        sub:this.params.sub,
+                        sub:this.sub,
                         iss:'https://auth.tiger-crunch.com',
                         aud: this.params.client_id,
                         auth_time: + new Date(),
@@ -367,26 +321,151 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 return this.response
             }
         }
+        function RefreshTokenGrant(params){
+            this.params = params
+            this.isValidClient=false
+            this.response=null
+            this.token={}
+            this.validExpiredToken={}
+            this.verify = async function(){
+                if(!this.isValidResponseType()){
+                    throw new ErrorWrapper(
+                        "invalid grant type", 
+                        "invalid response type for token grant"
+                    )
+                }
+                if(!this.isValidExpiredIdToken()){
+                    throw new ErrorWrapper(
+                        "invalid id_token provided",
+                        "GrantTypes.refreshTokenGrant"
+                    )
+                }
+                const isValidRefreshToken = await this.isValidRefreshToken()
+                if(!isValidRefreshToken){
+                    throw new ErrorWrapper(
+                        "invalid refresh_token provided",
+                        "GrantTypes.refreshTokenGrant"
+                    )
+                }
+                try {
+                    await this.verifyClient()
+                    if(!this.clientOwnsIdToken()){
+                        throw new ErrorWrapper(
+                            "client does not own the id_token",
+                            `${ErrorScope}.refreshTokenGrant`
+                        )
+                    }
+                    return this
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyClient = async function(){
+                const client = new ClientAuthenticity(this.params)
+                this.isValidClient = await client.verifyBySecret()
+                return this
+            }
+            this.isValidResponseType = function (){
+                const responseType = new ResponseType(this.params)
+                return responseType.isRefreshTokenGrant()
+            }
+            this.isValidExpiredIdToken = function(){
+                try {
+                    const validExpiredToken = jwt.verify({
+                        token:this.params.id_token,
+                        options:{ ignoreExpiration: true}
+                    })
+                    if(validExpiredToken){
+                        this.validExpiredToken = validExpiredToken
+                        return true
+                    }
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.isValidRefreshToken = async function (){
+                const {rt_hash} = this.validExpiredToken
+                const isValid = await util.verifyCode(this.params.refresh_token,rt_hash)
+                return isValid
+            }
+            this.clientOwnsIdToken = function(){
+                return this.params.client_id === this.validExpiredToken.aud
+            }
+            this.generateAccessToken = async function(){
+                const {
+                    access_token, 
+                    at_hash,
+                    refresh_token,
+                    rt_hash
+                } = await generateAccessToken({withRefreshToken:true})
+                this.token = {
+                    access_token, 
+                    at_hash,
+                    refresh_token,
+                    rt_hash
+                }
+                return this
+            }
+            this.generateIdToken = function(){
+                const {at_hash, rt_hash} = this.token
+                const {
+                    sub,iss, aud,auth_time
+                } = this.validExpiredToken
+                const id_token = jwt.sign(
+                    {
+                        sub,
+                        iss,
+                        aud,
+                        auth_time,
+                        at_hash,
+                        rt_hash
+                    }, 
+                    { 
+                        expiresIn: 60 * 10 
+                    }
+                );
+                this.token = {id_token, ...this.token, expiresIn: 60 * 10}
+                return this
+            }
+            this.processResponse = function(){
+                const response = new GrantResponse({token:this.token,...this.params})
+                this.response = response.getRefreshTokenGrantResponse()
+                return this
+            }
+            this.getResponse = function (){
+                return this.response
+            }
+        }
         function GrantResponse(params){
             const {redirect_uri, code, state,token} = params
             this.params = {redirect_uri, code, state, token}
+            this.token = {}
             this.getAuthorizationCodeRedirectUri = function(){
                 return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
             }
-            this.getTokenGrantResponse = function(){
+            this.setToken = function (){
                 const {
                     access_token,
                     refresh_token,
                     expiresIn,
                     id_token
                 } = this.params.token
-                return {
+                this.token = {
                     access_token,
                     token_type: "Bearer",
                     refresh_token,
                     expires_in:expiresIn,
                     id_token
                 }
+                return this
+            }
+            this.getTokenGrantResponse = function(){
+                this.setToken()
+                return this.token
+            }
+            this.getRefreshTokenGrantResponse = function(){
+                this.setToken()
+                return this.token
             }
         }
         function AuthorizationCode(params){
@@ -414,6 +493,9 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
             this.isTokenGrant = function (){
                 return this.params.grant_type === "authorization_code"
+            }
+            this.isRefreshTokenGrant = function (){
+                return this.params.grant_type === "refresh_token"
             }
         }
         function ClientAuthenticity(params){
