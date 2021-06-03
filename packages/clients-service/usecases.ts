@@ -27,6 +27,9 @@ export default function makeUseCases({clientManager, clientEntity, dataSource, u
                 iterations: secretHash.iterations,
                 hash: secretHash.hash
             })
+            if(!isValid){
+                throw new Error("wrong client_id or client_secret provided")
+            }
         } catch (error) {
             console.log(error)
             throw error

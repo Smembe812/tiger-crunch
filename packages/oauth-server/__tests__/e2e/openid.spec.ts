@@ -262,7 +262,7 @@ describe("UserRequests",()=>{
                 const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
                 it("can get invalid client credentials error", async (done) => {
                     request(app)
-                        .post(`/auth/token${invalid_client_query}`)
+                        .post(`/auth/refresh-token${invalid_client_query}`)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),

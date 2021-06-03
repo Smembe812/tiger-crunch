@@ -113,52 +113,14 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
         }
         async function tokenGrant(params){
-            let token;
-            const {grant_type,code,redirect_uri, client_id, client_secret} = params
             try {
-                await hasClientCredentials({client_id,client_secret})
-                const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
-                if(validClient && grant_type === "authorization_code"){
-                    const {sub, ...authorization_code} = await dataSource.get(code)
-                    if (!isCodeOwner({client:{id:client_id, code},authorization_code})){
-                        throw new ErrorWrapper(
-                            "audience and code mismatch",
-                            "GrantTypes.tokenGrant"
-                        )
-                    }
-                    const {
-                        access_token, 
-                        at_hash,
-                        refresh_token,
-                        rt_hash
-                    } = await generateAccessToken({withRefreshToken:true})
-                    const id_token = jwt.sign(
-                        {
-                            sub,
-                            iss:'https://auth.tiger-crunch.com',
-                            aud: client_id,
-                            auth_time: + new Date(),
-                            at_hash,
-                            rt_hash
-                        }, 
-                        { 
-                            expiresIn: 60 * 10 
-                        }
-                    );
-                    token = {
-                        access_token,
-                        token_type: "Bearer",
-                        refresh_token: refresh_token,
-                        expires_in: 60 * 10,
-                        id_token
-                    }
-                }else{
-                    if (!validClient){
-                        throw new Error("wrong client_id or client_secret provided")
-                    }
-                    throw new Error("invalid_request")
-                }
-                return token
+                const tokenFlow = new TokenGrant(params)
+                await tokenFlow.verify()
+                await tokenFlow.generateAccessToken()
+                tokenFlow.generateIdToken()
+                tokenFlow.processResponse()
+                const response = tokenFlow.getResponse()
+                return response
             } catch (error) {
                 throw error
             }
@@ -321,11 +283,110 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 return this.response
             }
         }
+        function TokenGrant(params){
+            this.params = params
+            this.isValidClient=false
+            this.isValidResponseType=false
+            this.sub=null
+            this.responseType=null
+            this.response=null
+            this.token={}
+            this.verify = async function(){
+                if(!this.isValidResponseType()){
+                    throw new ErrorWrapper(
+                        "invalid_request", 
+                        "invalid response type for token grant"
+                    )
+                }
+                if(!this.isCodeOwner()){
+                    throw new ErrorWrapper(
+                        "audience and code mismatch",
+                        "GrantTypes.tokenGrant"
+                    )
+                }
+                try {
+                    await this.verifyClient()
+                    return this
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyClient = async function(){
+                const client = new ClientAuthenticity(this.params)
+                this.isValidClient = await client.verifyBySecret()
+                return this
+            }
+            this.isCodeOwner = async function(){
+                const {sub, ...authorization_code} = await dataSource.get(this.params.code)
+                this.sub = sub
+                return isCodeOwner({client:{id:this.params.client_id}, authorization_code})
+            }
+            this.isValidResponseType = function (){
+                const responseType = new ResponseType(this.params)
+                return this.isValidResponseType = responseType.isTokenGrant()
+            }
+            this.generateAccessToken = async function(){
+                const {
+                    access_token, 
+                    at_hash,
+                    refresh_token,
+                    rt_hash
+                } = await generateAccessToken({withRefreshToken:true})
+                this.token = {
+                    access_token, 
+                    at_hash,
+                    refresh_token,
+                    rt_hash
+                }
+                return this
+            }
+            this.generateIdToken = function(){
+                const {at_hash,rt_hash} = this.token
+                const id_token = jwt.sign(
+                    {
+                        sub:this.params.sub,
+                        iss:'https://auth.tiger-crunch.com',
+                        aud: this.params.client_id,
+                        auth_time: + new Date(),
+                        at_hash,
+                        rt_hash
+                    }, 
+                    { 
+                        expiresIn: 60 * 10 
+                    }
+                );
+                this.token = {id_token, ...this.token, expiresIn: 60 * 10}
+                return this
+            }
+            this.processResponse = function(){
+                const response = new GrantResponse({token:this.token,...this.params})
+                this.response = response.getTokenGrantResponse()
+                return this
+            }
+            this.getResponse = function (){
+                return this.response
+            }
+        }
         function GrantResponse(params){
-            const {redirect_uri, code, state} = params
-            this.params = {redirect_uri, code, state}
+            const {redirect_uri, code, state,token} = params
+            this.params = {redirect_uri, code, state, token}
             this.getAuthorizationCodeRedirectUri = function(){
                 return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
+            }
+            this.getTokenGrantResponse = function(){
+                const {
+                    access_token,
+                    refresh_token,
+                    expiresIn,
+                    id_token
+                } = this.params.token
+                return {
+                    access_token,
+                    token_type: "Bearer",
+                    refresh_token,
+                    expires_in:expiresIn,
+                    id_token
+                }
             }
         }
         function AuthorizationCode(params){
@@ -346,10 +407,13 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
         }
         function ResponseType(params){
-            const {response_type} = params
-            this.params = {response_type}
+            const {response_type, grant_type} = params
+            this.params = {response_type, grant_type}
             this.isAthorizationCode = function(){
                 return this.params.response_type === "code"
+            }
+            this.isTokenGrant = function (){
+                return this.params.grant_type === "authorization_code"
             }
         }
         function ClientAuthenticity(params){
@@ -367,7 +431,14 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 }
             }
             this.verifyBySecret = async function(){
-                return await hasClientCredentials({client_id,client_secret})
+                try {
+                    await hasClientCredentials({client_id,client_secret})
+                    await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
+                    this.isValidClient = true
+                    return this.isValidClient
+                } catch (error) {
+                    throw error
+                }
             }
             this.get = function (){
                 return this.isValidClient
