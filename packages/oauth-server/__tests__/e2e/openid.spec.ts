@@ -221,7 +221,7 @@ describe("UserRequests",()=>{
                     id_token:refreshIdToken
                 }
                 const valid_client_query = `?grant_type=refresh_token&id_token=${validClientCredentials.id_token}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
-                it("can redeem athorization code through token", (done) => {
+                it("can refresh token", (done) => {
                     request(app)
                         .post(`/auth/refresh-token${valid_client_query}`)
                         .end((error, response) => {
@@ -298,7 +298,7 @@ describe("UserRequests",()=>{
                     id_token:refreshIdToken
                 }
                 const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
-                it("can get invalid client credentials error", async (done) => {
+                it("can get invalid refresh token error", async (done) => {
                     request(app)
                         .post(`/auth/refresh-token${invalid_client_query}`)
                         .end((error, response) => {
@@ -307,6 +307,25 @@ describe("UserRequests",()=>{
                             expect(responseBody).to.be.eql({ error: 'invalid refresh_token provided' })
                         })
                     done()
+                })
+            })
+            describe("client does not own id_token", () => {
+                const validClientCredentials = {
+                    client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+                    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
+                    refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
+                    id_token:"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlYzZhZDRmNy1kOWYyLTRkYmUtYjQzZi0zNzEzZjcyMjdkNzgiLCJpc3MiOiJodHRwczovL2F1dGgudGlnZXItY3J1bmNoLmNvbSIsImF1ZCI6ImEwNjI5M2EwLWUzMDctNDViMi05MWI4LTdiZTE2NWYwMTBiNyIsImF1dGhfdGltZSI6MTYyMjY1NzEwNDcyNCwiYXRfaGFzaCI6Im9VM1IyOVo3bkNBdzZvUHlUbXBCNkRBdUVOc05ZeUZnNmZNNnNqTDljZWM9IiwicnRfaGFzaCI6ImQ1T3RiYXBaZVROWnh5aWU1aUpsQ1k5OTRwR1U2bENJNDNibERzQ1hhMlE9IiwiaWF0IjoxNjIyNzA1MjM5LCJleHAiOjE2MjI3MDU4Mzl9.Y06esG-2u2Bld64yOCpb81G7bwaB_NDK3PgBLSYF8woOXHbjEl48Uh7dc8U1ipiKmRlcRSoAPtzzyaH7n718HzM7rtc7VrzmfUORCJB8NxmHOtgJVcpCH5zefu2MXTSIYY5D1LIETnPNdL7xhW0kLJCR4U-W0xPq-WwMSuOcGIXUb7o6O6QMusClVUMcSvrSgpstz6IG4G2thPon3Xhxo86k2qV2AxvVX66lqZcohR72ewoGEYXwewU7IoYoejAJk-L7xbpu34OyMvFrTQWnAapGjDWC1gzmHZHWxDEeWfrQbZ-XvtPb3vmhBJexNY8TOHY13lZiJy5KgfcBsPeHoA"
+                }
+                const valid_client_query = `?grant_type=refresh_token&id_token=${validClientCredentials.id_token}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
+                it("can refresh token", (done) => {
+                    request(app)
+                        .post(`/auth/refresh-token${valid_client_query}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody.error).to.eql("client does not own the id_token")
+                        })
+                        done()
                 })
             })
         })

@@ -1,5 +1,6 @@
 export default function ({clientUseCases, dataSource, util, nonceManager}){
     const ErrorWrapper = util.ErrorWrapper
+    const ErrorScope="GrantTypes"
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
@@ -166,12 +167,18 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             try {
                 await hasClientCredentials({client_id,client_secret})
                 const validClient = await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
+                const validExpiredToken = jwt.verify({
+                    token:id_token,
+                    options:{ ignoreExpiration: true}
+                })
                 //TODO: verify if client owns refresh_token
+                if(client_id !== validExpiredToken.aud){
+                    throw new ErrorWrapper(
+                        "client does not own the id_token",
+                        `${ErrorScope}.refreshTokenGrant`
+                        )
+                }
                 if(validClient && grant_type === "refresh_token"){
-                    const validExpiredToken = jwt.verify({
-                        token:id_token,
-                        options:{ ignoreExpiration: true}
-                    })
                     const {
                         sub,iss, aud,auth_time,rt_hash
                     } = validExpiredToken
