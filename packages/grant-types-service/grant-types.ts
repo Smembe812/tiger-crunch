@@ -1,17 +1,19 @@
+import { Response } from "node-fetch"
+
 export default function ({clientUseCases, dataSource, util, nonceManager}){
     const ErrorWrapper = util.ErrorWrapper
     const ErrorScope="GrantTypes"
     return function GrantTypes({jwt, keys}){
         async function codeGrant(params){
             //TODO: verify scope
-            const {response_type,scope,client_id,state,redirect_uri, domain, sub} = params
+            const {state,redirect_uri} = params
             try {
-                const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
-                if(validClient && response_type === "code"){
-                    const {code} = await util.generateRandomCode()
-                    await dataSource.insert({code,client_id,sub})
-                    return `${redirect_uri}?code=${code}&state=${state}`
-                }
+                const codeFlow = new AthorizationCode(params)
+                await codeFlow.verify()
+                await codeFlow.generateCode()
+                codeFlow.processResponse()
+                const response = codeFlow.getResponse()
+                return response
             } catch (error) {
                 if (error.message === "invalid_request"){
                     return `${redirect_uri}?error=invalid_request&error_description=unauthorized_client&state=${state}`
@@ -251,6 +253,125 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 throw new Error("client credentials not provided")
             }
             return true
+        }
+        function GrantFlow(params){
+            this.params = params
+            this.validClient = false
+            this.code=null
+            this.redirectUriResponce=null
+            this.next = null
+            this.setNext= setNext.bind(this)
+            this._getResponse = _getResponse.bind(this)
+            function setNext(nextFlow){
+                this.next = nextFlow.bind(this)
+            }
+            function _getResponse(){
+                if(this.next){
+                    this.next()
+                }
+                if(this.redirectUriResponce){
+                    return this.redirectUriResponce
+                }
+                return null
+            }
+        }
+        function AthorizationCode(params){
+            this.params = params
+            this.isValidClient=false
+            this.isValidResponseType=false
+            this.code=null
+            this.responseType=null
+            this.response=null
+            this.verify = async function(){
+                if(!this.isValidResponseType()){
+                    throw new ErrorWrapper(
+                        "invalid_request", 
+                        "invalid response type for code flow"
+                    )
+                }
+                try {
+                    await this.verifyClient()
+                    return this
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyClient = async function(){
+                const client = new ClientAuthenticity(this.params)
+                this.isValidClient = await client.verifyByDomain()
+                return this
+            }
+            this.isValidResponseType = function (){
+                const responseType = new ResponseType(this.params)
+                return this.isValidResponseType = responseType.isAthorizationCode()
+            }
+            this.generateCode = async function(){
+                const code = new AuthorizationCode(this.params)
+                await code.makeCode()
+                await code.persist()
+                this.code = code.get()
+                return this
+            }
+            this.processResponse = function(){
+                const response = new GrantResponse({code:this.code,...this.params})
+                this.response = response.getAuthorizationCodeRedirectUri()
+                return this
+            }
+            this.getResponse = function (){
+                return this.response
+            }
+        }
+        function GrantResponse(params){
+            const {redirect_uri, code, state} = params
+            this.params = {redirect_uri, code, state}
+            this.getAuthorizationCodeRedirectUri = function(){
+                return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
+            }
+        }
+        function AuthorizationCode(params){
+            const {client_id,sub} = params
+            this.params = {client_id, sub}
+            this.code=null
+            this.makeCode = async function(){
+                const {code} = await util.generateRandomCode()
+                this.code = code
+                return this
+            }
+            this.persist = async function(){
+                await dataSource.insert({code:this.code,...this.params})
+                return this
+            }
+            this.get = function(){
+                return this.code
+            }
+        }
+        function ResponseType(params){
+            const {response_type} = params
+            this.params = {response_type}
+            this.isAthorizationCode = function(){
+                return this.params.response_type === "code"
+            }
+        }
+        function ClientAuthenticity(params){
+            const {client_id, client_secret, domain} = params
+            this.params = {client_id, client_secret, domain}
+            this.verifyByDomain = async function(){
+                try {
+                    this.validClient = await clientUseCases.verifyClientByDomain({
+                        id:this.params.client_id, 
+                        domain:this.params.domain
+                    })
+                    return true
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyBySecret = async function(){
+                return await hasClientCredentials({client_id,client_secret})
+            }
+            this.get = function (){
+                return this.isValidClient
+            }
         }
         return {
             codeGrant,

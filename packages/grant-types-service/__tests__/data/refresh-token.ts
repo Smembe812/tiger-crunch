@@ -25,9 +25,8 @@ export const dataSourceRes = {
 }
 export const validExpiredTokenPayload = {
     iss: "https://auth.tiger-crunch.com",
-    aud: "a06293a0-e307-45b2-91b8-7be165f010b7",
+    aud: "dee68621-0071-41ec-a2c6-641328ef5cc5",
     auth_time: 1622645918528,
-    uaid: '59c73b8298d4f27533d5734da5726da55a842d5eebcf419c836164d01f918e94',
     at_hash: "wfPsw5xpx21O7oAhHKeUgoLzijDExLi1jWcJysYvFHQ=",
     rt_hash: "GsJkfoPKG5YnlAWDdrTyYeY1b1hqWV_jOqU8SX4buvQ=",
     iat: 1622645918,
