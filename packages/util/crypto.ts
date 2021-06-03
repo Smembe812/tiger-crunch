@@ -60,3 +60,19 @@ export async function generateHash(word, options=null){
         throw error
     }
 }
+export async function generateAccessToken(options=null){
+    let tokens, rt={};
+    if (options?.withRefreshToken === true){
+        const {
+            code:refresh_token, 
+            c_hash:rt_hash
+         } = await generateRandomCode()
+        rt = {refresh_token, rt_hash}
+    }
+    const {
+       code:access_token, 
+       c_hash:at_hash
+    } = await generateRandomCode()
+    tokens = {...rt, access_token, at_hash}
+    return tokens
+}
