@@ -66,6 +66,8 @@ describe("Implicit-flow",()=>{
         .onSecondCall().throwsException(new Error("Testing_error"))
     sinon.stub(Client.useCases, "verifyClientByDomain").throwsException(new Error("Testing_error"))
     sinon.stub(jwt, "sign").throwsException(new Error("Testing_error"))
+    sinon.stub(nonceManager, "isAuthenticNonce").throwsException(new Error("Testing_error"))
+    sinon.stub(nonceManager, "persistNonce").throwsException(new Error("Testing_error"))
     sinon.stub(dataSource, "get").throwsException(new Error("Testing_error"))
     const redirectUri = await grantTypes.implicitFlow({...mockImplicitInput})
     expect(

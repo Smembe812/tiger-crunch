@@ -22,50 +22,16 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
         }
         async function implicitFlow(params) : Promise <string>{
-            const {redirect_uri,response_type,client_id,scope,state,nonce, domain, sub} = params
+            const {redirect_uri,state} = params
             try {
-                const {access_token, at_hash} = await generateAccessToken()
-                const validClient = await clientUseCases.verifyClientByDomain({id:client_id, domain})
-                if(validClient){
-                    const isAuthenticNonce = await nonceManager.isAuthenticNonce(nonce)
-                    if(!isAuthenticNonce){
-                        throw new ErrorWrapper(
-                            "nonce not unique",
-                            "GrantTypes.implicitFlow"
-                        )
-                    }
-                    await nonceManager.persistNonce({
-                        nonce,
-                        sub,
-                        redirect_uri,
-                        state,
-                        client_id,
-                        response_type,
-                        scope
-                    })
-                    const expires_in = 60 * 5
-                    const id_token = jwt.sign(
-                        {
-                            sub,
-                            iss:'https://auth.tiger-crunch.com',
-                            aud: redirect_uri,
-                            auth_time: + new Date(),
-                            at_hash,
-                            nonce
-                        }, 
-                        { 
-                            expiresIn: expires_in
-                        }
-                    );
-                    const token_type="bearer"
-                    const response_url = `${redirect_uri}?id_token=${id_token}&access_token=${access_token}&token_type=${token_type}&state=${state}&expires_in=${expires_in}`
-                    return response_url
-                }
+                const implicitFlow = new ImplicitFlow(params)
+                await implicitFlow.verify()
+                await implicitFlow.generateAccessToken()
+                implicitFlow.generateIdToken()
+                implicitFlow.processResponse()
+                const response = implicitFlow.getResponse()
+                return response
             } catch (error) {
-                // console.log(
-                //     "GrantTypes.implicitFlow",
-                //     error
-                // )
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
@@ -112,7 +78,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
-        async function tokenGrant(params){
+        async function tokenGrant(params):Promise<object>{
             try {
                 const tokenFlow = new TokenGrant(params)
                 await tokenFlow.verify()
@@ -125,7 +91,7 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
                 throw error
             }
         }
-        async function refreshTokenGrant(params){
+        async function refreshTokenGrant(params):Promise<object>{
             try {
                 const refreshTokenFlow = new RefreshTokenGrant(params)
                 await refreshTokenFlow.verify()
@@ -226,6 +192,94 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             this.processResponse = function(){
                 const response = new GrantResponse({code:this.code,...this.params})
                 this.response = response.getAuthorizationCodeRedirectUri()
+                return this
+            }
+            this.getResponse = function (){
+                return this.response
+            }
+        }
+        function ImplicitFlow(params){
+            this.params = params
+            this.isValidClient=false
+            this.isValidResponseType=false
+            this.code=null
+            this.responseType=null
+            this.response=null
+            this.verify = async function(){
+                if(!this.isValidResponseType()){
+                    throw new ErrorWrapper(
+                        "invalid_request", 
+                        "invalid response type for implicit flow"
+                    )
+                }
+                const nonceIsAuthentic = await this.isAuthenticNonce() 
+                if(!nonceIsAuthentic){
+                    throw new ErrorWrapper(
+                        "nonce not unique",
+                        "GrantTypes.implicitFlow"
+                    )
+                }
+                try {
+                    await this.verifyClient()
+                    return this
+                } catch (error) {
+                    throw error
+                }
+            }
+            this.verifyClient = async function(){
+                const client = new ClientAuthenticity(this.params)
+                this.isValidClient = await client.verifyByDomain()
+                return this
+            }
+            this.isValidResponseType = function (){
+                const responseType = new ResponseType(this.params)
+                return this.isValidResponseType = responseType.isIdTokenToken()
+            }
+            this.isAuthenticNonce = async function(){
+                const isUnique = await nonceManager.isAuthenticNonce(this.params.nonce)
+                await nonceManager.persistNonce({
+                    nonce:this.params.nonce,
+                    sub:this.params.sub,
+                    redirect_uri:this.params.redirect_uri,
+                    state:this.params.state,
+                    client_id:this.params.client_id,
+                    response_type:this.params.response_type,
+                    scope:this.params.scope
+                })
+                return isUnique
+            }
+            this.generateAccessToken = async function(){
+                const {
+                    access_token, 
+                    at_hash
+                } = await generateAccessToken()
+                this.token = {
+                    access_token, 
+                    at_hash
+                }
+                return this
+            }
+            this.generateIdToken = function(){
+                const {at_hash} = this.token
+                const expiresIn = 60 * 5
+                const id_token = jwt.sign(
+                    {
+                        sub:this.params.sub,
+                        iss:'https://auth.tiger-crunch.com',
+                        aud: this.params.client_id,
+                        auth_time: + new Date(),
+                        at_hash,
+                    }, 
+                    { 
+                        expiresIn
+                    }
+                );
+                this.token = {id_token, ...this.token, expiresIn, token_type:"bearer"}
+                return this
+            }
+            this.processResponse = function(){
+                const response = new GrantResponse({token:this.token,...this.params})
+                this.response = response.getImplicitFLowRedirectUri()
                 return this
             }
             this.getResponse = function (){
@@ -439,9 +493,12 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
         function GrantResponse(params){
             const {redirect_uri, code, state,token} = params
             this.params = {redirect_uri, code, state, token}
-            this.token = {}
+            this.token = this.params.token
             this.getAuthorizationCodeRedirectUri = function(){
                 return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
+            }
+            this.getImplicitFLowRedirectUri = function (){
+                return `${redirect_uri}?id_token=${this.token.id_token}&access_token=${this.token.access_token}&token_type=${this.token.token_type}&state=${state}&expires_in=${this.token.expiresIn}`
             }
             this.setToken = function (){
                 const {
@@ -496,6 +553,9 @@ export default function ({clientUseCases, dataSource, util, nonceManager}){
             }
             this.isRefreshTokenGrant = function (){
                 return this.params.grant_type === "refresh_token"
+            }
+            this.isIdTokenToken = function (){
+                return this.params.response_type = "id_token token"
             }
         }
         function ClientAuthenticity(params){
