@@ -5,6 +5,7 @@ export default function makeRefreshTokenGrant({
     GrantResponse,
     util,
     jwt,
+    tokenCache,
     ErrorScope,
 }){
     return function RefreshTokenGrant(params){
@@ -111,6 +112,10 @@ export default function makeRefreshTokenGrant({
                 }
             );
             this.token = {id_token, ...this.token, expiresIn: 60 * 10}
+            return this
+        }
+        this.cacheToken = function(){
+            tokenCache.insert(this.token)
             return this
         }
         this.processResponse = function(){

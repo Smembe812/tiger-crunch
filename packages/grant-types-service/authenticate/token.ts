@@ -1,4 +1,4 @@
-export default function makeAuthorizationCodeFlow({
+export default function makeTokenGrant({
     ErrorWrapper,
     ClientAuthenticity,
     ResponseType,
@@ -6,7 +6,8 @@ export default function makeAuthorizationCodeFlow({
     jwt,
     dataSource,
     isCodeOwner,
-    util
+    util,
+    tokenCache
 }){
     return function TokenGrant(params){
         this.params = params
@@ -68,6 +69,17 @@ export default function makeAuthorizationCodeFlow({
                 refresh_token,
                 rt_hash
             }
+            return this
+        }
+        //maybe should fail silently?
+        this.cacheToken = function(){
+            const cachePayload = {
+                access_token: this.token.access_token,
+                expires_in: this.token.expiresIn,
+                id_token: this.token.id_token,
+                refresh_token: this.token.refresh_token
+            }
+            tokenCache.insert(cachePayload)
             return this
         }
         this.generateIdToken = function(){

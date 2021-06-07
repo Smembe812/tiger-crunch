@@ -1,10 +1,18 @@
-export default function makeGrantTypes({clientUseCases, dataSource, util, nonceManager, Authenticate}){
+export default function makeGrantTypes({
+    clientUseCases, 
+    dataSource, 
+    tokenCache, 
+    util, 
+    nonceManager, 
+    Authenticate
+}){
     const {
         makeAuthorizationCodeFlow,
         makeTokenGrant,
         makeImplicitFlow,
         makeHybridFlow,
-        makeRefreshTokenGrant
+        makeRefreshTokenGrant,
+        makeIntrospection
     } = Authenticate
     const ErrorWrapper = util.ErrorWrapper
     const ErrorScope="GrantTypes"
@@ -24,7 +32,8 @@ export default function makeGrantTypes({clientUseCases, dataSource, util, nonceM
             jwt,
             dataSource,
             isCodeOwner,
-            util
+            util,
+            tokenCache
         })
         const ImplicitFlow = makeImplicitFlow({
             ErrorWrapper,
@@ -52,6 +61,14 @@ export default function makeGrantTypes({clientUseCases, dataSource, util, nonceM
             GrantResponse,
             util,
             jwt,
+            ErrorScope,
+            tokenCache
+        })
+        const Introspection = makeIntrospection({
+            ErrorWrapper,
+            ClientAuthenticity,
+            jwt,
+            tokenCache,
             ErrorScope,
         })
         async function codeGrant(params){
@@ -106,6 +123,7 @@ export default function makeGrantTypes({clientUseCases, dataSource, util, nonceM
                 await tokenFlow.verify()
                 await tokenFlow.generateAccessToken()
                 tokenFlow.generateIdToken()
+                await tokenFlow.cacheToken()
                 tokenFlow.processResponse()
                 const response = tokenFlow.getResponse()
                 return response
@@ -119,10 +137,28 @@ export default function makeGrantTypes({clientUseCases, dataSource, util, nonceM
                 await refreshTokenFlow.verify()
                 await refreshTokenFlow.generateAccessToken()
                 refreshTokenFlow.generateIdToken()
+                refreshTokenFlow.cacheToken()
                 refreshTokenFlow.processResponse()
                 const response = refreshTokenFlow.getResponse()
                 return response
             } catch (error) {
+                throw error
+            }
+        }
+        async function introspection(params):Promise<object>{
+            let response;
+            try {
+                const introspect = new Introspection(params)
+                await introspect.verify()
+                introspect.decodeIdToken()
+                introspect.processResponse()
+                response = introspect.getResponse()
+                return response
+            } catch (error) {
+                if (error.message === "client does not own the id_token"){
+                    response = {active:false}
+                    return response
+                }
                 throw error
             }
         }
@@ -267,7 +303,8 @@ export default function makeGrantTypes({clientUseCases, dataSource, util, nonceM
             implicitFlow,
             tokenGrant,
             hybridFlow,
-            refreshTokenGrant
+            refreshTokenGrant,
+            introspection
         }
     }
 }

@@ -7,7 +7,7 @@ chai.use(chaiAsPromised);
 const fs = require("fs")
 const URL = require('url')
 import sinon from "sinon";
-import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, refreshTokenInput, userIdMock, validExpiredTokenPayload} from "../data/refresh-token";
+import { introspectionInput, expected_introspection_response, validIdTokenPayload, validExpiredIdTokenPayload, expected_introspection_expired_response, wrong_token_id_payload} from "../data/introspection";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 import DataSource from "../../datasource"
@@ -25,7 +25,7 @@ const jwt = new util.JWT({
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
     verifier:process.env.AUTH_PUB_KEY
 })
-describe("Refresh-grant",()=>{
+describe("Introspection",()=>{
     let dataSource, grantTypes, tokenCache, nonceManager;
     beforeEach(async () => {
         // not really using the database at all.
@@ -55,32 +55,33 @@ describe("Refresh-grant",()=>{
         await dataSource.close()
         await nonceManager.close()
     });
-    it("returns a token response", async () => {
-        sinon.stub(util, "verifyCode").resolves(true)
-        sinon.stub(util, "generateRandomCode")
-            .onFirstCall().resolves({code:refresh_token_mock, c_hash:null})
-            .onSecondCall().resolves({code:access_token_mock, c_hash:null})
-        sinon.stub(util, "generateAccessToken").resolves({access_token:access_token_mock, refresh_token: refresh_token_mock})
+    it("returns a token info", async () => {
         sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
-        sinon.stub(tokenCache, "insert").returns(true)
-        sinon.stub(jwt, "verify").returns(validExpiredTokenPayload)
-        sinon.stub(jwt, "sign").returns(id_token_mock)
-        sinon.stub(dataSource, "get").resolves(dataSourceRes)
-        const response = await grantTypes.refreshTokenGrant({...refreshTokenInput})
-        expect(response).to.be.eql(expected_token)
-   })
-   it('handles exception', async () => {
-    sinon.stub(util, "verifyCode").throwsException(new Error("Testing error"))
-    sinon.stub(util, "generateRandomCode")
-        .onFirstCall().throwsException(new Error("Testing error"))
-        .onSecondCall().throwsException(new Error("Testing error"))
-        sinon.stub(tokenCache, "insert").throwsException(new Error("Testing error"))
-    sinon.stub(Client.useCases, "verifyClientBySecret").throwsException(new Error("Testing error"))
-    sinon.stub(jwt, "verify").throwsException(new Error("Testing error"))
-    sinon.stub(jwt, "sign").throwsException(new Error("Testing error"))
-    sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
-    await expect(
-        grantTypes.refreshTokenGrant({...refreshTokenInput})
-    ).to.be.rejectedWith("Testing error")
-   })
+        sinon.stub(tokenCache, "get").returns(true)
+        sinon.stub(jwt, "verify").returns(validIdTokenPayload)
+        const response = await grantTypes.introspection({...introspectionInput})
+        expect(response).to.be.eql(expected_introspection_response)
+    })
+    it("returns active:false when token expired", async () => {
+        sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
+        sinon.stub(tokenCache, "get").returns(true)
+        sinon.stub(jwt, "verify").returns(validExpiredIdTokenPayload)
+        const response = await grantTypes.introspection({...introspectionInput})
+        expect(response).to.be.eql(expected_introspection_expired_response)
+    })
+    it("returns active:false when wrong token_id", async () => {
+        sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
+        sinon.stub(tokenCache, "get").returns(true)
+        sinon.stub(jwt, "verify").returns(wrong_token_id_payload)
+        const response = await grantTypes.introspection({...introspectionInput})
+        expect(response).to.be.eql(expected_introspection_expired_response)
+    })
+    it('handles exception', async () => {
+        sinon.stub(Client.useCases, "verifyClientBySecret").throwsException(new Error("Testing error"))
+        sinon.stub(tokenCache, "get").throwsException(new Error("Testing error"))
+        sinon.stub(jwt, "verify").throwsException(new Error("Testing error"))
+        await expect(
+            grantTypes.introspection({...introspectionInput})
+        ).to.be.rejectedWith("Testing error")
+    })
 })

@@ -17,7 +17,6 @@ export async function generateRandomCode():Promise<{code:string, c_hash:string}>
     }
 }
 export async function verifyCode(code, code_hash):Promise<boolean>{
-    console.log(code,code_hash)
     const c_hash_buff= Buffer.from(toBase64(code_hash))
     const code_buf= Buffer.from(toBase64(code))
     const leftMostOctets = code_buf.slice(0,(code_buf.length/2))
