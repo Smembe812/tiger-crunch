@@ -442,4 +442,60 @@ describe("UserRequests",()=>{
             })
         })
     })
+    describe("Introspection flow", () => {
+        describe("GET /auth/introspection", () => {
+            describe("valid client", () => {
+                const validClientCredentials = {
+                    client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+                    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
+                    access_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
+                    id_token:refreshIdToken
+                }
+                async function getToken(){
+                    const token = await request(app)
+                    .post(`/auth/token?grant_type=authorization_code&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`)
+                    return token.body
+                }
+                it("can get token info", async () => {
+                    const token = await getToken()
+                    const valid_client_query = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${token.access_token}&token_hint=access_token`
+                    request(app)
+                        .get(`/auth/introspection${valid_client_query}`)
+                        .end((error, response) => {
+                            const headers = response.header
+                            const responseBody = response.body
+                            const cacheControl = headers['cache-control']
+                            const pragma = headers['pragma']
+                            const contentLength = headers['content-length']
+                            expect(responseBody.aud).to.be.eql(validClientCredentials.client_id)
+                            expect(responseBody.token_type).to.be.eql("Bearer")
+                            expect(cacheControl).to.eql('no-store')
+                            expect(pragma).to.eql('no-cache')
+                            expect(contentLength).to.be.eql('238')
+                            expect(responseBody).to.be.an('object')
+                        })
+                })
+                it("invalid token returns active:false", () => {
+                    const invalid_request = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${validClientCredentials.client_secret}&token_hint=access_token`
+                    request(app)
+                        .get(`/auth/introspection${invalid_request}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.eql({active:false})
+                        })
+                })
+                it("invalid token_hint error", () => {
+                    const invalid_request = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${validClientCredentials.client_secret}&token_hint=invalid`
+                    request(app)
+                        .get(`/auth/introspection${invalid_request}`)
+                        .end((error, response) => {
+                            const responseBody = response.body
+                            expect(responseBody).to.be.an('object'),
+                            expect(responseBody).to.be.eql({ error: 'invalid token_hint' })
+                        })
+                })
+            })
+        })
+    })
 })
