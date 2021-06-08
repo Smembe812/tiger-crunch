@@ -21,7 +21,18 @@ const https = require('https');
 const fs = require("fs")
 const request = require('supertest')
 import GTS from "@smembe812/grant-types-service"
-import util from "@smembe812/util"
+
+const validClientCredentials = {
+    client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
+    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0="
+}
+async function getToken(){
+    const token = await request(app)
+    .post(`/auth/token?grant_type=authorization_code&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=&redirect_uri=https%3A%2F%2Ffindyourcat.com`)
+    .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
+    return token.body
+}
+
 describe("UserRequests",()=>{
     const server = https.createServer(options, app);
     const testPort="5500"
@@ -139,10 +150,11 @@ describe("UserRequests",()=>{
                     client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
                     client_secret:"lUpPp37TjOwzP4VnvIiedWTzqltqrsOdXk011UA15MI="
                 }
-                const valid_client_query = `?grant_type=authorization_code&code=${CODE}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const valid_client_query = `?grant_type=authorization_code&code=${CODE}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can redeem athorization code through token", () => {
                     request(app)
                         .post(`/auth/token${valid_client_query}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end(async (error, response) => {
                             const headers = response.header
                             const responseBody = response.body
@@ -162,6 +174,7 @@ describe("UserRequests",()=>{
                     const invalid_request = valid_client_query.replace("authorization_code", "unsupported_grant")
                     request(app)
                         .post(`/auth/token${invalid_request}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
@@ -174,10 +187,11 @@ describe("UserRequests",()=>{
                     client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
                     client_secret:"sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw="
                 }
-                const invalid_client_query = `?grant_type=authorization_code&code=${CODE}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const invalid_client_query = `?grant_type=authorization_code&code=${CODE}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can get invalid client credentials error", () => {
                     request(app)
                         .post(`/auth/token${invalid_client_query}`)
+                        .auth(invalidClientCredentials.client_id, invalidClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
@@ -190,7 +204,7 @@ describe("UserRequests",()=>{
                     client_id:"",
                     client_secret:""
                 }
-                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`
+                const invalid_client_query = `?grant_type=authorization_code&code=e015310f01eafc0eb3fd&redirect_uri=https%3A%2F%2Ffindyourcat.com`
                 it("can get invalid client credentials error", () => {
                     request(app)
                         .post(`/auth/token${invalid_client_query}`)
@@ -205,17 +219,19 @@ describe("UserRequests",()=>{
     })
     describe("REFRESH-TOKEN flow", () => {
         describe("POST /auth/refresh-token", () => {
-            describe("valid client", () => {
+            describe("valid client", async () => {
                 const validClientCredentials = {
                     client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
                     client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
                     refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
                     id_token:refreshIdToken
                 }
-                const valid_client_query = `?grant_type=refresh_token&id_token=${validClientCredentials.id_token}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
+                const token = await getToken()
+                const valid_client_query = `?grant_type=refresh_token&refresh_token=${token.refresh_token}&scope=openid%20profile`
                 it("can refresh token", () => {
                     request(app)
                         .post(`/auth/refresh-token${valid_client_query}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const headers = response.header
                             const responseBody = response.body
@@ -235,6 +251,7 @@ describe("UserRequests",()=>{
                     const invalid_request = valid_client_query.replace("refresh_token", "unsupported_grant")
                     request(app)
                         .post(`/auth/refresh-token${invalid_request}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
@@ -242,17 +259,19 @@ describe("UserRequests",()=>{
                         })
                 })
             })
-            describe("invalid client", () => {
+            describe("invalid client", async () => {
                 const invalidClientCredentials = {
                     client_id:"a06293a0-e307-45b2-91b8-7be165f010b7",
                     client_secret:"sVAk6XJOfjvOPq45gh6r-errrtJIVegjo1h1JUUSHGw=",
                     refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
                     id_token:refreshIdToken
                 }
-                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
-                it("can get invalid client credentials error",  () => {
+                const token = await getToken()
+                const invalid_client_query = `?grant_type=refresh_token&refresh_token=${token.refresh_token}&scope=openid%20profile`
+                it("gets invalid client credentials error",  () => {
                     request(app)
                         .post(`/auth/refresh-token${invalid_client_query}`)
+                        .auth(invalidClientCredentials.client_id, invalidClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
@@ -260,14 +279,15 @@ describe("UserRequests",()=>{
                         })
                 })
             })
-            describe("no client credentals provided", () => {
+            describe("no client credentals provided", async () => {
                 const invalidClientCredentials = {
                     client_id:"",
                     client_secret:"",
                     refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
                     id_token:refreshIdToken
                 }
-                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
+                const token = await getToken()
+                const invalid_client_query = `?grant_type=refresh_token&refresh_token=${token.refresh_token}&scope=openid%20profile`
                 it("can get invalid client credentials error", () => {
                     request(app)
                         .post(`/auth/refresh-token${invalid_client_query}`)
@@ -285,13 +305,14 @@ describe("UserRequests",()=>{
                     refresh_token:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=",
                     id_token:refreshIdToken
                 }
-                const invalid_client_query = `?grant_type=refresh_token&id_token=${invalidClientCredentials.id_token}&client_id=${invalidClientCredentials.client_id}&client_secret=${invalidClientCredentials.client_secret}&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
+                const invalid_client_query = `?grant_type=refresh_token&refresh_token=${invalidClientCredentials.refresh_token}&scope=openid%20profile`
                 it("can get invalid refresh token error",function() {
                     request(app)
                         .post(`/auth/refresh-token${invalid_client_query}`)
+                        .auth(invalidClientCredentials.client_id, invalidClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
-                            expect(responseBody).to.be.eql({ error: 'invalid refresh_token provided' })
+                            expect(responseBody).to.be.eql({ error: 'invalid_request' })
                             expect(responseBody).to.be.an('object')
                         })
                 })
@@ -302,14 +323,15 @@ describe("UserRequests",()=>{
                         refresh_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
                         id_token:"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJlYzZhZDRmNy1kOWYyLTRkYmUtYjQzZi0zNzEzZjcyMjdkNzgiLCJpc3MiOiJodHRwczovL2F1dGgudGlnZXItY3J1bmNoLmNvbSIsImF1ZCI6ImEwNjI5M2EwLWUzMDctNDViMi05MWI4LTdiZTE2NWYwMTBiNyIsImF1dGhfdGltZSI6MTYyMjY1NzEwNDcyNCwiYXRfaGFzaCI6Im9VM1IyOVo3bkNBdzZvUHlUbXBCNkRBdUVOc05ZeUZnNmZNNnNqTDljZWM9IiwicnRfaGFzaCI6ImQ1T3RiYXBaZVROWnh5aWU1aUpsQ1k5OTRwR1U2bENJNDNibERzQ1hhMlE9IiwiaWF0IjoxNjIyNzA1MjM5LCJleHAiOjE2MjI3MDU4Mzl9.Y06esG-2u2Bld64yOCpb81G7bwaB_NDK3PgBLSYF8woOXHbjEl48Uh7dc8U1ipiKmRlcRSoAPtzzyaH7n718HzM7rtc7VrzmfUORCJB8NxmHOtgJVcpCH5zefu2MXTSIYY5D1LIETnPNdL7xhW0kLJCR4U-W0xPq-WwMSuOcGIXUb7o6O6QMusClVUMcSvrSgpstz6IG4G2thPon3Xhxo86k2qV2AxvVX66lqZcohR72ewoGEYXwewU7IoYoejAJk-L7xbpu34OyMvFrTQWnAapGjDWC1gzmHZHWxDEeWfrQbZ-XvtPb3vmhBJexNY8TOHY13lZiJy5KgfcBsPeHoA"
                     }
-                    const valid_client_query = `?grant_type=refresh_token&id_token=${validClientCredentials.id_token}&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
+                    const valid_client_query = `?grant_type=refresh_token&refresh_token=${validClientCredentials.refresh_token}&scope=openid%20profile`
                     it("returns token error", () => {
                         request(app)
                             .post(`/auth/refresh-token${valid_client_query}`)
+                            .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                             .end((error, response) => {
                                 const responseBody = response.body
                                 expect(responseBody).to.be.an('object'),
-                                expect(responseBody.error).to.eql("invalid refresh_token provided")
+                                expect(responseBody.error).to.eql("invalid_request")
                             })
                     })
                 })
@@ -451,16 +473,12 @@ describe("UserRequests",()=>{
                     access_token:"4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA=",
                     id_token:refreshIdToken
                 }
-                async function getToken(){
-                    const token = await request(app)
-                    .post(`/auth/token?grant_type=authorization_code&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&redirect_uri=https%3A%2F%2Ffindyourcat.com`)
-                    return token.body
-                }
                 it("can get token info", async () => {
                     const token = await getToken()
-                    const valid_client_query = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${token.access_token}&token_hint=access_token`
+                    const valid_client_query = `?token=${token.access_token}&token_hint=access_token`
                     request(app)
-                        .get(`/auth/introspection${valid_client_query}`)
+                        .post(`/auth/introspection${valid_client_query}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const headers = response.header
                             const responseBody = response.body
@@ -476,9 +494,10 @@ describe("UserRequests",()=>{
                         })
                 })
                 it("invalid token returns active:false", () => {
-                    const invalid_request = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${validClientCredentials.client_secret}&token_hint=access_token`
+                    const invalid_request = `?token=${validClientCredentials.client_secret}&token_hint=access_token`
                     request(app)
-                        .get(`/auth/introspection${invalid_request}`)
+                        .post(`/auth/introspection${invalid_request}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),
@@ -486,9 +505,10 @@ describe("UserRequests",()=>{
                         })
                 })
                 it("invalid token_hint error", () => {
-                    const invalid_request = `?&client_id=${validClientCredentials.client_id}&client_secret=${validClientCredentials.client_secret}&token=${validClientCredentials.client_secret}&token_hint=invalid`
+                    const invalid_request = `?token=${validClientCredentials.access_token}&token_hint=invalid`
                     request(app)
-                        .get(`/auth/introspection${invalid_request}`)
+                        .post(`/auth/introspection${invalid_request}`)
+                        .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
                             const responseBody = response.body
                             expect(responseBody).to.be.an('object'),

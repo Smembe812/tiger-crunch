@@ -17,29 +17,29 @@ export default function makeRefreshTokenGrant({
         this.verify = async function(){
             if(!this.isValidResponseType()){
                 throw new ErrorWrapper(
-                    "invalid grant type", 
-                    "invalid response type for token grant"
+                    "invalid_request", 
+                    "GrantTypes.refreshTokenGrant.verify: wrong grant type provided"
                 )
             }
             if(!this.isValidExpiredIdToken()){
                 throw new ErrorWrapper(
-                    "invalid id_token provided",
-                    "GrantTypes.refreshTokenGrant"
+                    "invalid_request",
+                    "GrantTypes.refreshTokenGrant.verify: invalid id_token"
                 )
             }
             const isValidRefreshToken = await this.isValidRefreshToken()
             if(!isValidRefreshToken){
                 throw new ErrorWrapper(
-                    "invalid refresh_token provided",
-                    "GrantTypes.refreshTokenGrant"
+                    "invalid request",
+                    "GrantTypes.refreshTokenGrant: invalid refresh_token provided"
                 )
             }
             try {
                 await this.verifyClient()
                 if(!this.clientOwnsIdToken()){
                     throw new ErrorWrapper(
-                        "client does not own the id_token",
-                        `${ErrorScope}.refreshTokenGrant`
+                        "invalid_request",
+                        `${ErrorScope}.refreshTokenGrant: client ${this.params.client_id} does not own id_token and refresh_token`
                     )
                 }
                 return this
@@ -59,7 +59,7 @@ export default function makeRefreshTokenGrant({
         this.isValidExpiredIdToken = function(){
             try {
                 const validExpiredToken = jwt.verify({
-                    token:this.params.id_token,
+                    token:this.token.id_token,
                     options:{ ignoreExpiration: true}
                 })
                 if(validExpiredToken){
@@ -78,6 +78,19 @@ export default function makeRefreshTokenGrant({
         this.clientOwnsIdToken = function(){
             return this.params.client_id === this.validExpiredToken.aud
         }
+        this.getTokenInfo = function (){
+            const token = tokenCache.get(this.params.refresh_token)
+            if(!token){
+                throw new ErrorWrapper(
+                    "invalid_request",
+                    `${ErrorScope}.getTokenInfo: could not find refresh token information for ${this.params.refresh_token}`
+                )
+            }
+            this.token = {
+                id_token: token.id_token
+            }
+            return this
+        }
         this.generateAccessToken = async function(){
             const {
                 access_token, 
@@ -86,6 +99,7 @@ export default function makeRefreshTokenGrant({
                 rt_hash
             } = await util.generateAccessToken({withRefreshToken:true})
             this.token = {
+                ...this.token,
                 access_token, 
                 at_hash,
                 refresh_token,
@@ -111,7 +125,7 @@ export default function makeRefreshTokenGrant({
                     expiresIn: 60 * 10 
                 }
             );
-            this.token = {id_token, ...this.token, expiresIn: 60 * 10}
+            this.token = {...this.token, id_token, expiresIn: 60 * 10}
             return this
         }
         this.cacheToken = function(){

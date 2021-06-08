@@ -134,6 +134,7 @@ export default function makeGrantTypes({
         async function refreshTokenGrant(params):Promise<object>{
             try {
                 const refreshTokenFlow = new RefreshTokenGrant(params)
+                refreshTokenFlow.getTokenInfo()
                 await refreshTokenFlow.verify()
                 await refreshTokenFlow.generateAccessToken()
                 refreshTokenFlow.generateIdToken()

@@ -25,7 +25,7 @@ import cors from 'cors'
 import bodyParser from 'body-parser'
 import * as crypto from 'crypto';
 import logger from "./logger"
-
+import basicAuth from "basic-auth"
 import User from '@smembe812/user-service'
 import Client from "@smembe812/clients-service"
 import makeGrantTypes from "@smembe812/grant-types-service/"
@@ -49,6 +49,18 @@ app.use(async (req, res, next) =>{
     Object.assign(req, {browserHash: hash})
     next()
 })
+app.use(authenticateClient)
+
+function authenticateClient(req, res, next){
+    const headers = req.headers
+    const authorization = headers["authorization"]
+    const isBasic = authorization?.includes('Basic') || false
+    if(authorization && isBasic){
+        const {pass:client_secret, name:client_id} = basicAuth(req)
+        req.client = {client_id, client_secret}
+    }
+    next()
+}
 
 app.get('/', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
@@ -181,7 +193,7 @@ app.get('/auth/code', async(req, res, next) => {
     const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
     return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
-app.post('/auth/token/', async(req, res, next) => {
+app.post('/auth/token/', async(req:any, res, next) => {
     // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
     // Ensure the Authorization Code was issued to the authenticated Client.
     // Verify that the Authorization Code is valid.
@@ -189,7 +201,8 @@ app.post('/auth/token/', async(req, res, next) => {
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
     try {
-        const {grant_type,code,redirect_uri, client_id, client_secret} = req.query
+        const {client_id, client_secret} = req.client
+        const {grant_type,code,redirect_uri} = req.query
         const token = await grantTypes.tokenGrant({grant_type,code,redirect_uri, client_id, client_secret})
         res.set({'Cache-Control':'no-store'})
         res.set({'Pragma': 'no-cache'})
@@ -291,17 +304,18 @@ app.get('/auth/hybrid/', async(req, res, next) => {
     const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
     return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
-app.post('/auth/refresh-token/', async(req, res, next) => {
+app.post('/auth/refresh-token/', async(req:any, res, next) => {
     // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
     // Ensure the Authorization Code was issued to the authenticated Client.
     // Verify that the Authorization Code is valid.
     // If possible, verify that the Authorization Code has not been previously used.
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
-    const {grant_type,client_id,client_secret,refresh_token,scope, id_token} = req.query
+    const {client_id,client_secret} = req?.client
+    const {grant_type,refresh_token,scope, id_token} = req.query
     try {
         const token = await grantTypes.refreshTokenGrant({
-            grant_type,client_id,client_secret,refresh_token,scope, id_token
+            grant_type,client_id,client_secret,refresh_token,scope
         })
         res.set({'Cache-Control':'no-store'})
         res.set({'Pragma': 'no-cache'})
@@ -311,14 +325,15 @@ app.post('/auth/refresh-token/', async(req, res, next) => {
         return res.json({error: error.message})
         }
 })
-app.get('/auth/introspection/', async(req, res, next) => {
+app.post('/auth/introspection/', async(req:any, res, next) => {
+    const {client_id,client_secret} = req?.client
     // Authenticate the Client if it was issued Client Credentials or if it uses another Client Authentication method, per Section 9.
     // Ensure the Authorization Code was issued to the authenticated Client.
     // Verify that the Authorization Code is valid.
     // If possible, verify that the Authorization Code has not been previously used.
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
-    const {client_id,client_secret,token,token_hint} = req.query
+    const {token,token_hint} = req.query
     try {
         const response = await grantTypes.introspection({
             client_id,client_secret,token,token_hint
