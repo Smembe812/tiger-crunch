@@ -31,9 +31,9 @@ describe("UserRequests",()=>{
                         proposedPIN:"1234"
                     })
                     .end((error, response) => {
-                        const {uuid, ...actual} = response.body
+                        const {id, ...actual} = response.body
                         expect(response.statusCode).to.be.eql(201) 
-                        expect(uuid).to.be.a.string
+                        expect(id).to.be.a.string
                         expect(actual).to.eql({
                             name:"Paul Sembereka", 
                             email:"paulsembereka@zohomail.eu",

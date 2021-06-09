@@ -71,12 +71,12 @@ describe('UserEntity', function() {
             ).to.be.rejectedWith("invalid phone number")
         });
     })
-    describe("#uuid", () => {
+    describe("#id", () => {
         it('should fail if not provided', async () => {
             await expect(
                 user({
                     ...userMock,
-                    uuid:null
+                    id:null
                 })
             ).to.be.rejectedWith("uuid not provided")
         });
@@ -84,7 +84,7 @@ describe('UserEntity', function() {
             await expect(
                 user({
                     ...userMock,
-                    uuid:"4a70e47e-ac0c-11eb-8529-0242ac130003"
+                    id:"4a70e47e-ac0c-11eb-8529-0242ac130003"
                 })
             ).to.be.rejectedWith("invalid uuid")
         });

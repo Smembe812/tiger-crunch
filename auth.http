@@ -14,6 +14,7 @@ content-type: application/json
     }
 }
 
+
 ### Register
 POST https://tiger-crunch.com:4433/users HTTP/1.1
 content-type: application/json
@@ -106,3 +107,7 @@ POST https://tiger-crunch.com:4433/auth/introspection
 ?token=IwdSIOeV6L8uRmaeeYYI9mtEmWlpUdmPypsnv-psmaw=
 &token_hint=access_token HTTP/1.1
 Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
+
+### userinfo
+GET https://tiger-crunch.com:4433/userinfo HTTP/1.1
+Authorization: Bearer wSThUv-eSR1UPzJ-YCJgnAecpAFIFGkMwL99uY5JS60=access_token

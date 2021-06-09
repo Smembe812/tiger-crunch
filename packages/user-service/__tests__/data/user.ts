@@ -2,7 +2,7 @@ export const user = {
     name:"paul sembereka", 
     email:"email@fake.com",
     phone:"12345678",
-    uuid:"cb568fff-c8c6-4548-9d04-586a5780c46a",
+    id:"cb568fff-c8c6-4548-9d04-586a5780c46a",
     proposedPIN:"1234"
 }
 export const {proposedPIN, ...userWithoutPPIN} = user

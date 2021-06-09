@@ -50,6 +50,7 @@ app.use(async (req, res, next) =>{
     next()
 })
 app.use(authenticateClient)
+app.use(bearerAuth)
 
 function authenticateClient(req, res, next){
     const headers = req.headers
@@ -94,7 +95,7 @@ app.post('/auth', async(req, res, next) => {
             const user = await userUseCases.getUser(claims)
             id_token_params.user = user
             const id_token = jwt.sign({
-                sub: user.uuid,
+                sub: user.id,
                 aud: !id_token_params.client ? "tiger-crunch.com": id_token_params.client.domain,
                 iss:'https://auth.tiger-crunch.com',
                 uaid,
@@ -102,7 +103,7 @@ app.post('/auth', async(req, res, next) => {
             },
             {expiresIn:60*60})
             res.set({'Cache-Control':'no-store'})
-            res.cookie('access_token',  id_token, {
+            res.cookie('id_token',  id_token, {
                 expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
                 secure: true,
                 httpOnly: true,
@@ -112,7 +113,7 @@ app.post('/auth', async(req, res, next) => {
             if (cb_params){
                 return res.redirect(`/auth/code?${cb_params.raw_query}`)
             }
-            return res.json({access_token: id_token})
+            return res.json({id_token})
         }
     } catch (error) {
         console.log(error)
@@ -160,11 +161,11 @@ app.get('/auth/code', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {response_type,scope,client_id,state,redirect_uri} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const access_token = req.signedCookies['access_token']
+    const id_token = req.signedCookies['id_token']
     const {isAuthoritative, browser } = req["useragent"]
-    if(access_token){
+    if(id_token){
         try {
-            const { sub } = jwt.verify({token:access_token})
+            const { sub } = jwt.verify({token:id_token})
             if (!sub){
                 const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
@@ -222,11 +223,11 @@ app.get('/auth/implicit/', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const access_token = req.signedCookies['access_token']
+    const id_token = req.signedCookies['id_token']
     const {isAuthoritative, browser } = req["useragent"]
-    if(access_token){
+    if(id_token){
         try {
-            const { sub } = jwt.verify({token:access_token})
+            const { sub } = jwt.verify({token:id_token})
             if (!sub){
                 const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
@@ -268,11 +269,11 @@ app.get('/auth/hybrid/', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const access_token = req.signedCookies['access_token']
+    const id_token = req.signedCookies['id_token']
     const {isAuthoritative, browser } = req["useragent"]
-    if(access_token){
+    if(id_token){
         try {
-            const { sub } = jwt.verify({token:access_token})
+            const { sub } = jwt.verify({token:id_token})
             if (!sub){
                 const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
@@ -357,13 +358,30 @@ app.get('/clients/verify', async (req, res) => {
     const resp = await clientUseCases.getClient({id:client_id})
     return res.json({...resp})
 })
+app.get('/userinfo', async (req:any, res) => {
+    console.log(req.client.access_token)
+    const id_token = req.signedCookies['id_token']
+    const { sub } = jwt.verify({token:id_token})
+    const userInfo = await userUseCases.getUser({id:sub, email:null})
+    return res.json(userInfo)
+})
+function bearerAuth(req, res, next){
+    const headers = req.headers
+    const authorization = headers["authorization"]
+    const isBearer = authorization?.includes('Bearer') || false
+    if(authorization && isBearer){
+        const access_token = authorization.split("Bearer ")[1]
+        req.client = {access_token}
+    }
+    next()
+}
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash
-    const access_token = req.signedCookies['access_token']
-    if(!access_token){
-        return (!!access_token)
+    const id_token = req.signedCookies['id_token']
+    if(!id_token){
+        return (!!id_token)
     }
-    const {uaid: browserHash} = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
+    const {uaid: browserHash} = jwt.verify({token:id_token, key:AUTH_PUB_KEY})
     return (browserHash === incomingBrowserHash)
 }
 function browserHash(req) : Promise<{

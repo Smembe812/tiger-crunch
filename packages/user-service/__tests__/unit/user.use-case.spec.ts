@@ -171,7 +171,7 @@ describe('UserUseCases', function() {
                     ...userWithout2fa
                 })
                 const user = await userUseCase.getUser(userEntityOutPut)
-                expect(user).to.be.eql(userWithout2fa)
+                expect(user).to.be.eql(userEntityOutPut)
         })
         it("can fail to get user by email", async () => {
             const {proposedPIN, ...userEntityOutPut} = userMock

@@ -13,7 +13,7 @@ interface PIN{
 interface User {
     email: string
     name: string
-    uuid: string
+    id: string
     phone: string
     DoB?:string
     gender?:string
@@ -28,6 +28,6 @@ interface UserProfile{
 interface UserEntityInput extends Omit<User, "twoFactor"|"pin"> {
     proposedPIN:string
 }
-type UserInput = Omit<UserEntityInput, 'uuid' >
+type UserInput = Omit<UserEntityInput, 'id' >
 
 type UserResponse = Omit<UserEntityInput, 'proposedPIN' >

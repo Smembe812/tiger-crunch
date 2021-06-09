@@ -19,8 +19,8 @@ export default function ({
     async function createNewUser(userFields: UserInput) : Promise<UserResponse>{
         let userResponse;
         try {
-            const uuid = await util.uuidV4()
-            const newUser = await userEntity.create({...userFields, uuid})
+            const id = await util.uuidV4()
+            const newUser = await userEntity.create({...userFields, id})
             const {pin, ...user} = await dataSource.insert(newUser)
             userResponse = user
         } catch (error) {
@@ -95,9 +95,17 @@ export default function ({
             throw error
         }
     }
-    async function getUser({email}){
+    async function getUser({email, id}){
         try {
-            return await dataSource.get(email)
+            let user;
+            if(!email){
+                const {pin, ...person} = await dataSource.getById(id)
+                user = person
+            }else{
+                const {pin, ...person} = await dataSource.get(email)
+                user = person
+            }
+            return user
         } catch (error) {
             throw error
         }
