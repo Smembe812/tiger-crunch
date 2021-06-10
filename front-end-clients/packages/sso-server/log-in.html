@@ -1,0 +1,109 @@
+<form class="login-form">
+    <div>
+        <label for="email">Email</label>
+        <input type="text" name="email" id="email_input">
+    </div>
+    <div>
+        <label for="pin">PIN</label>
+        <input type="password" name="pin" id="pin_input">
+    </div>
+    <div>
+        <label for="otp">OTP</label>
+        <input type="text" name="otp" id="otp_input">
+    </div>
+    <button id="on_login">Log In</button>
+    <span id="error"></span>
+</form>
+<script>
+    (function (){
+        const crypto = window.crypto ||  window.msCrypto;
+
+        const queryString = window.location.search;
+        const urlParams = new URLSearchParams(queryString);
+        const cb_token = urlParams.get('cb')
+        on_login.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const error_span = document.querySelector("#error")
+            const email = document.querySelector("#email_input").value
+            const pin = document.querySelector("#pin_input").value
+            const otp = document.querySelector("#otp_input").value
+            const payload = {
+                claims:{
+                    email,
+                    otp,
+                    proposedPIN: pin}
+            }
+            try {
+                const response = await authenticateUser(
+                    `https://tiger-crunch.com:4433/auth?cb_token=${cb_token}`,
+                    payload)
+                if(response?.message){
+                    error_span.innerHTML = response.message
+                }
+                if(response?.redirectUri){
+                    window.location.replace(response.redirectUri)
+                }
+                console.log(response)
+            } catch (error) {
+                error_span.innerHTML = error.message
+            }
+        })
+        window.onerror = function(message, source, lineno, colno, error) { 
+            console.log(message, source, lineno, colno, error)
+        };
+        window.addEventListener("message", receiveMessage, false);
+
+        function receiveMessage(e){ // e.data has client_id and session_state
+            console.log(e)
+            const client_id = e.data.split(' ')[0];
+            const session_state = e.data.split(' ')[1];
+            const salt = session_state.split('.')[1];
+
+            // if message is syntactically invalid
+            //     postMessage('error', e.origin) and return
+
+            // if message comes an unexpected origin
+            //     postMessage('error', e.origin) and return
+
+            // get_op_user_agent_state() is an OP defined function
+            // that returns the User Agent's login status at the OP.
+            // How it is done is entirely up to the OP.
+            //var opuas = get_op_user_agent_state();
+
+            // Here, the session_state is calculated in this particular way,
+            // but it is entirely up to the OP how to do it under the
+            // requirements defined in this specification.
+            //var ss = crypto.SHA256(client_id + ' ' + e.origin + ' ' + opuas + ' ' + salt) + "." + salt;
+
+            var stat = '';
+            if (session_state) {
+            stat = 'unchanged';
+            } else {
+            stat = 'changed';
+            }
+
+            e.source.postMessage(stat, e.origin);
+        };
+    })()
+
+    async function authenticateUser(url, payload){
+        try {
+            const response = await fetch(url,
+                {
+                    method:"POST",
+                    body: JSON.stringify(payload),
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Auth-Client': 'true'
+                    },
+                    mode: 'cors',
+                    redirect: 'follow',
+                    credentials: 'include'
+                })
+            return response.json()
+        } catch (error) {
+            console.error(error)
+            throw error
+        }
+    }
+</script>

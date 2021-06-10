@@ -1,0 +1,13 @@
+{ 
+  "extends":"../../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "lib",
+  },
+  "include": ["**/*", "**/*.d.ts", "global.d.ts", "/*", "../grant-types"],
+  "ts-node": {
+    "files":true
+  },
+  "references": [
+    { "path": "../../packages/user-service/tsconfig.json" }
+  ]
+}
