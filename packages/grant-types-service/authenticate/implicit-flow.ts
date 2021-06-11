@@ -42,7 +42,7 @@ export default function makeImplicitFlow({
         }
         this.isValidResponseType = function (){
             const responseType = new ResponseType(this.params)
-            return this.isValidResponseType = responseType.isIdTokenToken()
+            return this.isValidResponseType = responseType.isImplicit()
         }
         this.isAuthenticNonce = async function(){
             const isUnique = await nonceManager.isAuthenticNonce(this.params.nonce)

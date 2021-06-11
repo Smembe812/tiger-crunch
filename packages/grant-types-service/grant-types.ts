@@ -114,6 +114,7 @@ export default function makeGrantTypes({
                 const response = hybridFlow.getResponse()
                 return response
             } catch (error) {
+                console.log(error)
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
@@ -196,18 +197,60 @@ export default function makeGrantTypes({
             }
         }
         function GrantResponse(params){
-            const {redirect_uri, code, state,token} = params
-            this.params = {redirect_uri, code, state, token}
+            const {redirect_uri, code, state,token, response_type} = params
+            this.params = {redirect_uri, code, state, token, response_type}
             this.token = this.params.token
             this.code = this.params.code
             this.getAuthorizationCodeRedirectUri = function(){
-                return `${this.params.redirect_uri}?code=${this.params.code}&state=${this.params.state}`
+                const REPLACE = 'REPLACE'
+                const baseUri = `${redirect_uri}REPLACE&state=${state}`
+                let redirectUri;
+                switch(this.params.response_type){
+                    case "code":
+                        redirectUri = baseUri.replace(REPLACE, `?code=${this.params.code}`)
+                        break;
+                    default:
+                        redirectUri = baseUri.replace(REPLACE,`?error=invalid_request&error_description=invalid_response_type`)
+                        break;
+                }
+                return redirectUri
             }
             this.getImplicitFLowRedirectUri = function (){
-                return `${redirect_uri}?id_token=${this.token.id_token}&access_token=${this.token.access_token}&token_type=${this.token.token_type}&state=${state}&expires_in=${this.token.expiresIn}`
+                const REPLACE = 'REPLACE'
+                const baseUri = `${redirect_uri}REPLACE&state=${state}`
+                let redirectUri;
+                switch(this.params.response_type){
+                    case "id_token":
+                        redirectUri = baseUri.replace(REPLACE, `?id_token=${this.token.id_token}`)
+                        break;
+                    case "id_token token":
+                        redirectUri = baseUri.replace(REPLACE, `?id_token=${this.token.id_token}&access_token=${this.token.access_token}&token_type=${this.token.token_type}&expires_in=${this.token.expiresIn}`)
+                        break;
+                    default:
+                        redirectUri = baseUri.replace(REPLACE,`?error=invalid_request&error_description=invalid_response_type`)
+                        break;
+                }
+                return redirectUri
             }
             this.getHybridFlowRedirectUri = function (){
-                return `${redirect_uri}?id_token=${this.token.id_token}&code=${this.code}&state=${this.params.state}`
+                const REPLACE = 'REPLACE'
+                const baseUri = `${redirect_uri}${REPLACE}&state=${state}`
+                let redirectUri;
+                switch(this.params.response_type){
+                    case "code id_token":
+                        redirectUri = baseUri.replace(REPLACE, `?id_token=${this.token.id_token}&code=${this.code}`)
+                        break;
+                    case "code token":
+                        redirectUri = baseUri.replace(REPLACE, `?access_token=${this.token.access_token}&token_type=${this.token.token_type}&expires_in=${this.token.expiresIn}&code=${this.code}`)
+                        break;
+                    case "code id_token token":
+                        redirectUri = baseUri.replace(REPLACE, `?id_token=${this.token.id_token}&access_token=${this.token.access_token}&token_type=${this.token.token_type}&expires_in=${this.token.expiresIn}&code=${this.code}`)
+                        break;
+                    default:
+                        redirectUri = baseUri.replace(REPLACE,`?error=invalid_request&error_description=invalid_response_type`)
+                        break;
+                }
+                return redirectUri
             }
             this.setToken = function (){
                 const {
@@ -233,7 +276,6 @@ export default function makeGrantTypes({
                 this.setToken()
                 return this.token
             }
-            
         }
         function AuthorizationCode(params){
             const {client_id,sub} = params
@@ -253,10 +295,13 @@ export default function makeGrantTypes({
             }
         }
         function ResponseType(params){
+            const CODE_FLOW = ["code"]
+            const IMPLICIT_FLOW = ['id_token', 'token']
+            const HYBRID_FLOW = ['code', 'id_token', 'token']
             const {response_type, grant_type} = params
             this.params = {response_type, grant_type}
             this.isAthorizationCode = function(){
-                return this.params.response_type === "code"
+                return (this.params.response_type === CODE_FLOW[0])
             }
             this.isTokenGrant = function (){
                 return this.params.grant_type === "authorization_code"
@@ -264,11 +309,20 @@ export default function makeGrantTypes({
             this.isRefreshTokenGrant = function (){
                 return this.params.grant_type === "refresh_token"
             }
-            this.isIdTokenToken = function (){
-                return this.params.response_type = "id_token token"
+            this.isImplicit = function (){
+                const response_type = this.params.response_type
+                return (
+                    response_type === `${IMPLICIT_FLOW[0]}`
+                    || response_type === `${IMPLICIT_FLOW[0]} ${IMPLICIT_FLOW[1]}`
+                )
             }
-            this.isCodeIdToken = function (){
-                return this.params.response_type = "code id_token"
+            this.isHybrid = function (){
+                const response_type = this.params.response_type
+                return (
+                    response_type === `${HYBRID_FLOW[0]} ${HYBRID_FLOW[1]}`
+                    || response_type === `${HYBRID_FLOW[0]} ${HYBRID_FLOW[2]}`
+                    || response_type === `${HYBRID_FLOW[0]} ${HYBRID_FLOW[1]} ${HYBRID_FLOW[2]}`
+                )
             }
         }
         function ClientAuthenticity(params){

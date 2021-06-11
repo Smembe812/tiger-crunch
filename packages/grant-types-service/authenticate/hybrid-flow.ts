@@ -43,7 +43,9 @@ export default function makeHybridFlow({
         }
         this.isValidResponseType = function (){
             const responseType = new ResponseType(this.params)
-            return this.isValidResponseType = responseType.isCodeIdToken()
+            this.response_type = this.params.response_type
+            console.log(responseType)
+            return this.isValidResponseType = responseType.isHybrid()
         }
         this.isAuthenticNonce = async function(){
             const isUnique = await nonceManager.isAuthenticNonce(this.params.nonce)

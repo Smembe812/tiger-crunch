@@ -5,17 +5,17 @@ const chaiAsPromised = require("chai-as-promised");
 const expect = chai.expect;
 chai.use(chaiAsPromised);
 import app, {options} from "../../index"
-import { 
-    impRedirectErrorMock, 
-    impRedirectErrorText, 
-    impRedirectUriMock, 
-    impRedirectURITextMock, 
-    locationMock, 
-    redirectionTextMock, 
-    redirectUriMock, 
-    redirectURITextMock, 
-    refreshIdToken, 
-    signedCookieMock 
+import {
+    impRedirectErrorMock,
+    impRedirectErrorText,
+    impRedirectUriMock,
+    impRedirectURITextMock,
+    locationMock,
+    redirectionTextMock,
+    redirectUriMock,
+    redirectURITextMock,
+    refreshIdToken,
+    signedCookieMock
 } from "../data/openid";
 const https = require('https');
 const fs = require("fs")
@@ -410,7 +410,7 @@ describe("UserRequests",()=>{
                     let nonce = crypto.randomBytes(16)
                         .toString('base64')
                         .split('+').join("-").split('/').join("_")
-                    valid_client_query = `?response_type=id_token%20token&scope=openid%20profile%20email&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c&state=af0ifjsldkj&redirect_uri=https%3A%2F%2Ffindyourcat.com&nonce=${nonce}`
+                    valid_client_query = `?response_type=code id_token&scope=openid%20profile%20email&client_id=8b3692a8-4108-40d8-a6c3-dfccca3dd12c&state=af0ifjsldkj&redirect_uri=https%3A%2F%2Ffindyourcat.com&nonce=${nonce}`
                 })
                 it("can redirect to login server when user not logged in", () => {
                     request(app)
@@ -425,7 +425,7 @@ describe("UserRequests",()=>{
                             expect(location).to.be.a.string
                             expect(isLocation).to.be.true
                             expect(isRedirectText).to.be.true
-                            expect(contentLength).to.eql('828')
+                            expect(contentLength).to.eql('827')
                         })
                 })
                 it("can redirect to client's redirect_uri with token when end user logged in", () => {

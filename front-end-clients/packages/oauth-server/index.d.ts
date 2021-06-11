@@ -1,1 +1,0 @@
-declare module '@tiger-crunch/user-service'
