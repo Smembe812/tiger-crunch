@@ -73,10 +73,21 @@ export default function makeGrantTypes({
         })
         async function codeGrant(params){
             //TODO: verify scope
-            const {state,redirect_uri} = params
+            const {state,redirect_uri, scope} = params
+            const scopeHandlers = {
+                userScope: function (params, next){
+                    const userPermissions = params.scope.permissions.filter(p => p.includes('users'))
+                    if(userPermissions.length < 1){
+                        next(params)
+                    }
+                    params.scope.userPermissions = getUserScope(userPermissions, params.user)
+                    next(scope)
+                }
+            }
             try {
-                const codeFlow = new AuthorizationCodeFlow(params)
+                const codeFlow = new AuthorizationCodeFlow({scope:scopeHandlers} ,params)
                 await codeFlow.verify()
+                codeFlow.delegateScope()
                 await codeFlow.generateCode()
                 codeFlow.processResponse()
                 const response = codeFlow.getResponse()
@@ -278,8 +289,8 @@ export default function makeGrantTypes({
             }
         }
         function AuthorizationCode(params){
-            const {client_id,sub} = params
-            this.params = {client_id, sub}
+            const {client_id, sub, scope} = params
+            this.params = {client_id, sub, scope}
             this.code=null
             this.makeCode = async function(){
                 const {code} = await util.generateRandomCode()

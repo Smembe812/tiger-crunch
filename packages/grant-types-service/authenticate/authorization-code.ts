@@ -5,13 +5,25 @@ export default function makeAuthorizationCodeFlow({
     AuthorizationCode,
     GrantResponse
 }){
-    return function AuthorizationCodeFlow(params){
+    return function AuthorizationCodeFlow(handlers, params){
         this.params = params
         this.isValidClient=false
         this.isValidResponseType=false
         this.code=null
         this.responseType=null
         this.response=null
+        this.handlerFinals = function(handlerParams){
+            const permission = handlerParams.permissions
+            const scope = `openid`+permission.join(' ').trim()
+            this.scope = scope
+            return this
+        }
+        this.handlers = [...Object.values(handlers), this.handlerFinals]
+            .map((handler, index) => (
+                handlerParams => handler(
+                    handlerParams, 
+                    this.handlers[index + 1])
+                ))
         this.verify = async function(){
             if(!this.isValidResponseType()){
                 throw new ErrorWrapper(
@@ -25,6 +37,10 @@ export default function makeAuthorizationCodeFlow({
             } catch (error) {
                 throw error
             }
+        }
+        this.delegateScope = function (){
+            this.handlers[0](this.params)
+            return this
         }
         this.verifyClient = async function(){
             const client = new ClientAuthenticity(this.params)
