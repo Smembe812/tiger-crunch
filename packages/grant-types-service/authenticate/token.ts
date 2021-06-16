@@ -7,7 +7,8 @@ export default function makeTokenGrant({
     dataSource,
     isCodeOwner,
     util,
-    tokenCache
+    tokenCache,
+    permissionsUseCases
 }){
     return function TokenGrant(params){
         this.params = params
@@ -43,8 +44,14 @@ export default function makeTokenGrant({
             return this
         }
         this.isCodeOwner = async function(){
-            const {sub, ...authorization_code} = await dataSource.get(this.params.code)
+            const {sub, scope, ...authorization_code} = await dataSource.get(this.params.code)
             this.sub = sub
+            const [opernId, ...permissions] = scope.split(' ')
+            const allowedPermissions = await permissionsUseCases.getAvailablePermission({
+                id: this.params.sub,
+                permissions: permissions
+            })
+            this.scope = `${opernId} ${allowedPermissions}`
             return isCodeOwner({
                 client:{
                     id:this.params.client_id,
@@ -91,7 +98,8 @@ export default function makeTokenGrant({
                     aud: this.params.client_id,
                     auth_time: + new Date(),
                     at_hash,
-                    rt_hash
+                    rt_hash,
+                    scope: this.scope
                 }, 
                 { 
                     expiresIn: 60 * 10 

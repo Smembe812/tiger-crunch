@@ -4,7 +4,12 @@ export default function makeGrantTypes({
     tokenCache, 
     util, 
     nonceManager, 
-    Authenticate
+    Authenticate,
+    // producer,
+    // consumer,
+    // publish,
+    // Transactions,
+    permissionsUseCases
 }){
     const {
         makeAuthorizationCodeFlow,
@@ -22,7 +27,9 @@ export default function makeGrantTypes({
             ClientAuthenticity,
             ResponseType,
             AuthorizationCode,
-            GrantResponse
+            GrantResponse,
+            util,
+            permissionsUseCases
         })
         const TokenGrant = makeTokenGrant({
             ErrorWrapper,
@@ -76,16 +83,18 @@ export default function makeGrantTypes({
             const {state,redirect_uri, scope} = params
             const scopeHandlers = {
                 userScope: function (params, next){
-                    const userPermissions = params.scope.permissions.filter(p => p.includes('users'))
-                    if(userPermissions.length < 1){
+                    const permissions = params.scope.split(' ')
+                    const usersPermissions = permissions.filter(p => p.includes('users'))
+                    if(usersPermissions.length < 1){
+                        next(params)
+                    }else{
+                        params.permissions = [...params.permissions, ...usersPermissions]
                         next(params)
                     }
-                    params.scope.userPermissions = getUserScope(userPermissions, params.user)
-                    next(scope)
                 }
             }
             try {
-                const codeFlow = new AuthorizationCodeFlow({scope:scopeHandlers} ,params)
+                const codeFlow = new AuthorizationCodeFlow({scope:scopeHandlers}, params)
                 await codeFlow.verify()
                 codeFlow.delegateScope()
                 await codeFlow.generateCode()
@@ -289,8 +298,8 @@ export default function makeGrantTypes({
             }
         }
         function AuthorizationCode(params){
-            const {client_id, sub, scope} = params
-            this.params = {client_id, sub, scope}
+            const {client_id, sub, permissions} = params
+            this.params = {client_id, sub, permissions}
             this.code=null
             this.makeCode = async function(){
                 const {code} = await util.generateRandomCode()

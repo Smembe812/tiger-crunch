@@ -3,7 +3,10 @@ export default function makeAuthorizationCodeFlow({
     ClientAuthenticity,
     ResponseType,
     AuthorizationCode,
-    GrantResponse
+    GrantResponse,
+    consumer,
+    util,
+    permissionsUseCases
 }){
     return function AuthorizationCodeFlow(handlers, params){
         this.params = params
@@ -12,10 +15,12 @@ export default function makeAuthorizationCodeFlow({
         this.code=null
         this.responseType=null
         this.response=null
-        this.handlerFinals = function(handlerParams){
-            const permission = handlerParams.permissions
-            const scope = `openid`+permission.join(' ').trim()
-            this.scope = scope
+        this.handlerFinals = async function(handlerParams){
+            const permissions = await permissionsUseCases.getAvailablePermission({
+                id: this.params.sub,
+                permissions: handlerParams.permisions
+            })
+            this.params.permissions = permissions
             return this
         }
         this.handlers = [...Object.values(handlers), this.handlerFinals]

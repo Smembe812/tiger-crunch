@@ -14,6 +14,7 @@
     },
     "dependencies": {
         "@smembe812/clients-service": "^0.1.0",
+        "@smembe812/kafka-broker": "workspace:packages/kafka-broker",
         "@smembe812/user-service": "^0.1.0",
         "@smembe812/util": "^0.1.0",
         "body-parser": "^1.19.0",
