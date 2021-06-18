@@ -44,15 +44,14 @@ export default function makeTokenGrant({
             return this
         }
         this.isCodeOwner = async function(){
-            const {sub, scope, ...authorization_code} = await dataSource.get(this.params.code)
+            const {sub, permissions, ...authorization_code} = await dataSource.get(this.params.code)
             this.sub = sub
-            console.log(scope)
-            const [opernId, ...permissions] = scope.split(' ')
+            console.log(permissions)
             const allowedPermissions = await permissionsUseCases.getAvailablePermission({
                 id: this.params.sub,
                 permissions: permissions
             })
-            this.scope = `${opernId} ${allowedPermissions}`
+            this.scope = `opernid ${allowedPermissions}`
             return isCodeOwner({
                 client:{
                     id:this.params.client_id,

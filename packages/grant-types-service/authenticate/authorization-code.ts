@@ -15,20 +15,20 @@ export default function makeAuthorizationCodeFlow({
         this.code=null
         this.responseType=null
         this.response=null
-        this.handlerFinals = async function handlerFinals(handlerParams){
-            console.log('PERMISSIONS!!!',handlerParams)
-            const permissions = await permissionsUseCases.getAvailablePermission({
-                id: this.params.sub,
-                permissions: handlerParams.permisions
+        this.handlePermissions = handlePermissions.bind(this)
+        function handlePermissions(handlerParams){
+            return permissionsUseCases.getAvailablePermission({
+                id: handlerParams.sub,
+                permissions: handlerParams.possiblePermissions
             })
-            this.params.permissions = permissions
-            return this
+            .then(permissions => this.params.permissions = permissions)
         }
-        this.handlers = [...Object.values(handlers), this.handlerFinals]
+        this.handlers = [...Object.values(handlers), this.handlePermissions]
             .map((handler, index) => {
-                return handlerParams => handler(
+                return (handlerParams) => handler(
                     handlerParams, 
-                    this.handlers[index + 1])
+                    this.handlers[index + 1]
+                )
             })
         this.verify = async function(){
             if(!this.isValidResponseType()){
@@ -37,6 +37,7 @@ export default function makeAuthorizationCodeFlow({
                     "invalid response type for code flow"
                 )
             }
+            this.responseType = this.params.response_type
             try {
                 await this.verifyClient()
                 return this
@@ -44,8 +45,8 @@ export default function makeAuthorizationCodeFlow({
                 throw error
             }
         }
-        this.delegateScope = function (){
-            this.handlers[0](this.params)
+        this.delegateScope = async function (){
+            await this.handlers[0](this.params)
             return this
         }
         this.verifyClient = async function(){
@@ -55,7 +56,7 @@ export default function makeAuthorizationCodeFlow({
         }
         this.isValidResponseType = function (){
             const responseType = new ResponseType(this.params)
-            return this.isValidResponseType = responseType.isAthorizationCode()
+            return responseType.isAthorizationCode()
         }
         this.generateCode = async function(){
             const code = new AuthorizationCode(this.params)

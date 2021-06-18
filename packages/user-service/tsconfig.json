@@ -5,7 +5,7 @@
     "rootDir": "."
   },
   "references": [],
-  "include": ["**/*", "**/*.d.ts", "global.d.ts"],
+  "include": ["**/*", "**/*.d.ts", "global.d.ts", "../user-scope/user.scopes.ts"],
   "ts-node": {
     "files":true
   }

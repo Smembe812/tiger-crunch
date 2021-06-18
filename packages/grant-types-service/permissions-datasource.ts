@@ -57,6 +57,7 @@ export default class PermissionsPool {
     }
     async get(id){
         try {
+            console.log(id)
             return await this.pool.get(id)
         } catch (error) {
             if (error.message.includes('Key not found in database')){

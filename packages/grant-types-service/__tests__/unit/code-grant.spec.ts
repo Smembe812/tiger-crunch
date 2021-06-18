@@ -11,7 +11,13 @@ import { mockCode, mockInput } from "../data/grant-code";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 const clientUseCases = Client.useCases
-import {GrantTypes, nonceManager, dataSource, permissionsDataSource, permissionsUseCases} from "../../index"
+import {
+    GrantTypes, 
+    nonceManager,
+    dataSource, 
+    permissionsDataSource, 
+    permissionsUseCases
+} from "../../index"
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},

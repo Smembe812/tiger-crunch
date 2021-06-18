@@ -2,7 +2,7 @@ const WRITE = "WRITE"
 const READ = "READ"
 const DELETE = "DELETE"
 const EDIT = "EDIT"
-const operations = [WRITE, READ, DELETE, EDIT]
+export const operations = [WRITE, READ, DELETE, EDIT]
 
 // this means that user-roles must always be stored with roles
 export const roles = {

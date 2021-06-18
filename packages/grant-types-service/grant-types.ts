@@ -82,26 +82,26 @@ export default function makeGrantTypes({
         async function codeGrant(params){
             //TODO: verify scope
             const {state,redirect_uri, scope} = params
+            params.possiblePermissions = []
             const scopeHandlers = {
                 userScope: function (params, next){
-                    console.log("SCOOPPPEE!!", params.scope)
                     const permissions = params.scope.split(' ')
                     const usersPermissions = permissions.filter(p => p.includes('users'))
                     if(usersPermissions.length < 1){
-                        next(params)
+                        return next(params)
                     }else{
-                        params.permissions = [...params.permissions, ...usersPermissions]
-                        next(params)
+                        params.possiblePermissions = [...params.possiblePermissions, ...usersPermissions]
+                        return next(params)
                     }
                 }
             }
             try {
                 const codeFlow = new AuthorizationCodeFlow({...scopeHandlers}, params)
                 await codeFlow.verify()
-                codeFlow.delegateScope()
+                await codeFlow.delegateScope()
                 await codeFlow.generateCode()
-                codeFlow.processResponse()
-                const response = codeFlow.getResponse()
+                const response = codeFlow.processResponse().getResponse()
+                console.log(codeFlow)
                 return response
             } catch (error) {
                 if (error.message === "invalid_request"){

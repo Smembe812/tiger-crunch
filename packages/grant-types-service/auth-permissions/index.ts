@@ -1,16 +1,19 @@
 function makePermissions({dataSource}){
-    async function getAvailablePermission(params) : Promise<string> {
-        if(params?.permissions < 1){
-            return null
+    async function getAvailablePermission(params:{
+        id: string;
+        permissions: string[];
+    }) : Promise<string[]> {
+        if(!params?.permissions || params?.permissions.length < 1){
+            return []
         }
         const permissions = await dataSource.get(params.id)
         if (permissions.length < 1){
-            return null
+            return []
         }
         const incomingPermissionsSet = new Set(params.permissions)
         const incomingPermissions = Array.from(incomingPermissionsSet)
-        const available = permissions.filter(permission => incomingPermissions.includes(permission))
-        return available.join(' ').trim()
+        const available: string[] = permissions.filter(permission => incomingPermissions.includes(permission))
+        return available
     }
     return {
         getAvailablePermission
