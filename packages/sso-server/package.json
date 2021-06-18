@@ -1,6 +1,6 @@
 {
   "name": "front-end-clients",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -8,5 +8,6 @@
     "start": "node index"
   },
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "gitHead": "eed79d0398a12daddf3471f37262b3a935b84a7c"
 }
