@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/user-roles",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "user scope for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/util": "^0.1.0",
+        "@smembe812/util": "^0.1.1",
         "level": "^7.0.0",
         "uuid": "^8.3.2",
         "validator": "^13.6.0"
