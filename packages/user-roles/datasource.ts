@@ -10,12 +10,11 @@ export default class DBPool {
             if(!roles){
                 return await this.pool.put(obj.id, [obj.role])
             }else{
-                const hasRole = roles.join(" ").includes(obj.role)
-                if()){
-                    
+                const hasRole:boolean = roles.join(" ").includes(obj.role)
+                if(hasRole){
+                    throw Error('role already assigned to user')
                 }
-                    const roleSet = new Set([obj.role, ...roles])
-                return await this.pool.put(obj.id, Array.from(roleSet))
+                return await this.pool.put(obj.id, [...roles, obj.role])
             }
         } catch (error) {
             throw error   

@@ -28,12 +28,12 @@ import PermissionsPool from "./permissions-datasource"
 //         Transactions(JSON.parse(message.value));
 //     })
 // })
-const dataSource = new DataSource("level-oauth-grants")
-const tokenCache = new TokenCache({maxSize:1000})
-const nonceManager = new NonceManager('implicit-nonce')
-const permissionsDataSource = new PermissionsPool('level-auth-permissions')
-const permissionsUseCases = makePermissionsUseCases({dataSource:permissionsDataSource})
-const GrantTypes = makeGrantTypes({
+export const dataSource = new DataSource("level-oauth-grants")
+export const tokenCache = new TokenCache({maxSize:1000})
+export const nonceManager = new NonceManager('implicit-nonce')
+export const permissionsDataSource = new PermissionsPool('level-auth-permissions')
+export const permissionsUseCases = makePermissionsUseCases({dataSource:permissionsDataSource})
+export const GrantTypes = makeGrantTypes({
     clientUseCases: Client.useCases,
     dataSource,
     util,
@@ -52,5 +52,7 @@ const GrantTypes = makeGrantTypes({
 export default {
     GrantTypes,
     dataSource,
-    nonceManager
+    nonceManager,
+    permissionsUseCases,
+    permissionsDataSource
 }

@@ -11,7 +11,8 @@
         "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
         "build": "npm run clean && npm run compile",
         "test": "yarn run test:unit && yarn run test:e2e",
-        "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
+        "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'",
+        "seed": "ts-node '__tests__/preparation'"
     },
     "dependencies": {
         "@smembe812/clients-service": "^0.1.0",
@@ -58,6 +59,7 @@
         "chai-subset": "^1.6.0",
         "eslint": "^7.19.0",
         "eslint-config-prettier": "^7.2.0",
+        "faker": "^5.5.3",
         "mocha": "^8.2.1",
         "nodemon": "^2.0.4",
         "proxyquire": "^2.1.3",

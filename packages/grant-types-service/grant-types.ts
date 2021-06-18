@@ -40,7 +40,8 @@ export default function makeGrantTypes({
             dataSource,
             isCodeOwner,
             util,
-            tokenCache
+            tokenCache,
+            permissionsUseCases
         })
         const ImplicitFlow = makeImplicitFlow({
             ErrorWrapper,
@@ -83,6 +84,7 @@ export default function makeGrantTypes({
             const {state,redirect_uri, scope} = params
             const scopeHandlers = {
                 userScope: function (params, next){
+                    console.log("SCOOPPPEE!!", params.scope)
                     const permissions = params.scope.split(' ')
                     const usersPermissions = permissions.filter(p => p.includes('users'))
                     if(usersPermissions.length < 1){
@@ -94,7 +96,7 @@ export default function makeGrantTypes({
                 }
             }
             try {
-                const codeFlow = new AuthorizationCodeFlow({scope:scopeHandlers}, params)
+                const codeFlow = new AuthorizationCodeFlow({...scopeHandlers}, params)
                 await codeFlow.verify()
                 codeFlow.delegateScope()
                 await codeFlow.generateCode()

@@ -6,20 +6,18 @@ const expect = chai.expect;
 chai.use(chaiAsPromised);
 const fs = require("fs")
 const URL = require('url')
-import sinon, { stub } from "sinon";
+import sinon from "sinon";
 import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, tokenInputMock, userIdMock} from "../data/token-grant";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
-import DataSource from "../../datasource"
-import NonceManager from "../../nonce-manager"
-import makeGrantTypes from '../../grant-types'
-import makeAuthorizationCodeFlow from "../../authenticate/authorization-code"
-import makeTokenGrant from "../../authenticate/token"
-import makeImplicitFlow from "../../authenticate/implicit-flow"
-import makeHybridFlow from "../../authenticate/hybrid-flow"
-import makeRefreshTokenGrant from "../../authenticate/refresh-token"
-import makeIntrospection from "../../authenticate/introspection"
-import TokenCache from "../../cache-adapter";
+import {
+    GrantTypes, 
+    nonceManager,
+    dataSource, 
+    permissionsDataSource, 
+    permissionsUseCases,
+    tokenCache
+} from "../../index"
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
@@ -27,34 +25,17 @@ const jwt = new util.JWT({
 })
 
 describe("Token-grant",()=>{
-    let dataSource, grantTypes, nonceManager, tokenCache;
+    let grantTypes;
     beforeEach(async () => {
         // not really using the database at all.
         // proper instatiation of datasorce required before tests run
-        dataSource = new DataSource("level-oauth-grants")
-        nonceManager = new NonceManager('implicit-nonce')
-        tokenCache = new TokenCache({maxSize:1})
-        const GrantTypes = makeGrantTypes({
-            clientUseCases: Client.useCases,
-            dataSource,
-            util,
-            tokenCache,
-            nonceManager,
-            Authenticate:{
-                makeAuthorizationCodeFlow,
-                makeTokenGrant,
-                makeImplicitFlow,
-                makeHybridFlow,
-                makeRefreshTokenGrant,
-                makeIntrospection
-            }
-        })
         grantTypes = GrantTypes({jwt, keys:null})
     })
     afterEach(async function() {
         sinon.restore();
         await dataSource.close()
         await nonceManager.close()
+        await permissionsDataSource.close()
     });
     it("returns a token response", async () => {
         sinon.stub(util, "generateRandomCode")
@@ -68,6 +49,7 @@ describe("Token-grant",()=>{
         sinon.stub(Client.useCases, "verifyClientBySecret").resolves(true)
         sinon.stub(jwt, "sign").returns(id_token_mock)
         sinon.stub(dataSource, "get").resolves(dataSourceRes)
+        sinon.stub(permissionsUseCases, "getAvailablePermission").resolves('')
         const response = await grantTypes.tokenGrant({...tokenInputMock})
         expect(response).to.be.eql(expected_token)
    })
@@ -78,8 +60,9 @@ describe("Token-grant",()=>{
         sinon.stub(util, "generateAccessToken").throwsException(new Error("Testing error"))
         sinon.stub(tokenCache, "insert").throwsException(new Error("Testing error"))
         sinon.stub(Client.useCases, "verifyClientBySecret").throwsException(new Error("Testing error"))
-        sinon.stub(jwt, "sign").returns(id_token_mock)
-        sinon.stub(dataSource, "get").resolves(dataSourceRes)
+        sinon.stub(jwt, "sign").throwsException(new Error("Testing error"))
+        sinon.stub(dataSource, "get").throwsException(new Error("Testing error"))
+        sinon.stub(permissionsUseCases, "getAvailablePermission").throwsException(new Error("Testing error"))
         await expect(
             grantTypes.tokenGrant({...tokenInputMock})
         ).to.be.rejectedWith("Testing error")

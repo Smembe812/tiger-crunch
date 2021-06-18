@@ -46,6 +46,7 @@ export default function makeTokenGrant({
         this.isCodeOwner = async function(){
             const {sub, scope, ...authorization_code} = await dataSource.get(this.params.code)
             this.sub = sub
+            console.log(scope)
             const [opernId, ...permissions] = scope.split(' ')
             const allowedPermissions = await permissionsUseCases.getAvailablePermission({
                 id: this.params.sub,

@@ -15,7 +15,8 @@ export default function makeAuthorizationCodeFlow({
         this.code=null
         this.responseType=null
         this.response=null
-        this.handlerFinals = async function(handlerParams){
+        this.handlerFinals = async function handlerFinals(handlerParams){
+            console.log('PERMISSIONS!!!',handlerParams)
             const permissions = await permissionsUseCases.getAvailablePermission({
                 id: this.params.sub,
                 permissions: handlerParams.permisions
@@ -24,11 +25,11 @@ export default function makeAuthorizationCodeFlow({
             return this
         }
         this.handlers = [...Object.values(handlers), this.handlerFinals]
-            .map((handler, index) => (
-                handlerParams => handler(
+            .map((handler, index) => {
+                return handlerParams => handler(
                     handlerParams, 
                     this.handlers[index + 1])
-                ))
+            })
         this.verify = async function(){
             if(!this.isValidResponseType()){
                 throw new ErrorWrapper(

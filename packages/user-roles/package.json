@@ -1,5 +1,5 @@
 {
-    "name": "@smembe812/user-scope",
+    "name": "@smembe812/user-roles",
     "version": "0.1.0",
     "description": "user scope for project tiger-crunch",
     "main": "./lib/",

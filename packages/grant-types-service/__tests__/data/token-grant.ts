@@ -20,5 +20,6 @@ export const expected_token = {
 export const dataSourceRes = {
     sub:userIdMock, 
     client_id:tokenInputMock.client_id,
-    code:code_fake
+    code:code_fake,
+    scope:''
 }

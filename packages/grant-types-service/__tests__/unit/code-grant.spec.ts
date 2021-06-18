@@ -11,54 +11,31 @@ import { mockCode, mockInput } from "../data/grant-code";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
 const clientUseCases = Client.useCases
-import DataSource from "../../datasource"
-import NonceManager from "../../nonce-manager"
-import makeGrantTypes from '../../grant-types'
-import makeAuthorizationCodeFlow from "../../authenticate/authorization-code"
-import makeTokenGrant from "../../authenticate/token"
-import makeImplicitFlow from "../../authenticate/implicit-flow"
-import makeHybridFlow from "../../authenticate/hybrid-flow"
-import makeRefreshTokenGrant from "../../authenticate/refresh-token"
-import makeIntrospection from "../../authenticate/introspection"
+import {GrantTypes, nonceManager, dataSource, permissionsDataSource, permissionsUseCases} from "../../index"
 const jwt = new util.JWT({
     algo:'RS256', 
     signer:{key:process.env.AUTH_SIGNER_KEY, passphrase:""},
     verifier:process.env.AUTH_PUB_KEY
 })
 describe("Grant-code",()=>{
-    let dataSource, grantTypes, nonceManager, tokenCache;
+    let grantTypes, tokenCache;
     beforeEach(async () => {
         // not really using the database at all.
         // proper instatiation of datasorce required before tests run
-        dataSource = new DataSource("level-oauth-grants")
-        nonceManager = new NonceManager('implicit-nonce')
         tokenCache = null
-        const GrantTypes = makeGrantTypes({
-            clientUseCases: Client.useCases,
-            dataSource,
-            util,
-            tokenCache,
-            nonceManager,
-            Authenticate:{
-                makeAuthorizationCodeFlow,
-                makeTokenGrant,
-                makeImplicitFlow,
-                makeHybridFlow,
-                makeRefreshTokenGrant,
-                makeIntrospection
-            }
-        })
         grantTypes = GrantTypes({jwt, keys:null})
     })
     afterEach(async function() {
         sinon.restore();
         await dataSource.close()
         await nonceManager.close()
+        await permissionsDataSource.close()
     });
     it("can return redirect_uri with code and state on success", async () => {
         sinon.stub(util, "generateRandomCode").resolves({code:mockCode, c_hash:null})    
         sinon.stub(clientUseCases, "verifyClientByDomain").resolves(true)
         sinon.stub(dataSource, "insert").resolves(true)
+        sinon.stub(permissionsUseCases, 'getAvailablePermission').resolves('')
         const redirectUri = await grantTypes.codeGrant({...mockInput})
         const parseduri = URL.parse(redirectUri)
         const uriHasCode = parseduri.query.includes(`code=${mockCode}`)
@@ -71,6 +48,7 @@ describe("Grant-code",()=>{
    it("can fail with error and error description", async () => {
         sinon.stub(util, "generateRandomCode").resolves({code:mockCode, c_hash:null})    
         sinon.stub(clientUseCases, "verifyClientByDomain").throws(new Error("invalid_request"))
+        sinon.stub(permissionsUseCases, 'getAvailablePermission').resolves('')
         const redirectUri = await grantTypes.codeGrant({...mockInput})
         const parseduri = URL.parse(redirectUri)
         const uriHasError = parseduri.query.includes(`error=invalid_request`)

@@ -8,12 +8,12 @@ export default class PermissionsPool {
         id:string,
         permissions: Array<string>
     }){
+        let input = obj.permissions;
+        let response;
+        if(input.length<1){
+            throw new TypeError('obj.permissions cannot be empty')
+        }
         try {
-            let input = obj.permissions;
-            let response;
-            if(input.length<1){
-                throw new TypeError('obj.permissions cannot be empty')
-            }
             const availablePermissions = await this.get(obj.id)
             if(availablePermissions.length > 0){
                 const p = new Set([...availablePermissions, input])
@@ -56,7 +56,14 @@ export default class PermissionsPool {
         }
     }
     async get(id){
-        return await this.pool.get(id)
+        try {
+            return await this.pool.get(id)
+        } catch (error) {
+            if (error.message.includes('Key not found in database')){
+                return []
+            }
+            throw error
+        }
     }
     async clear(id){
         return await this.pool.delete(id)

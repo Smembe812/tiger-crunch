@@ -15,5 +15,5 @@ export const token = {
     token_type: 'bearer',
     redirect_uri: 'https://findyourcat.com'
   }
-export const expectedImpResponse = `${token.redirect_uri}?id_token=${token.id_token}&access_token=${token.access_token}&token_type=${token.token_type}&state=${token.state}&expires_in=300`
+export const expectedImpResponse = `${token.redirect_uri}?id_token=${token.id_token}&access_token=${token.access_token}&token_type=${token.token_type}&expires_in=300&state=${token.state}`
 export const mockRedirectError = "https://findyourcat.com?error=invalid_request&error_description=Testing_error&state=af0ifjsldkj"

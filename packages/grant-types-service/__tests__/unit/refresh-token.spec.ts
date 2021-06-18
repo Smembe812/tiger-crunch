@@ -10,15 +10,14 @@ import sinon from "sinon";
 import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, refreshTokenInput, userIdMock, validExpiredTokenPayload} from "../data/refresh-token";
 import Client from "@smembe812/clients-service"
 import util from "@smembe812/util"
-import DataSource from "../../datasource"
-import NonceManager from "../../nonce-manager"
-import makeGrantTypes from '../../grant-types'
-import makeAuthorizationCodeFlow from "../../authenticate/authorization-code"
-import makeTokenGrant from "../../authenticate/token"
-import makeImplicitFlow from "../../authenticate/implicit-flow"
-import makeHybridFlow from "../../authenticate/hybrid-flow"
-import makeRefreshTokenGrant from "../../authenticate/refresh-token"
-import makeIntrospection from "../../authenticate/introspection"
+import {
+    GrantTypes, 
+    nonceManager,
+    dataSource, 
+    permissionsDataSource, 
+    permissionsUseCases,
+    tokenCache
+} from "../../index"
 import TokenCache from "../../cache-adapter";
 const jwt = new util.JWT({
     algo:'RS256', 
@@ -26,34 +25,17 @@ const jwt = new util.JWT({
     verifier:process.env.AUTH_PUB_KEY
 })
 describe("Refresh-grant",()=>{
-    let dataSource, grantTypes, tokenCache, nonceManager;
+    let grantTypes;
     beforeEach(async () => {
         // not really using the database at all.
         // proper instatiation of datasorce required before tests run
-        dataSource = new DataSource("level-oauth-grants")
-        nonceManager = new NonceManager('implicit-nonce')
-        tokenCache = new TokenCache({maxSize:1})
-        const GrantTypes = makeGrantTypes({
-            clientUseCases: Client.useCases,
-            dataSource,
-            util,
-            tokenCache,
-            nonceManager,
-            Authenticate:{
-                makeAuthorizationCodeFlow,
-                makeTokenGrant,
-                makeImplicitFlow,
-                makeHybridFlow,
-                makeRefreshTokenGrant,
-                makeIntrospection
-            }
-        })
         grantTypes = GrantTypes({jwt, keys:null})
     })
     afterEach(async function() {
         sinon.restore();
         await dataSource.close()
         await nonceManager.close()
+        await permissionsDataSource.close()
     });
     it("returns a token response", async () => {
         sinon.stub(util, "verifyCode").resolves(true)

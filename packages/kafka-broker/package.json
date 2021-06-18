@@ -39,7 +39,7 @@
         "typescript": "^3.9.5"
     },
     "keywords": [
-        "kafta"
+        "kafka"
     ],
     "repository": {
         "type": "git",

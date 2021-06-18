@@ -110,6 +110,15 @@ export default function ({
             throw error
         }
     }
+    function isOwner(ctx, target){
+        const {id, email} = ctx.user
+        return target.user.id === id
+    }
+    // function isAdmin(ctx){
+    //     const scope = getScopes(ctx.user.id)
+    //     const validScope =  scope.includes(ctx.user.scope)
+    //     return validScope.isAdmin
+    // }
     return {
         createNewUser,
         verifyUser,
