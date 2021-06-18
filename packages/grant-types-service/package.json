@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/grant-types-service",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "grant types for OAuth and OID",
     "main": "./lib/index.js",
     "types": "./index.d.ts",
@@ -13,10 +13,10 @@
         "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/clients-service": "^0.1.3",
-        "@smembe812/kafka-broker": "^0.1.3",
-        "@smembe812/user-service": "^0.1.3",
-        "@smembe812/util": "^0.1.3",
+        "@smembe812/clients-service": "^0.1.4",
+        "@smembe812/kafka-broker": "^0.1.4",
+        "@smembe812/user-service": "^0.1.4",
+        "@smembe812/util": "^0.1.4",
         "body-parser": "^1.19.0",
         "cookie-parser": "^1.4.5",
         "cookie-session": "^1.4.0",
@@ -64,5 +64,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "c8d05815d92205d8f499742b9f5559dc4cfadba1"
+    "gitHead": "8f67e83e048d81f38475d046c5dd5b5dd61e9616"
 }

@@ -1,6 +1,6 @@
 {
   "name": "front-end-clients",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "",
   "main": "index.js",
   "scripts": {
@@ -9,5 +9,5 @@
   },
   "author": "",
   "license": "ISC",
-  "gitHead": "c8d05815d92205d8f499742b9f5559dc4cfadba1"
+  "gitHead": "8f67e83e048d81f38475d046c5dd5b5dd61e9616"
 }

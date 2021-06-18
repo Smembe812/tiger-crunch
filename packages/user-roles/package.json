@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/user-roles",
-    "version": "0.1.3",
+    "version": "0.1.4",
     "description": "user scope for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/util": "^0.1.3",
+        "@smembe812/util": "^0.1.4",
         "level": "^7.0.0",
         "uuid": "^8.3.2",
         "validator": "^13.6.0"
@@ -57,5 +57,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "c8d05815d92205d8f499742b9f5559dc4cfadba1"
+    "gitHead": "8f67e83e048d81f38475d046c5dd5b5dd61e9616"
 }
