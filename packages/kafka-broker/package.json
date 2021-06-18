@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/kafka-broker",
-    "version": "0.1.2",
+    "version": "0.1.3",
     "description": "kafka broker for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/util": "^0.1.2",
+        "@smembe812/util": "^0.1.3",
         "dotenv": "^8.2.0",
         "kafka-node": "^5.0.0",
         "uuid": "^8.3.2"
@@ -57,5 +57,5 @@
     "installConfig": {
         "hoistingLimits": "none"
     },
-    "gitHead": "eed79d0398a12daddf3471f37262b3a935b84a7c"
+    "gitHead": "c8d05815d92205d8f499742b9f5559dc4cfadba1"
 }
