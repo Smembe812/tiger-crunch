@@ -1,0 +1,36 @@
+{
+    "name": "@smembe812/session-client",
+    "version": "0.1.4",
+    "description": "sign in and session server",
+    "private": true,
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1",
+        "start": "node server",
+        "build:dev": "webpack --config webpack.dev.js",
+        "build": "webpack --config webpack.prod.js",
+        "watch": "webpack --config webpack.dev.js --watch",
+        "start:webpack": "webpack --config webpack.dev.js serve --open"
+    },
+    "author": "Paul Sembereka <psemberekajr@gmail.com>",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/Smembe812/tiger-crunch.git"
+    },
+    "license": "ISC",
+    "installConfig": {
+        "hoistingLimits": "none"
+    },
+    "gitHead": "1e3c6bdcda4208972d98b49fe546eb40399face5",
+    "devDependencies": {
+        "html-webpack-plugin": "^5.3.2",
+        "webpack": "^5.42.0",
+        "webpack-cli": "^4.7.2",
+        "webpack-dev-server": "^3.11.2",
+        "webpack-merge": "^5.8.0"
+    },
+    "dependencies": {
+        "cors": "^2.8.5",
+        "express": "^4.17.1",
+        "webpack-dev-middleware": "^5.0.0"
+    }
+}

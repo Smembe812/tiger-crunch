@@ -1,13 +1,20 @@
 {
-  "name": "front-end-clients",
+  "name": "@smembe812/sso-server",
   "version": "0.1.4",
-  "description": "",
+  "description": "sign in and session server",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "node index"
   },
-  "author": "",
+  "author": "Paul Sembereka <psemberekajr@gmail.com>",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Smembe812/tiger-crunch.git"
+  },
   "license": "ISC",
-  "gitHead": "8f67e83e048d81f38475d046c5dd5b5dd61e9616"
+  "installConfig": {
+    "hoistingLimits": "none"
+  },
+  "gitHead": "1e3c6bdcda4208972d98b49fe546eb40399face5"
 }

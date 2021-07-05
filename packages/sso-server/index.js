@@ -9,11 +9,13 @@ const options = {
     key: fs.readFileSync('../../client1-key.pem'), 
     cert: fs.readFileSync('../../client1-crt.pem'), 
     ca: fs.readFileSync('../../ca-crt.pem') 
-}; 
+};
 function requestListener (req, res) {
     fs.promises.readFile(__dirname + "/log-in.html")
     .then(contents => {
         res.setHeader("Content-Type", "text/html");
+        res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
+        res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
         res.writeHead(200);
         res.end(contents);
     })

@@ -53,75 +53,7 @@
         window.onerror = function(message, source, lineno, colno, error) { 
             console.log(message, source, lineno, colno, error)
         };
-        
-        window.addEventListener("message", receiveMessage, false);
-
-        function receiveMessage(e){ // e.data has client_id and session_state
-            console.log(e)
-            const client_id = e.data.split(' ')[0];
-            const session_state = e.data.split(' ')[1];
-            const salt = session_state.split('.')[1];
-
-            // if message is syntactically invalid
-            //     postMessage('error', e.origin) and return
-
-            // if message comes an unexpected origin
-            //     postMessage('error', e.origin) and return
-
-            // get_op_user_agent_state() is an OP defined function
-            // that returns the User Agent's login status at the OP.
-            // How it is done is entirely up to the OP.
-            //var opuas = get_op_user_agent_state();
-
-            // Here, the session_state is calculated in this particular way,
-            // but it is entirely up to the OP how to do it under the
-            // requirements defined in this specification.
-            //var ss = crypto.SHA256(client_id + ' ' + e.origin + ' ' + opuas + ' ' + salt) + "." + salt;
-
-            var stat = '';
-            if (session_state) {
-                stat = 'unchanged';
-            } else {
-                stat = 'changed';
-            }
-
-            e.source.postMessage(stat, e.origin);
-        };
-
-        
     })()
-
-    var stat = "unchanged";
-    var mes = "client_id" + " " + "session_state.salt";
-    var targetOrigin = "https://auth.tiger-crunch.com:3000"; // Validates origin
-    var opFrameId = "op";
-    var timerID;
-
-    function check_session()   {
-        var win = window.parent.frames[opFrameId].contentWindow
-        win.postMessage(mes, targetOrigin);
-    }
-
-    function setTimer() {
-        check_session();
-        timerID = setInterval(check_session, 5 * 1000);
-    }
-
-    window.addEventListener("message", receiveMessageRP, false);
-
-    function receiveMessageRP(e) {
-        if (e.origin !== targetOrigin) {
-        return;
-        }
-        stat = e.data;
-
-        if (stat === "changed") {
-        clearInterval(timerID);
-        // then take the actions below...
-        }
-    }
-
-    setTimer();
 
     async function authenticateUser(url, payload){
         try {
@@ -143,4 +75,4 @@
             throw error
         }
     }
-</script>
+</script>z

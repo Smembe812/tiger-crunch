@@ -12,23 +12,19 @@ let producer;
 let producerReady;
 
 const bindListeners = function bindListeners() {
-
   producerReady = new Promise((resolve, reject) => {
     producer.on('ready', () => {
       console.log('producer ready');
       resolve(producer);
     });
-
     producer.on('error', err => {
       console.log('producer err', err);
       reject(err);
     })
   })
 };
-
 const initializeProducer = () => {
   producer = new Producer(client);
-
   bindListeners();
 }
 
@@ -50,7 +46,6 @@ ProducerService.prototype.produce = function produce(
   // Returns data if producer success
   return producerReady
     .then(producer => {
-      
       const payload = [{ topic, messages, partition }];
       return new Promise((resolve, reject) => {
         producer.send(payload, function (err, data) {
@@ -69,13 +64,12 @@ ProducerService.prototype.createTopic = function createTopic(
     return producerReady.then(producer => {
         return new Promise((resolve,reject) => {
             producer.createTopics(topics,(err,res) => {
-                if(err){
-                    console.log('Error while creating a topic');
-                    reject(err);
-                }
-                console.log('Topics created successfully');
-                resolve(res);
-
+              if(err){
+                console.log('Error while creating a topic');
+                reject(err);
+              }
+              console.log('Topics created successfully');
+              resolve(res);
             })
         })
     })
