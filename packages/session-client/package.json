@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/session-client",
-    "version": "0.1.6",
+    "version": "0.1.7",
     "description": "sign in and session server",
     "private": true,
     "scripts": {
