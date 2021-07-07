@@ -8,7 +8,9 @@ const cors = require('cors')
 const config = require('./webpack.dev.js');
 const compiler = webpack(config);
 app.use((req,res,next) => {
-    res.set({"Cross-Origin-Resource-Policy": "same-origin"})
+    // res.set({"Access-Control-Allow-Origin": "https://auth.tiger-crunch.com:3000"})
+    res.set({"Cross-Origin-Resource-Policy": "cross-origin"})
+    res.set({"Content-Security-Policy": "frame-src https://auth.tiger-crunch.com:3000"})
     next()
 })
 app.use(

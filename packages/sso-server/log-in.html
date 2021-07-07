@@ -14,12 +14,13 @@
     <button id="on_login">Log In</button>
     <span id="error"></span>
 </form>
-<iframe id="op" src="https://auth.tiger-crunch.com:3000"  style="position: absolute;width:0;height:0;border:0;" frameborder="0" seamless="seamless"></iframe>
-<iframe id="rp"src="" frameborder="0"></iframe>
 <script>
     (function (){
         const crypto = window.crypto ||  window.msCrypto;
 
+        const [subdomain, ...baseHost] = window.location.hostname.split('.')
+        const domain = baseHost.join('.')
+        // window.domain = domain
         const queryString = window.location.search;
         const urlParams = new URLSearchParams(queryString);
         const cb_token = urlParams.get('cb')
@@ -36,9 +37,14 @@
                     proposedPIN: pin}
             }
             try {
-                const response = await authenticateUser(
-                    `https://tiger-crunch.com:4433/auth?cb_token=${cb_token}`,
-                    payload)
+                const BASE_URL = 'https://tiger-crunch.com:4433/auth';
+                let authUrl;
+                if (!cb_token){
+                    authUrl = BASE_URL
+                } else{
+                    authUrl = `${BASE_URL}?cb_token=${cb_token}`
+                }
+                const response = await authenticateUser(authUrl,payload)
                 if(response?.message){
                     error_span.innerHTML = response.message
                 }
@@ -53,6 +59,41 @@
         window.onerror = function(message, source, lineno, colno, error) { 
             console.log(message, source, lineno, colno, error)
         };
+        window.addEventListener("message", (e) => {
+            console.log(e)
+            e.source.postMessage("stat", e.origin);
+        }, false)
+
+        function OP(){
+            this.receiveMessage = function receiveMessage(e){ // e.data has client_id and session_state
+                console.log(e)
+                const client_id = e.data.split(' ')[0];
+                const session_state = e.data.split(' ')[1];
+                const salt = session_state.split('.')[1];
+                // if message is syntactically invalid
+                //     postMessage('error', e.origin) and return
+
+                // if message comes an unexpected origin
+                //     postMessage('error', e.origin) and return
+
+                // get_op_user_agent_state() is an OP defined function
+                // that returns the User Agent's login status at the OP.
+                // How it is done is entirely up to the OP.
+                //var opuas = get_op_user_agent_state();
+
+                // Here, the session_state is calculated in this particular way,
+                // but it is entirely up to the OP how to do it under the
+                // requirements defined in this specification.
+                //var ss = crypto.SHA256(client_id + ' ' + e.origin + ' ' + opuas + ' ' + salt) + "." + salt;
+                const stat = '';
+                if (session_state) {
+                    stat = 'unchanged';
+                } else {
+                    stat = 'changed';
+                }
+                e.source.postMessage(stat, e.origin);
+            };
+        }
     })()
 
     async function authenticateUser(url, payload){
@@ -75,4 +116,4 @@
             throw error
         }
     }
-</script>z
+</script>
