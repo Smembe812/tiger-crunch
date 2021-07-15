@@ -27,8 +27,8 @@ const options = {
     port: 3300, 
     path: '/', 
     method: 'GET', 
-    key: fs.readFileSync('../../client2-key.pem'), 
-    cert: fs.readFileSync('../../client2-crt.pem'), 
+    key: fs.readFileSync('../../client-key.pem'), 
+    cert: fs.readFileSync('../../client-crt.pem'), 
     ca: fs.readFileSync('../../ca-crt.pem') 
 }; 
 // function requestListener (req, res) {
