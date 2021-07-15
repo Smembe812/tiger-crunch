@@ -106,7 +106,7 @@ app.post('/auth', async(req, res, next) => {
             res.cookie('id_token',  id_token, {
                 expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
                 secure: true,
-                httpOnly: true,
+                // httpOnly: true,
                 signed: true,
                 domain: '.tiger-crunch.com'
             })

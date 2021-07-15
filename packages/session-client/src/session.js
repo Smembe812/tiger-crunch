@@ -1,25 +1,35 @@
 function RP(opFrameId,targetOrigin=null){
+    this.clientId;
     this.stat = "unchanged";
-    this.mes = "client_id" + " " + "session_state";
+    this.message = `${this.client_id } ${this.session_state}`;
     this.targetOrigin = targetOrigin || "https://auth.tiger-crunch.com:3000"; // Validates origin
-    this.opFrameId = opFrameId
+    this.opFrameId = opFrameId;
     this.timerID;
     this.check_session = function check_session(opFrameId, target, message){
         const win = window.parent.frames[opFrameId].contentWindow
-        // const win = window.open(target, )
-        // win.onload = function (){
-            win.postMessage(message, '*');
-        // }
+        win.postMessage(message, "*");
     }
     this.setTimer = function setTimer() {
-        this.check_session(this.opFrameId, this.targetOrigin, this.mes);
+        this.check_session(this.opFrameId, this.targetOrigin, this.message);
         this.timerID = setInterval(
             this.check_session, 
             5 * 1000, 
             this.opFrameId, 
             this.targetOrigin,
-            this.mes
+            this.message
         );
+    }
+    this.setClientId = function setClientId(clientId){
+        this.clientId = clientId;
+        return this;
+    }
+    this.setSessionState = function setSessionState(sessionState){
+        this.setSessionState = sessionState;
+        return this;
+    }
+    this._setMessage = function _setMessage(){
+        this.message = `${this.client_id } ${this.session_state}`;
+        return this
     }
     this.receiveMessage = function receiveMessage(e) {
         console.log(e.origin, this.targetOrigin)
@@ -29,11 +39,10 @@ function RP(opFrameId,targetOrigin=null){
         this.stat = e.data;
         if (this.stat === "changed") {
             clearInterval(this.timerID);
-            window.addEventListener("message", receiveMessage, false);
+            window.addEventListener(this.message, receiveMessage, false);
         // then take the actions below...
         }
     }
-    // this.setTimer();
 }
 function SSOSession (){
     //TODO:

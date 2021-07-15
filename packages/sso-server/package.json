@@ -16,5 +16,8 @@
   "installConfig": {
     "hoistingLimits": "none"
   },
-  "gitHead": "440a9f337d3906fdd6b55db0bab41793a9cfc797"
+  "gitHead": "605f5f5aae3e60a83a60eb31a6592fbc17f326aa",
+  "dependencies": {
+    "jose-browser-runtime": "^3.14.0"
+  }
 }
