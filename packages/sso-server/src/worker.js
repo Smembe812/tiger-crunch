@@ -12,10 +12,10 @@ function importPublicKey(pem) {
     const pemFooter = "-----END PUBLIC KEY-----";
     const pemContents = pem.substring(pemHeader.length, pem.length - pemFooter.length);
     // base64 decode the string to get the binary data
-    const binaryDerString = window.atob(pemContents);
+    const binaryDerString = atob(pemContents);
     // convert from a binary string to an ArrayBuffer
     const binaryDer = str2ab(binaryDerString);
-    return window.crypto.subtle.importKey(
+    return crypto.subtle.importKey(
         "spki",
         binaryDer,
         {
@@ -26,28 +26,39 @@ function importPublicKey(pem) {
         ["verify"]
     );
 }
-onmessage = function(e) {
-    console.log('Worker: Message received from main script');
-    const [h, p, s, event] = e.data
-    const rawPubKey = `-----BEGIN PUBLIC KEY-----
-MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwfgC/cgSha3asB3UX5m83l7iilhKlITOWDQNlixIs5FvkBlyxqhtciUx9xcR/LyGEB/a9xh2+YoglwD76kM+bq/mGG5PI7Z9R8AhIuesgh0ubtIn4HCTJvkJHdMNSfk4HZpVw2KAn67qvcdzRnSGrkNuNeSC1jWYenc3RazGRP6mozFfinEOEdbZ7jndKo2TgoiPjaH6RXM5rebYPoHNsjL7hwY9Lv69cdjEz4Lp9JpM8yItJ4gX6NUDjTXnMS9YUiLerktGAVtM2PHdO1in5LZYP9OCR1fTGkrl1KASJHDgHwIjVgIHGQk18ccj8g0TkQPdmxmRguutd86Ew3RxAQIDAQAB
------END PUBLIC KEY-----`
-    if (rawPubKey) {
-        importPublicKey(rawPubKey)
-        .then(async pem => {
-            console.log(s, event)
-            const isValid = await window.crypto.subtle.verify(
-                'RSA-SHA256',
-                pem,
-                s, 
-                'base64'
-            )
-            console.log(isValid)
-            postMessage([isValid, event]);
-        })
-        .catch(error => console.log(error))
-    } else {
-        console.log('Worker: Posting message back to main script');
-        postMessage("Nothing");
+self.onmessage = async function(e) {
+    if( !self.document &&
+        self === e.target && 
+        e.target.origin === "https://auth.tiger-crunch.com:3000"
+    ){
+        const [h, p, s] = e.data
+        const rawPubKey = `-----BEGIN PUBLIC KEY-----
+    MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwfgC/cgSha3asB3UX5m83l7iilhKlITOWDQNlixIs5FvkBlyxqhtciUx9xcR/LyGEB/a9xh2+YoglwD76kM+bq/mGG5PI7Z9R8AhIuesgh0ubtIn4HCTJvkJHdMNSfk4HZpVw2KAn67qvcdzRnSGrkNuNeSC1jWYenc3RazGRP6mozFfinEOEdbZ7jndKo2TgoiPjaH6RXM5rebYPoHNsjL7hwY9Lv69cdjEz4Lp9JpM8yItJ4gX6NUDjTXnMS9YUiLerktGAVtM2PHdO1in5LZYP9OCR1fTGkrl1KASJHDgHwIjVgIHGQk18ccj8g0TkQPdmxmRguutd86Ew3RxAQIDAQAB
+    -----END PUBLIC KEY-----`
+        if (rawPubKey) {
+            try {
+                const isValid = await importPublicKey(rawPubKey)
+                .then( pem => {
+                    return true
+                    return crypto.subtle.verify(
+                        'RSA-SHA256',
+                        pem,
+                        s, 
+                        'base64'
+                        )
+                })
+                self.postMessage([isValid])
+            } catch (error) {
+                console.error(error)
+            }
+            // .then((r) => {
+            //     const msg = [r]
+            //     postMessage(msg);
+            // })
+            // .catch(error => console.log(error))
+        } else {
+            console.log('Worker: Posting message back to main script');
+            postMessage("Nothing");
+        }
     }
 }

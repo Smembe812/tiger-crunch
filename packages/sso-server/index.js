@@ -30,8 +30,8 @@ function requestListener (req, res, next) {
         res.setHeader("Content-Type", "text/html");
         // res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
         // res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
-        res.writeHead(200);
-        // res.end(contents);
+        // res.writeHead(200);
+    //     res.end(contents);
     // })
     // .catch(err => {
     //     res.writeHead(500);

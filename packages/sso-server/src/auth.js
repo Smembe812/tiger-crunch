@@ -44,72 +44,30 @@ on_login.addEventListener('click', async function(e) {
 function toBase64(word){
     return word.split('-').join('+').split('_').join('/')
 }
-function str2ab(str) {
-    const buf = new ArrayBuffer(str.length);
-    const bufView = new Uint8Array(buf);
-    for (let i = 0, strLen = str.length; i < strLen; i++) {
-    bufView[i] = str.charCodeAt(i);
-    }
-    return buf;
-}
-function importPublicKey(pem) {
-    // fetch the part of the PEM string between header and footer
-    const pemHeader = "-----BEGIN PUBLIC KEY-----";
-    const pemFooter = "-----END PUBLIC KEY-----";
-    const pemContents = pem.substring(pemHeader.length, pem.length - pemFooter.length);
-    // base64 decode the string to get the binary data
-    const binaryDerString = window.atob(pemContents);
-    // convert from a binary string to an ArrayBuffer
-    const binaryDer = str2ab(binaryDerString);
-    return window.crypto.subtle.importKey(
-        "spki",
-        binaryDer,
-        {
-            name: 'RSASSA-PKCS1-v1_5',
-            hash: {name: 'SHA-512'}
-        },
-        false,
-        ["verify"]
-    );
-}
 window.onerror = function(message, source, lineno, colno, error) { 
     console.log(message, source, lineno, colno, error)
 };
 
 if (window.Worker) {
     const myWorker = new Worker(new URL('./worker.js', import.meta.url));
-    window.addEventListener("message", async (e) => {
-        const token = document.cookie.split('id_token=s%3A')[1]
-        const [h, p, s] = token.split('.')
-        const header = toBase64(h)
-        const payload = toBase64(p)
-        const signature = toBase64(s)
-//                 const rawPubKey = `-----BEGIN PUBLIC KEY-----
-// MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwfgC/cgSha3asB3UX5m83l7iilhKlITOWDQNlixIs5FvkBlyxqhtciUx9xcR/LyGEB/a9xh2+YoglwD76kM+bq/mGG5PI7Z9R8AhIuesgh0ubtIn4HCTJvkJHdMNSfk4HZpVw2KAn67qvcdzRnSGrkNuNeSC1jWYenc3RazGRP6mozFfinEOEdbZ7jndKo2TgoiPjaH6RXM5rebYPoHNsjL7hwY9Lv69cdjEz4Lp9JpM8yItJ4gX6NUDjTXnMS9YUiLerktGAVtM2PHdO1in5LZYP9OCR1fTGkrl1KASJHDgHwIjVgIHGQk18ccj8g0TkQPdmxmRguutd86Ew3RxAQIDAQAB
-// -----END PUBLIC KEY-----`
-//                 const pem = importPublicKey(rawPubKey)
-//                 .then(async pem => {
-//                     console.log(pem)
-//                     const isValid = await window.crypto.subtle.verify(
-//                         'RSA-SHA256',
-//                         pem,
-//                         signature, 
-//                         'base64'
-//                     )
-//                     console.log(isValid)
-//                 })
-//                 .catch(error => console.log(error))
-        // const verifySign = window.crypto.createVerify('RSA-SHA256')
-        // const jwt = await import('jose-browser-runtime/jwt/verify')
-        // const stuff = jwt.verify()
-        // console.log(e, [JSON.parse(window.atob(payload))])   
-        myWorker.postMessage([header, payload, signature, e]);
-    }, false)
-    myWorker.onmessage = function(e) {
-        const [isValid, event] = e.data;
+    myWorker.addEventListener('message', e => {
+        // console.log(e)
+        // const [isValid, event] = e.data;
         console.log('Message received from worker ', e.data);
-        event.source.postMessage("stat", event.origin);
-    }
+        // event.source.postMessage("stat", event.origin);
+    })
+    window.addEventListener("message", async (e) => {
+        if (e.origin === "https://client.tiger-crunch.com:3300"){
+            console.log(e)
+            const token = document.cookie.split('id_token=s%3A')[1]
+            const [h, p, s] = token.split('.')
+            const header = toBase64(h)
+            const payload = toBase64(p)
+            const signature = toBase64(s)
+            const msg = [header, payload, signature ]
+            myWorker.postMessage(msg);
+        }
+    }, false)
 } 
 else {
     console.log('Your browser doesn\'t support web workers.');
@@ -118,9 +76,8 @@ else {
 function OP(){
     this.receiveMessage = function receiveMessage(e){ // e.data has client_id and session_state
         console.log(e)
-        const client_id = e.data.split(' ')[0];
-        const session_state = e.data.split(' ')[1];
-        const salt = session_state.split('.')[1];
+        const [clientId, sessionState] = e.data.split(' ')
+        const salt = sessionState.split('.').pop()
         // if message is syntactically invalid
         //     postMessage('error', e.origin) and return
 
