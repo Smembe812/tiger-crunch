@@ -20,8 +20,9 @@ yargs(hideBin(process.argv))
     if (argv.verbose) {
         console.info(`start server on :${argv.port}`)
     }
-    server.listen(argv.port, () => {
-        console.log(`App listening at https://tiger-crunch.com:${argv.port}`)
+    server.listen(argv.port, async () => {
+      app.emit('listening', null)
+      console.log(`App listening at https://tiger-crunch.com:${argv.port}`)
     })
   })
   .option('verbose', {

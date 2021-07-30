@@ -14,6 +14,7 @@ export default function makeImplicitFlow({
         this.code=null
         this.responseType=null
         this.response=null
+        this.auth_time = (+ new Date/1000)
         this.verify = async function(){
             if(!this.isValidResponseType()){
                 throw new ErrorWrapper(
@@ -69,22 +70,25 @@ export default function makeImplicitFlow({
             }
             return this
         }
-        this.generateIdToken = function(){
+        this.generateIdToken = async function(){
             const {at_hash} = this.token
-            const expiresIn = 60 * 5
-            const id_token = jwt.sign(
+            const exp = 60 * 5
+            const id_token = await jwt.sign(
                 {
                     sub:this.params.sub,
                     iss:'https://auth.tiger-crunch.com',
                     aud: this.params.client_id,
-                    auth_time: + new Date(),
+                    auth_time: this.auth_time,
                     at_hash,
                 }, 
-                { 
-                    expiresIn
-                }
+                { exp }
             );
-            this.token = {id_token, ...this.token, expiresIn, token_type:"bearer"}
+            this.token = {
+                id_token, 
+                ...this.token, 
+                expiresIn:exp, 
+                token_type:"bearer"
+            }
             return this
         }
         this.processResponse = function(){

@@ -17,12 +17,12 @@ export default function makeUseCases({clientManager, clientEntity, dataSource, u
         return {...newClient, client_secret}
     }
     async function verifyClientBySecret(params){
-        const {secret, id} = params
-        const {secret:secretHash} = await dataSource.get(id)
+        const {client_id, client_secret} = params
+        const {secret:secretHash} = await dataSource.get(client_id)
         let isValid;
         try {
             isValid = await clientManager.validateClientSecret({
-                clientSecret:secret.split('-').join('+').split('_').join('/'),
+                clientSecret:client_secret.split('-').join('+').split('_').join('/'),
                 salt: secretHash.salt,
                 iterations: secretHash.iterations,
                 hash: secretHash.hash

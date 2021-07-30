@@ -18,6 +18,7 @@ export default function makeTokenGrant({
         this.responseType=null
         this.response=null
         this.token={}
+        this.auth_time = (+ new Date/1000)
         this.verify = async function(){
             if(!this.isValidResponseType()){
                 throw new ErrorWrapper(
@@ -89,23 +90,22 @@ export default function makeTokenGrant({
             tokenCache.insert(cachePayload)
             return this
         }
-        this.generateIdToken = function(){
+        this.generateIdToken = async function(){
             const {at_hash,rt_hash} = this.token
-            const id_token = jwt.sign(
+            const exp = 60 * 10;
+            const id_token = await jwt.sign(
                 {
                     sub:this.sub,
                     iss:'https://auth.tiger-crunch.com',
                     aud: this.params.client_id,
-                    auth_time: + new Date(),
                     at_hash,
                     rt_hash,
+                    auth_time: this.auth_time,
                     scope: this.scope
                 }, 
-                { 
-                    expiresIn: 60 * 10 
-                }
+                { exp }
             );
-            this.token = {id_token, ...this.token, expiresIn: 60 * 10}
+            this.token = {id_token, ...this.token, expiresIn: exp}
             return this
         }
         this.processResponse = function(){

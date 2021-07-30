@@ -28,6 +28,7 @@ function requestListener (req, res, next) {
             res.setHeader("Cross-Origin-Resource-Policy", 'cross-origin')
         }
         res.setHeader("Content-Type", "text/html");
+        res.setHeader("Access-Control-Allow-Origin", "https://tiger-crunch.com:4433")
         // res.setHeader("Cross-Origin-Opener-Policy", "same-origin")
         // res.setHeader("Cross-Origin-Embedder-Policy", "require-corp")
         // res.writeHead(200);

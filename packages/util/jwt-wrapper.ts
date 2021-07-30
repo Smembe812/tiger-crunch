@@ -1,42 +1,34 @@
 import jwt from "jsonwebtoken"
+import jwktopem from "jwk-to-pem"
 export default class JWT{
-    #signer={key:null, passphrase:""};
-    #algo;
     #jwt;
-    #verifier;
-    constructor({algo, signer, verifier}){
+    private keyStore;
+    private defaultExp;
+    constructor({keyStore=null}){
         this.#jwt = jwt
-        this.setSigner(signer)
-        this.setAlgorithm(algo)
-        this.setVerifier(verifier)
+        this.keyStore = keyStore;
+        this.defaultExp = 60 * 10 //10 minutes;
     }
-    setSigner(signer){
-        if(signer?.key){
-            this.#signer.key = signer.key
+    async sign(payload, options=null){
+        if (!this.keyStore){
+            throw new TypeError("jwk keystore not provided")
         }
-        if(signer?.passphrase){
-            this.#signer.passphrase
+        let exp;
+        if(!options.exp){
+            exp = this.defaultExp
         }
-        return this
-    }
-    setAlgorithm(algo){
-        if(algo){
-            this.#algo = {algorithm: algo}
+        exp = options.exp;
+        const pyl = {
+            exp: Math.floor((Date.now() + (1000 * exp))/1000),
+            iat: Math.floor(Date.now() / 1000),
+            ...payload
         }
-        return this
+        const signer = this.keyStore.createSign()
+        return await signer.update(JSON.stringify(pyl)).final()
     }
-    setVerifier(verifier){
-        if(verifier)
-            this.#verifier = verifier
-        return this
-    }
-    sign(payload, options=null){
-        return this.#jwt.sign({...payload}, this.#signer, {...options, ...this.#algo})
-    }
-    verify({token, key=null, options=null}){
-        if(key)
-            return this.#jwt.verify(token,key,options)
-        else
-            return this.#jwt.verify(token, this.#verifier, options)
+    verify({token, options=null}){
+        const [key] = this.keyStore.keyStore.toJSON().keys
+        const publicKey = jwktopem(key)
+        return this.#jwt.verify(token,publicKey,options)
     }
 }

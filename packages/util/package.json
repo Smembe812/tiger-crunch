@@ -12,6 +12,7 @@
   "dependencies": {
     "dotenv": "^8.2.0",
     "jsonwebtoken": "^8.5.1",
+    "jwk-to-pem": "^2.0.5",
     "nodemailer": "^6.6.0",
     "qrcode": "^1.4.4",
     "speakeasy": "^2.0.0",

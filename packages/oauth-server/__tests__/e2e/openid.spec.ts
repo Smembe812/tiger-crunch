@@ -24,13 +24,13 @@ import GTS from "@smembe812/grant-types-service"
 
 const validClientCredentials = {
     client_id:"bd7e5e97-afe4-4796-b757-690ddc79ebb2",
-    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0="
+    client_secret:"p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0"
 }
 async function getToken(){
     const token = await request(app)
-    .post(`/auth/token?grant_type=authorization_code&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=&redirect_uri=https%3A%2F%2Ffindyourcat.com`)
+    .post(`/auth/token?grant_type=authorization_code&code=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=&redirect_uri=https%3A%2F%2Ffindyourcat.com`)
     .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
-    // console.log(token)
+    console.log(token.body)
     return token.body
 }
 
@@ -65,6 +65,7 @@ describe("UserRequests",()=>{
                     request(app)
                         .get(`/auth/code${valid_client_query}`)
                         .end((error, response) => {
+                            // console.log(response)
                             const headers = response.header
                             const location = headers.location
                             const text = response.text
@@ -478,11 +479,13 @@ describe("UserRequests",()=>{
                 }
                 it("can get token info", async () => {
                     const token = await getToken()
+                    console.log(token)
                     const valid_client_query = `?token=${token.access_token}&token_hint=access_token`
                     request(app)
                         .post(`/auth/introspection${valid_client_query}`)
                         .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
                         .end((error, response) => {
+                            console.log(response)
                             const headers = response.header
                             const responseBody = response.body
                             const cacheControl = headers['cache-control']

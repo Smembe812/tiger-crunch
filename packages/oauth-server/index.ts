@@ -4,11 +4,10 @@ require("dotenv").config({path:path.resolve(__dirname+"../../../../.env")})
 //configure jwt
 import util from "@smembe812/util"
 const JWT = util.JWT
-import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY} from './keys'
+import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY, KeyStore} from './keys'
+const keyStore = new KeyStore()
 const jwt = new JWT({
-    algo:'RS256', 
-    signer:{key:AUTH_SIGNER_KEY, passphrase:""},
-    verifier:AUTH_PUB_KEY
+    keyStore
 })
 // server config
 export const options = { 
@@ -36,7 +35,7 @@ const app = express()
 const sha256 = x => crypto.createHash('sha256').update(x, 'utf8').digest('hex')
 app.use(helmet())
 app.use(cors({
-    origin: ['https://findyourcat.com','tiger-crunch.com', 'https://tiger-crunch.com:4433', "https://auth.tiger-crunch.com:3000"],
+    origin: ['https://findyourcat.com','tiger-crunch.com', 'https://tiger-crunch.com:4433', "https://auth.tiger-crunch.com:3000", "https://client.tiger-crunch.com:3300"],
     credentials: true
 }))
 app.use(userAgent.express())
@@ -45,8 +44,9 @@ app.use(bodyParser.json())
 app.use(cookieParser(AUTH_SIGNER_KEY.toString('utf-8')))
 app.use(logConnections)
 app.use(async (req, res, next) =>{
-    const {hash} =  await browserHash(req)
-    Object.assign(req, {browserHash: hash})
+    const fingerprint =  await browserHash(req)
+    // console.log(fingerprint)
+    Object.assign(req, {browserHash: fingerprint.hash})
     next()
 })
 app.use(authenticateClient)
@@ -87,24 +87,23 @@ app.post('/auth', async(req, res, next) => {
     let id_token_params = {client:null,user:null}
     try {
         if(cb_token){
-            cb_params = jwt.verify({token:cb_token, key:AUTH_PUB_KEY})
+            cb_params = jwt.verify({token:cb_token})
             id_token_params.client = {domain: require("url").parse(cb_params.redirect_uri).host}
         }
         isAuthentic = await isAuthenticated({claims})
         if (isAuthentic){
             const user = await userUseCases.getUser(claims)
             id_token_params.user = user
-            const id_token = jwt.sign({
+            const id_token = await await jwt.sign({
                 sub: user.id,
                 aud: !id_token_params.client ? "tiger-crunch.com": id_token_params.client.domain,
                 iss:'https://auth.tiger-crunch.com',
-                uaid,
-                auth_time: + new Date()
+                uaid
             },
-            {expiresIn:60*60})
+            {exp: 60 * 60 * 24})
             res.set({'Cache-Control':'no-store'})
             res.cookie('id_token',  id_token, {
-                expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
+                expires: new Date(Date.now() + 24 * 3600000), // cookie will be removed after 14 hours
                 secure: true,
                 // httpOnly: true,
                 signed: true,
@@ -135,7 +134,7 @@ app.post('/users', async (req, res, next) => {
 })
 app.post('/auth/2fa', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
-    const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
+    const { sub } = jwt.verify({token:access_token})
     const proposedPIN = req.body.proposedPIN
     const data_url = await userUseCases.setUp2FA({
         email:sub,
@@ -146,7 +145,7 @@ app.post('/auth/2fa', async (req, res, next) => {
 app.post('/auth/2fa/verify', async (req, res, next) => {
     const access_token = req.signedCookies['access_token']
     const otp = req.body.otp
-    const { sub } = jwt.verify({token:access_token, key:AUTH_PUB_KEY})
+    const { sub } = jwt.verify({token:access_token})
     const isUser = await userUseCases.verify2faSetup({email:sub}, otp)
     return res.json({
         me:sub,
@@ -167,7 +166,7 @@ app.get('/auth/code', async(req, res, next) => {
         try {
             const { sub } = jwt.verify({token:id_token})
             if (!sub){
-                const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+                const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
             }
             const redirectUri = await grantTypes.codeGrant({
@@ -191,7 +190,7 @@ app.get('/auth/code', async(req, res, next) => {
             return res.json({error: error.message})
         }
     }
-    const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+    const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
     return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
 app.post('/auth/token/', async(req:any, res, next) => {
@@ -229,7 +228,7 @@ app.get('/auth/implicit/', async(req, res, next) => {
         try {
             const { sub } = jwt.verify({token:id_token})
             if (!sub){
-                const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+                const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
             }
             const redirectUri = await grantTypes.implicitFlow({
@@ -248,6 +247,18 @@ app.get('/auth/implicit/', async(req, res, next) => {
                     return res.json({redirectUri})
                 }
             }
+            const random_buffer = await util.generateRandomBytes(128)
+            const salt = random_buffer.toString('hex')
+            const word = `${client_id} ${client_domain} ${req['browserHash']} ${salt}`
+            const sessionStateBuffer = await util.generateHash(word)
+            const sessionState = sessionStateBuffer.digest('hex') + `.${salt}`;
+            res.cookie('session_state',  sessionState, {
+                expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
+                secure: true,
+                // httpOnly: true,
+                signed: true,
+                domain: client_domain
+            })
             res.set({'Cache-Control':'no-store'})
             res.set({'Pragma': 'no-cache'})
             return res.redirect(307,redirectUri)
@@ -256,7 +267,7 @@ app.get('/auth/implicit/', async(req, res, next) => {
             return res.json({error: error.message})
         }
     }
-    const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+    const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
     return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
 app.get('/auth/hybrid/', async(req, res, next) => {
@@ -275,7 +286,7 @@ app.get('/auth/hybrid/', async(req, res, next) => {
         try {
             const { sub } = jwt.verify({token:id_token})
             if (!sub){
-                const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+                const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
             }
             const redirectUri = await grantTypes.hybridFlow({
@@ -302,7 +313,7 @@ app.get('/auth/hybrid/', async(req, res, next) => {
             return res.json({error: error.message})
         }
     }
-    const cb_token = jwt.sign({raw_query, redirect_uri},{expiresIn:60*5})
+    const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
     return res.redirect(`https://auth.tiger-crunch.com:3000?cb=${cb_token}`)
 })
 app.post('/auth/refresh-token/', async(req:any, res, next) => {
@@ -365,6 +376,29 @@ app.get('/userinfo', async (req:any, res) => {
     const userInfo = await userUseCases.getUser({id:sub, email:null})
     return res.json(userInfo)
 })
+// const keyStore = async function (){
+//     return await new KeyStore().genetateKeys()
+// }
+app.get('/jwks', async (req, res) => {
+// const jose = await import("node-jose")
+// const jwktopem = require('jwk-to-pem')
+// const keyStores = await jose.JWK.asKeyStore(JSON.stringify(keys))
+// console.log(keys.toJSON())
+    // const payload = JSON.stringify({
+    //     exp: Math.floor((Date.now() + (1000 * 60 * 60 * 24))/1000),
+    //     iat: Math.floor(Date.now() / 1000),
+    //     sub: 'test',
+    //   })
+    // const signer = keyStore.createSign()
+    // const token = await signer
+    //     .update(payload)
+    //     .final()
+    const ks = keyStore.keyStore
+    return res.json(ks.toJSON())
+})
+app.on('listening', async () => {
+    await keyStore.genetateKeys()
+})
 function bearerAuth(req, res, next){
     const headers = req.headers
     const authorization = headers["authorization"]
@@ -381,8 +415,13 @@ function isVerifiedUA(req){
     if(!id_token){
         return (!!id_token)
     }
-    const {uaid: browserHash} = jwt.verify({token:id_token, key:AUTH_PUB_KEY})
-    return (browserHash === incomingBrowserHash)
+    try {
+        const {uaid: browserHash} = jwt.verify({token:id_token})
+        return (browserHash === incomingBrowserHash)
+    } catch (error) {
+        console.log(error)
+        return false
+    }
 }
 function browserHash(req) : Promise<{
     hash: string
@@ -391,7 +430,7 @@ function browserHash(req) : Promise<{
     const userAgent = req.headers['user-agent']
     const au = uaParser(userAgent)
     const acceptHeaders = {
-        accept: req.headers["accept"],
+        // accept: req.headers["accept"],
         language: req.headers["accept-language"],
     }
     const components = {

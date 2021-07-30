@@ -116,7 +116,7 @@ export default function makeGrantTypes({
                 const implicitFlow = new ImplicitFlow(params)
                 await implicitFlow.verify()
                 await implicitFlow.generateAccessToken()
-                implicitFlow.generateIdToken()
+                await implicitFlow.generateIdToken()
                 implicitFlow.processResponse()
                 const response = implicitFlow.getResponse()
                 return response
@@ -131,12 +131,11 @@ export default function makeGrantTypes({
                 await hybridFlow.verify()
                 await hybridFlow.generateAccessToken()
                 await hybridFlow.generateCode()
-                hybridFlow.generateIdToken()
+                await hybridFlow.generateIdToken()
                 hybridFlow.processResponse()
                 const response = hybridFlow.getResponse()
                 return response
             } catch (error) {
-                console.log(error)
                 return `${redirect_uri}?error=invalid_request&error_description=${error.message}&state=${state}`
             }
         }
@@ -145,7 +144,7 @@ export default function makeGrantTypes({
                 const tokenFlow = new TokenGrant(params)
                 await tokenFlow.verify()
                 await tokenFlow.generateAccessToken()
-                tokenFlow.generateIdToken()
+                await tokenFlow.generateIdToken()
                 await tokenFlow.cacheToken()
                 tokenFlow.processResponse()
                 const response = tokenFlow.getResponse()
@@ -160,7 +159,7 @@ export default function makeGrantTypes({
                 refreshTokenFlow.getTokenInfo()
                 await refreshTokenFlow.verify()
                 await refreshTokenFlow.generateAccessToken()
-                refreshTokenFlow.generateIdToken()
+                await refreshTokenFlow.generateIdToken()
                 refreshTokenFlow.cacheToken()
                 refreshTokenFlow.processResponse()
                 const response = refreshTokenFlow.getResponse()
@@ -364,7 +363,7 @@ export default function makeGrantTypes({
             this.verifyBySecret = async function(){
                 try {
                     await hasClientCredentials({client_id,client_secret})
-                    await clientUseCases.verifyClientBySecret({id:client_id, secret:client_secret})
+                    await clientUseCases.verifyClientBySecret({client_id, client_secret})
                     this.isValidClient = true
                     return this.isValidClient
                 } catch (error) {

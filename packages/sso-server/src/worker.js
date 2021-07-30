@@ -37,6 +37,7 @@ self.onmessage = async function(e) {
     -----END PUBLIC KEY-----`
         if (rawPubKey) {
             try {
+                
                 const isValid = await importPublicKey(rawPubKey)
                 .then( pem => {
                     return true

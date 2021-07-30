@@ -42,7 +42,7 @@ function RP({
     }
     this.setTimer = function setTimer() {
         if(!this.sessionState && !this.clientId){
-            throw new Errow('no sesstion details loaded')
+            throw new Errow('no session details loaded')
         }
         this.checkSession(this.opFrameId, null, this.message);
         this.timerID = setInterval(
@@ -70,6 +70,21 @@ class SSOSession {
     loadSession (){
         this.sessionState = sessionStorage.getItem('sessionState') || null
         this.clientId = sessionStorage.getItem('clientId') || null
+        if (!this.clientId){
+            const uri = new URL(window.location.href)
+            const idToken = uri.searchParams.get('id_token')
+            const at = uri.searchParams.get('access_token')
+            const tokenType = uri.searchParams.get('token_type')
+            const expiresIn = uri.searchParams.get('expires_in')
+            const state = uri.searchParams.get('state')
+            if(idToken && at && state && expiresIn){
+                const [h,p,s] = idToken.split('.')
+                const {aud,sub,...rest} = JSON.parse(window.atob(p))
+                this.clientId = aud
+                this.sessionState = `${this.clientId}.${state}`
+                console.log(this.sessionState)
+            }
+        }
         return this
     }
     isLoaded(){

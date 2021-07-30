@@ -23,8 +23,11 @@
   "gitHead": "605f5f5aae3e60a83a60eb31a6592fbc17f326aa",
   "dependencies": {
     "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
     "express": "^4.17.1",
+    "jose": "^3.14.3",
     "jose-browser-runtime": "^3.14.0",
+    "jsencrypt": "^3.2.0",
     "webpack": "^5.44.0",
     "webpack-dev-middleware": "^5.0.0"
   },

@@ -1,5 +1,5 @@
 var fs = require('fs');
-export const options = { 
+const options = { 
     key: fs.readFileSync('server-key.pem'), 
     cert: fs.readFileSync('server-crt.pem'), 
     // ca: fs.readFileSync('ca-crt.pem'),
@@ -7,44 +7,45 @@ export const options = {
     // requestCert: true, 
     // rejectUnauthorized: true
 };
-var jwt = require('jsonwebtoken');
-import * as crypto from 'crypto';
+// var jwt = require('jsonwebtoken');
+const crypto = require('crypto');
 const assert = require('assert');
-const AUTH_SERVER = 'auth.tiger-crunch.com'
-const IssuerMetaData = {
-    issuer: AUTH_SERVER,
-    authorization_endpoint: `${AUTH_SERVER}/o/oauth2/v2/auth`,
-    token_endpoint: `${AUTH_SERVER}/token`,
-    jwks_uri: `${AUTH_SERVER}/v1/certs`,
-    userinfo_endpoint: `${AUTH_SERVER}/v1/userinfo`,
-    revocation_endpoint: `${AUTH_SERVER}/v1/revoke`,
-    // introspection_endpoint: <string>,
-    // end_session_endpoint: <string>,
-    registration_endpoint:`${AUTH_SERVER}/v1/users/`,
-    // token_endpoint_auth_methods_supported: <string>,
-    // token_endpoint_auth_signing_alg_values_supported: <string>
-    // introspection_endpoint_auth_methods_supported: <string>
-    // introspection_endpoint_auth_signing_alg_values_supported: <string>
-    // revocation_endpoint_auth_methods_supported: <string>
-    // revocation_endpoint_auth_signing_alg_values_supported: <string>
-    // request_object_signing_alg_values_supported: <string>
-    // mtls_endpoint_aliases: <Object>
-    // token_endpoint: <string>
-    // userinfo_endpoint: <string>
-    // revocation_endpoint: <string>
-    // introspection_endpoint: <string>
-}
-function logConnections(req, res, next){
-    // logger.info(new Date()+' '+ 
-    // req.socket.remoteAddress+' '+ 
-    // // req.socket.getPeerCertificate().subject.CN+' '+ 
-    // req.method+' '+req.url)
-    console.log(new Date()+' '+ 
-    req.socket.remoteAddress+' '+ 
-    // req.socket.getPeerCertificate().subject.CN+' '+ 
-    req.method+' '+req.url); 
-    next()
-}
+// const AUTH_SERVER = 'auth.tiger-crunch.com'
+// const IssuerMetaData = {
+//     issuer: AUTH_SERVER,
+//     authorization_endpoint: `${AUTH_SERVER}/o/oauth2/v2/auth`,
+//     token_endpoint: `${AUTH_SERVER}/token`,
+//     jwks_uri: `${AUTH_SERVER}/v1/certs`,
+//     userinfo_endpoint: `${AUTH_SERVER}/v1/userinfo`,
+//     revocation_endpoint: `${AUTH_SERVER}/v1/revoke`,
+//     // introspection_endpoint: <string>,
+//     // end_session_endpoint: <string>,
+//     registration_endpoint:`${AUTH_SERVER}/v1/users/`,
+//     // token_endpoint_auth_methods_supported: <string>,
+//     // token_endpoint_auth_signing_alg_values_supported: <string>
+//     // introspection_endpoint_auth_methods_supported: <string>
+//     // introspection_endpoint_auth_signing_alg_values_supported: <string>
+//     // revocation_endpoint_auth_methods_supported: <string>
+//     // revocation_endpoint_auth_signing_alg_values_supported: <string>
+//     // request_object_signing_alg_values_supported: <string>
+//     // mtls_endpoint_aliases: <Object>
+//     // token_endpoint: <string>
+//     // userinfo_endpoint: <string>
+//     // revocation_endpoint: <string>
+//     // introspection_endpoint: <string>
+// }
+
+// function logConnections(req, res, next){
+//     // logger.info(new Date()+' '+ 
+//     // req.socket.remoteAddress+' '+ 
+//     // // req.socket.getPeerCertificate().subject.CN+' '+ 
+//     // req.method+' '+req.url)
+//     console.log(new Date()+' '+ 
+//     req.socket.remoteAddress+' '+ 
+//     // req.socket.getPeerCertificate().subject.CN+' '+ 
+//     req.method+' '+req.url); 
+//     next()
+// }
 
 const { 
     privateKey: AUTH_SIGNER_KEY, 
@@ -52,16 +53,15 @@ const {
 } = crypto.generateKeyPairSync('rsa', {
     modulusLength: 2048,
     publicKeyEncoding: {
-      type: 'spki',
-      format: 'pem'
+        type: 'pkcs1',
+        format: 'pem'
     },
     privateKeyEncoding: {
-      type: 'pkcs8',
-      format: 'pem',
-      cipher: 'aes-256-cbc',
-      passphrase: ''
+        type: 'pkcs1',
+        format: 'pem'
     }
 });
+console.log(AUTH_SIGNER_KEY, AUTH_PUB_KEY)
 
 function Aunthenticator({Issuer}){
     // function IDUser(user){
@@ -317,24 +317,24 @@ function Aunthenticator({Issuer}){
 
 // });
 
-const alice = crypto.createDiffieHellman(2048);
-const aliceKeys = alice.generateKeys()
-const aliceKey = alice.getPrivateKey("base64");
-const alicePublicKey = alice.getPublicKey("base64")
+// const alice = crypto.createDiffieHellman(2048);
+// const aliceKeys = alice.generateKeys()
+// const aliceKey = alice.getPrivateKey("base64");
+// const alicePublicKey = alice.getPublicKey("base64")
 
-const arice = crypto.createDiffieHellman(alice.getPrime("base64"), "base64", alice.getGenerator())
-// arice.generateKeys()
-arice.setPrivateKey(alice.getPrivateKey())
-arice.setPublicKey(alice.getPublicKey())
+// const arice = crypto.createDiffieHellman(alice.getPrime("base64"), "base64", alice.getGenerator())
+// // arice.generateKeys()
+// arice.setPrivateKey(alice.getPrivateKey())
+// arice.setPublicKey(alice.getPublicKey())
 
 // const aricePriKey = arice.getPrivateKey("base64")
 // const ariceKeys = arice.getPublicKey("base64")
 // const ariceKey = arice.getPublicKey("base64")
 
-console.log(arice.getPublicKey("base64"), alice.getPublicKey("base64"))
-const aliceSecret = alice.computeSecret(arice.getPublicKey());
-const ariceSecret = arice.computeSecret(alice.getPublicKey());
-console.log(aliceSecret.toString("hex"), ariceSecret.toString("hex"))
+// console.log(arice.getPublicKey("base64"), alice.getPublicKey("base64"))
+// const aliceSecret = alice.computeSecret(arice.getPublicKey());
+// const ariceSecret = arice.computeSecret(alice.getPublicKey());
+// console.log(aliceSecret.toString("hex"), ariceSecret.toString("hex"))
 
 // const aliceKey = alice.generateKeys();
 

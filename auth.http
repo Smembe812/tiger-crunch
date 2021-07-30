@@ -50,7 +50,7 @@ content-type: application/json
 {
     "email":"findyourcat@app.com",
     "project_name":"findyourcat",
-    "domain":"https://findyourcat.com/v1/callback"
+    "domain":"https://client.tiger-crunch.com:3300"
 }
 
 ### verify client
@@ -74,7 +74,7 @@ GET https://tiger-crunch.com:4433/auth/code
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
-&code=zZdf2eEfdZNhlJfnJnG2pAyj29hCgQF2PSoySA6S9wI=
+&code=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=
 &redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
 Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
 ### implicit flow
@@ -104,10 +104,13 @@ Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6
 
 ### introspection
 POST https://tiger-crunch.com:4433/auth/introspection
-?token=IwdSIOeV6L8uRmaeeYYI9mtEmWlpUdmPypsnv-psmaw=
+?token=LXaucVI14CBI9Vv16YnUzsp9d9lCRS2zBgFu9zXTrqA=
 &token_hint=access_token HTTP/1.1
 Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
 
 ### userinfo
 GET https://tiger-crunch.com:4433/userinfo HTTP/1.1
 Authorization: Bearer wSThUv-eSR1UPzJ-YCJgnAecpAFIFGkMwL99uY5JS60=access_token
+
+### jwk
+GET https://tiger-crunch.com:4433/jwks HTTP/1.1

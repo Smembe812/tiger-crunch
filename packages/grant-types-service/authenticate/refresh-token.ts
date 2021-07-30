@@ -107,25 +107,24 @@ export default function makeRefreshTokenGrant({
             }
             return this
         }
-        this.generateIdToken = function(){
-            const {at_hash, rt_hash} = this.token
+        this.generateIdToken = async function(){
+            const {at_hash, rt_hash, auth_time} = this.token
             const {
-                sub,iss, aud,auth_time
+                sub,iss, aud,iat
             } = this.validExpiredToken
-            const id_token = jwt.sign(
+            const exp = 60 * 10;
+            const id_token = await jwt.sign(
                 {
                     sub,
                     iss,
                     aud,
-                    auth_time,
                     at_hash,
-                    rt_hash
+                    rt_hash,
+                    auth_time
                 }, 
-                { 
-                    expiresIn: 60 * 10 
-                }
+                { exp }
             );
-            this.token = {...this.token, id_token, expiresIn: 60 * 10}
+            this.token = {...this.token, id_token, expiresIn: exp}
             return this
         }
         this.cacheToken = function(){
