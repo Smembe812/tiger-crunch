@@ -101,7 +101,6 @@ export default function makeGrantTypes({
                 await codeFlow.delegateScope()
                 await codeFlow.generateCode()
                 const response = codeFlow.processResponse().getResponse()
-                console.log(codeFlow)
                 return response
             } catch (error) {
                 if (error.message === "invalid_request"){
@@ -195,27 +194,6 @@ export default function makeGrantTypes({
                 throw new Error("client credentials not provided")
             }
             return true
-        }
-        function GrantFlow(params){
-            this.params = params
-            this.validClient = false
-            this.code=null
-            this.redirectUriResponce=null
-            this.next = null
-            this.setNext= setNext.bind(this)
-            this._getResponse = _getResponse.bind(this)
-            function setNext(nextFlow){
-                this.next = nextFlow.bind(this)
-            }
-            function _getResponse(){
-                if(this.next){
-                    this.next()
-                }
-                if(this.redirectUriResponce){
-                    return this.redirectUriResponce
-                }
-                return null
-            }
         }
         function GrantResponse(params){
             const {redirect_uri, code, state,token, response_type} = params

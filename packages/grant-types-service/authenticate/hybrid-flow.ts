@@ -23,7 +23,7 @@ export default function makeHybridFlow({
                     "invalid response type for hybrid flow"
                 )
             }
-            const nonceIsAuthentic = await this.isAuthenticNonce() 
+            const nonceIsAuthentic = await this.isAuthenticNonce()
             if(!nonceIsAuthentic){
                 throw new ErrorWrapper(
                     "nonce not unique",

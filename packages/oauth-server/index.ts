@@ -94,7 +94,7 @@ app.post('/auth', async(req, res, next) => {
         if (isAuthentic){
             const user = await userUseCases.getUser(claims)
             id_token_params.user = user
-            const id_token = await await jwt.sign({
+            const id_token = await jwt.sign({
                 sub: user.id,
                 aud: !id_token_params.client ? "tiger-crunch.com": id_token_params.client.domain,
                 iss:'https://auth.tiger-crunch.com',
@@ -123,7 +123,6 @@ app.post('/auth', async(req, res, next) => {
 
 app.post('/users', async (req, res, next) => {
     try {
-        console.log(req.hostname, req.get("origin"))
         const userInput = req.body
         const userResponse = await userUseCases.createNewUser(userInput)
         res.status(201)
@@ -370,7 +369,6 @@ app.get('/clients/verify', async (req, res) => {
     return res.json({...resp})
 })
 app.get('/userinfo', async (req:any, res) => {
-    console.log(req.client.access_token)
     const id_token = req.signedCookies['id_token']
     const { sub } = jwt.verify({token:id_token})
     const userInfo = await userUseCases.getUser({id:sub, email:null})

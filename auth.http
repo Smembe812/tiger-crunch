@@ -69,14 +69,14 @@ GET https://tiger-crunch.com:4433/auth/code
 &scope=openid%20profile%20email
 &client_id=bd7e5e97-afe4-4796-b757-690ddc79ebb2
 &state=af0ifjsldkj
-&redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
+&redirect_uri=https://findyourcat.com HTTP/1.1
 
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
 &code=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=
 &redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
-Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
+Authorization: Basic de5b7b26-d5d1-4e79-9b91-04be0f7efeda:-B7pDQGet13or60wfu5-K1L6Y9aW1PNGHetkHSmJPsc=
 ### implicit flow
 GET https://tiger-crunch.com:4433/auth/implicit
 ?response_type=id_token%20token 
@@ -104,9 +104,9 @@ Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6
 
 ### introspection
 POST https://tiger-crunch.com:4433/auth/introspection
-?token=LXaucVI14CBI9Vv16YnUzsp9d9lCRS2zBgFu9zXTrqA=
+?token=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=
 &token_hint=access_token HTTP/1.1
-Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
+Authorization: Basic f5c52129-8ccc-4e55-8641-53367a474a24:SxTkNbWqNFBn_v5sJyvlBSz86A2iZawM1vY1BAbZaJg=
 
 ### userinfo
 GET https://tiger-crunch.com:4433/userinfo HTTP/1.1

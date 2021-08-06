@@ -40,19 +40,20 @@ export default function makeTokenGrant({
                 throw new ErrorWrapper(
                     "audience and code mismatch",
                     "GrantTypes.tokenGrant"
-                )
+                    )
             }
             return this
         }
         this.isCodeOwner = async function(){
             const {sub, permissions, ...authorization_code} = await dataSource.get(this.params.code)
             this.sub = sub
-            console.log(permissions)
+            // need to fail silently,
+            // if permissions to not exist, just ignore
             const allowedPermissions = await permissionsUseCases.getAvailablePermission({
-                id: this.params.sub,
+                id: this.sub,
                 permissions: permissions
             })
-            this.scope = `opernid ${allowedPermissions}`
+            this.scope = `openid ${allowedPermissions}`
             return isCodeOwner({
                 client:{
                     id:this.params.client_id,
