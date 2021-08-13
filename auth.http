@@ -74,9 +74,9 @@ GET https://tiger-crunch.com:4433/auth/code
 ### request token
 POST https://tiger-crunch.com:4433/auth/token
 ?grant_type=authorization_code
-&code=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=
+&code=MAu2pqeF0bE5WA2ZwVxNJut7qlnGt6RLUEz-qG2Yf20=
 &redirect_uri=https%3A%2F%2Ffindyourcat.com HTTP/1.1
-Authorization: Basic de5b7b26-d5d1-4e79-9b91-04be0f7efeda:-B7pDQGet13or60wfu5-K1L6Y9aW1PNGHetkHSmJPsc=
+Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
 ### implicit flow
 GET https://tiger-crunch.com:4433/auth/implicit
 ?response_type=id_token%20token 

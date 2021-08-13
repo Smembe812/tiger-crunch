@@ -23,13 +23,13 @@ export default function makeIntrospectioon({
         this.verify = async function(){
             try {
                 await this.verifyClient()
-                this.getToken()
+                await this.getToken()
                 return this
             } catch (error) {
                 throw error
             }
         }
-        this.getToken = function (){
+        this.getToken = async function (){
             if (this.params?.token_hint 
                 && (this.params?.token_hint !== "access_token"
                     && this.params?.token_hint !== "refresh_token")){
@@ -38,7 +38,13 @@ export default function makeIntrospectioon({
                     `${ErrorScope}.introspection`
                 )
             }
-            this.token = tokenCache.get(this.params.token)
+            const fields =  await tokenCache.getToken(this.params.token)
+            // this.token = tokenCache.get(this.params.token)
+            this.token = !fields ? null : {
+                id_token: fields?.it || null,
+                refresh_token: fields?.rt || null,
+                access_token: fields?.at || null
+            }
             return this
         }
         this.decodeIdToken = function(){

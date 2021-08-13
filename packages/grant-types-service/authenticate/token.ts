@@ -81,14 +81,18 @@ export default function makeTokenGrant({
             return this
         }
         //maybe should fail silently?
-        this.cacheToken = function(){
+        this.cacheToken = async function(){
+            const sid = await util.generateSessionId(this.token.access_token)
             const cachePayload = {
                 access_token: this.token.access_token,
                 expires_in: this.token.expiresIn,
                 id_token: this.token.id_token,
-                refresh_token: this.token.refresh_token
+                refresh_token: this.token.refresh_token,
+                sid,
+                sub: this.sub
             }
-            tokenCache.insert(cachePayload)
+            await tokenCache.setCache(cachePayload)
+            // tokenCache.insert(cachePayload)
             return this
         }
         this.generateIdToken = async function(){
@@ -102,7 +106,8 @@ export default function makeTokenGrant({
                     at_hash,
                     rt_hash,
                     auth_time: this.auth_time,
-                    scope: this.scope
+                    scope: this.scope,
+                    uah: this.params.uah
                 }, 
                 { exp }
             );

@@ -78,8 +78,8 @@ export default function makeRefreshTokenGrant({
         this.clientOwnsIdToken = function(){
             return this.params.client_id === this.validExpiredToken.aud
         }
-        this.getTokenInfo = function (){
-            const token = tokenCache.get(this.params.refresh_token)
+        this.getTokenInfo = async function (){
+            const token = await tokenCache.getToken(this.params.refresh_token)
             if(!token){
                 throw new ErrorWrapper(
                     "invalid_request",
@@ -87,7 +87,7 @@ export default function makeRefreshTokenGrant({
                 )
             }
             this.token = {
-                id_token: token.id_token
+                id_token: token.it
             }
             return this
         }
@@ -120,15 +120,26 @@ export default function makeRefreshTokenGrant({
                     aud,
                     at_hash,
                     rt_hash,
-                    auth_time
+                    auth_time,
+                    uah: this.params.uah
                 }, 
                 { exp }
             );
             this.token = {...this.token, id_token, expiresIn: exp}
             return this
         }
-        this.cacheToken = function(){
-            tokenCache.insert(this.token)
+        this.cacheToken = async function(){
+            // await tokenCache.insert(this.token)
+            const sid = await util.generateSessionId(this.token.access_token)
+            const cachePayload = {
+                access_token: this.token.access_token,
+                expires_in: this.token.expiresIn,
+                id_token: this.token.id_token,
+                refresh_token: this.token.refresh_token,
+                sid,
+                sub: this.sub
+            }
+            await tokenCache.setCache(cachePayload)
             return this
         }
         this.processResponse = function(){
@@ -140,4 +151,4 @@ export default function makeRefreshTokenGrant({
             return this.response
         }
     }
-}
+}this

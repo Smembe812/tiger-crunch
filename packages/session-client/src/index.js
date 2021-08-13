@@ -1,7 +1,5 @@
 import SSOSession from './session'
 const session = new SSOSession()
-console.log(navigator)
-// window.addEventListener('message', (e) => console.log(e))
 class OIDClient {
     authUrl
     redirectUri

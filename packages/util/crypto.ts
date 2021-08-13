@@ -28,6 +28,14 @@ export async function verifyCode(code, code_hash):Promise<boolean>{
     )
     return bufferDifference === 0
 }
+export async function generateSessionId(at:string):Promise<string> {
+    const randomBuff = await generateRandomBytes(32)
+    const salt = randomBuff.toString('hex')
+    const word = `${at}.${salt}`
+    const sessionBuf = await generateHash(word)
+    const sid = sessionBuf.digest('hex')+`.${salt}`
+    return sid
+}
 export function toBase64Url(word):string{
     return word.toString('base64').split('+').join("-").split('/').join("_")
 }

@@ -9,6 +9,18 @@ const keyStore = new KeyStore()
 const jwt = new JWT({
     keyStore
 })
+// import redis from "redis"
+// const redisOptions = {
+//     host: 'localhost',
+//     port: '6379',
+// }
+// const sessionCacheClient = redis.createClient(redisOptions);
+// sessionCacheClient.on("error", function(error) {
+//     console.error(error);
+// });
+// sessionCacheClient.set("key", "value", redis.print);
+// sessionCacheClient.expire("key", 60 * 5)
+// sessionCacheClient.get("key", redis.print);
 // server config
 export const options = { 
     key: keys.SEVER_KEY, 
@@ -80,7 +92,7 @@ app.get('/ua-integrity', async (req, res, next) => {
 
 app.post('/auth', async(req, res, next) => {
     let isAuthentic;
-    const uaid = req['browserHash']
+    const uah = req['browserHash']
     const {claims} = req.body
     const {cb_token} = req.query
     let cb_params;
@@ -98,11 +110,11 @@ app.post('/auth', async(req, res, next) => {
                 sub: user.id,
                 aud: !id_token_params.client ? "tiger-crunch.com": id_token_params.client.domain,
                 iss:'https://auth.tiger-crunch.com',
-                uaid
+                uah
             },
             {exp: 60 * 60 * 24})
             res.set({'Cache-Control':'no-store'})
-            res.cookie('id_token',  id_token, {
+            res.cookie('__IDT',  id_token, {
                 expires: new Date(Date.now() + 24 * 3600000), // cookie will be removed after 14 hours
                 secure: true,
                 // httpOnly: true,
@@ -159,7 +171,7 @@ app.get('/auth/code', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {response_type,scope,client_id,state,redirect_uri} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const id_token = req.signedCookies['id_token']
+    const id_token = req.signedCookies['__IDT']
     const {isAuthoritative, browser } = req["useragent"]
     if(id_token){
         try {
@@ -199,10 +211,18 @@ app.post('/auth/token/', async(req:any, res, next) => {
     // If possible, verify that the Authorization Code has not been previously used.
     // Ensure that the redirect_uri parameter value is identical to the redirect_uri parameter value that was included in the initial Authorization Request. If the redirect_uri parameter value is not present when there is only one registered redirect_uri value, the Authorization Server MAY return an error (since the Client should have included the parameter) or MAY proceed without an error (since OAuth 2.0 permits the parameter to be omitted in this case).
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
+    const uah = req['browserHash']
     try {
         const {client_id, client_secret} = req.client
         const {grant_type,code,redirect_uri} = req.query
-        const token = await grantTypes.tokenGrant({grant_type,code,redirect_uri, client_id, client_secret})
+        const token = await grantTypes.tokenGrant({
+            grant_type,
+            code,
+            redirect_uri,
+            client_id,
+            client_secret,
+            uah
+        })
         res.set({'Cache-Control':'no-store'})
         res.set({'Pragma': 'no-cache'})
         return res.json(token)
@@ -221,8 +241,9 @@ app.get('/auth/implicit/', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const id_token = req.signedCookies['id_token']
+    const id_token = req.signedCookies['__IDT']
     const {isAuthoritative, browser } = req["useragent"]
+    const uah = req['browserHash']
     if(id_token){
         try {
             const { sub } = jwt.verify({token:id_token})
@@ -238,7 +259,8 @@ app.get('/auth/implicit/', async(req, res, next) => {
                 state,
                 redirect_uri,
                 sub,
-                nonce
+                nonce,
+                uah
             })
             if(req.headers['origin']){
                 const oh = require('url').parse(req.headers['origin']).host
@@ -250,8 +272,11 @@ app.get('/auth/implicit/', async(req, res, next) => {
             const salt = random_buffer.toString('hex')
             const word = `${client_id} ${client_domain} ${req['browserHash']} ${salt}`
             const sessionStateBuffer = await util.generateHash(word)
-            const sessionState = sessionStateBuffer.digest('hex') + `.${salt}`;
-            res.cookie('session_state',  sessionState, {
+            const __SSID = sessionStateBuffer.digest('hex') + `.${salt}`;
+            // sessionCacheClient.set(__SSID, "value", redis.print)
+            // sessionCacheClient.expire(__SSID, 60 * 5)
+            
+            res.cookie('__SSID',  __SSID, {
                 expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
                 secure: true,
                 // httpOnly: true,
@@ -279,8 +304,9 @@ app.get('/auth/hybrid/', async(req, res, next) => {
     const raw_query = require("url").parse(req.url).query
     const {redirect_uri,response_type,client_id,scope,state,nonce} = req.query
     const client_domain = require("url").parse(redirect_uri).host
-    const id_token = req.signedCookies['id_token']
+    const id_token = req.signedCookies['__IDT']
     const {isAuthoritative, browser } = req["useragent"]
+    const uah = req['browserHash']
     if(id_token){
         try {
             const { sub } = jwt.verify({token:id_token})
@@ -296,7 +322,8 @@ app.get('/auth/hybrid/', async(req, res, next) => {
                 state,
                 redirect_uri,
                 sub,
-                nonce
+                nonce,
+                uah
             })
             if(req.headers['origin']){
                 const oh = require('url').parse(req.headers['origin']).host
@@ -324,9 +351,15 @@ app.post('/auth/refresh-token/', async(req:any, res, next) => {
     // Verify that the Authorization Code used was issued in response to an OpenID Connect Authentication Request (so that an ID Token will be returned from the Token Endpoint).
     const {client_id,client_secret} = req?.client
     const {grant_type,refresh_token,scope, id_token} = req.query
+    const uah = req['browserHash']
     try {
         const token = await grantTypes.refreshTokenGrant({
-            grant_type,client_id,client_secret,refresh_token,scope
+            grant_type,
+            client_id,
+            client_secret,
+            refresh_token,
+            scope,
+            uah
         })
         res.set({'Cache-Control':'no-store'})
         res.set({'Pragma': 'no-cache'})
@@ -369,28 +402,12 @@ app.get('/clients/verify', async (req, res) => {
     return res.json({...resp})
 })
 app.get('/userinfo', async (req:any, res) => {
-    const id_token = req.signedCookies['id_token']
+    const id_token = req.signedCookies['__IDT']
     const { sub } = jwt.verify({token:id_token})
     const userInfo = await userUseCases.getUser({id:sub, email:null})
     return res.json(userInfo)
 })
-// const keyStore = async function (){
-//     return await new KeyStore().genetateKeys()
-// }
 app.get('/jwks', async (req, res) => {
-// const jose = await import("node-jose")
-// const jwktopem = require('jwk-to-pem')
-// const keyStores = await jose.JWK.asKeyStore(JSON.stringify(keys))
-// console.log(keys.toJSON())
-    // const payload = JSON.stringify({
-    //     exp: Math.floor((Date.now() + (1000 * 60 * 60 * 24))/1000),
-    //     iat: Math.floor(Date.now() / 1000),
-    //     sub: 'test',
-    //   })
-    // const signer = keyStore.createSign()
-    // const token = await signer
-    //     .update(payload)
-    //     .final()
     const ks = keyStore.keyStore
     return res.json(ks.toJSON())
 })
@@ -409,7 +426,7 @@ function bearerAuth(req, res, next){
 }
 function isVerifiedUA(req){
     const incomingBrowserHash = req.browserHash
-    const id_token = req.signedCookies['id_token']
+    const id_token = req.signedCookies['__IDT']
     if(!id_token){
         return (!!id_token)
     }

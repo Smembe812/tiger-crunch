@@ -29,7 +29,7 @@ export default function makeGrantTypes({
             AuthorizationCode,
             GrantResponse,
             util,
-            permissionsUseCases
+            permissionsUseCases,
         })
         const TokenGrant = makeTokenGrant({
             ErrorWrapper,
@@ -50,7 +50,8 @@ export default function makeGrantTypes({
             GrantResponse,
             nonceManager,
             util,
-            jwt
+            jwt,
+            tokenCache
         })
         const HybridFlow = makeHybridFlow({
             ErrorWrapper,
@@ -60,7 +61,8 @@ export default function makeGrantTypes({
             GrantResponse,
             nonceManager,
             util,
-            jwt
+            jwt,
+            tokenCache
         })
         const RefreshTokenGrant = makeRefreshTokenGrant({
             ErrorWrapper,
@@ -116,6 +118,7 @@ export default function makeGrantTypes({
                 await implicitFlow.verify()
                 await implicitFlow.generateAccessToken()
                 await implicitFlow.generateIdToken()
+                await implicitFlow.cacheToken()
                 implicitFlow.processResponse()
                 const response = implicitFlow.getResponse()
                 return response
@@ -131,6 +134,7 @@ export default function makeGrantTypes({
                 await hybridFlow.generateAccessToken()
                 await hybridFlow.generateCode()
                 await hybridFlow.generateIdToken()
+                await hybridFlow.cacheToken()
                 hybridFlow.processResponse()
                 const response = hybridFlow.getResponse()
                 return response
@@ -155,11 +159,11 @@ export default function makeGrantTypes({
         async function refreshTokenGrant(params):Promise<object>{
             try {
                 const refreshTokenFlow = new RefreshTokenGrant(params)
-                refreshTokenFlow.getTokenInfo()
+                await refreshTokenFlow.getTokenInfo()
                 await refreshTokenFlow.verify()
                 await refreshTokenFlow.generateAccessToken()
                 await refreshTokenFlow.generateIdToken()
-                refreshTokenFlow.cacheToken()
+                await refreshTokenFlow.cacheToken()
                 refreshTokenFlow.processResponse()
                 const response = refreshTokenFlow.getResponse()
                 return response

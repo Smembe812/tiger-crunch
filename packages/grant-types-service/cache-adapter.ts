@@ -1,18 +1,75 @@
 import LRU from 'lru-cache';
-interface Token{
+import redis from "redis"
+interface Token {
     access_token:string;
-    expires_in:number,
+    expires_in:number;
     id_token:string;
-    refresh_token:String,
+    refresh_token:String;
+    sid: String;
     token_type?:string;
 }
 export default class TokenCache {
-    lru
+    lru;
+    tokenBase = "tc:tokens:";
+    userTokensSet = "tc:userTokens:";
+    userSessionsSet = "tc:userSessions:";
+    sessions = "tc:sessions:";
+    redisOptions = {
+        host: 'localhost',
+        port: '6379',
+    }
+    redisClient;
     constructor(options){
         if(!options?.maxSize){
             throw new Error("maxSize not set")
         }
         this.lru = new LRU(options.maxSize)
+        this.redisClient = redis.createClient(this.redisOptions);
+    }
+    setCache(token){ 
+        return new Promise((resolve, reject) => {
+            const refreshTokenExp = 60 * 60 * 24
+            const multi = this.redisClient.multi()
+            multi.hmset(this.tokenBase+token.access_token, 
+                    "rt", token.refresh_token,
+                    "it", token.id_token
+                )
+                .expire(this.tokenBase+token.access_token, token.expires_in)
+                .hmset(this.sessions+token.sid,
+                    "at", token.access_token,
+                    "rt", token.refresh_token,
+                    "it", token.id_token
+                )
+                .sadd(this.userSessionsSet+token.sub,
+                    token.sid
+                )
+                .sadd(this.userTokensSet+token.sub,
+                    token.access_token
+                )
+                if(token.refresh_token){
+                    multi.hmset(this.tokenBase+token.refresh_token,
+                        "at", token.access_token,
+                        "it", token.id_token
+                    )
+                    .expire(this.tokenBase+token.refresh_token, refreshTokenExp)
+                    .sadd(this.userTokensSet+token.sub,
+                        token.refresh_token
+                    )
+                }   
+            multi.exec((err, res) => {
+                if (err) reject(err);
+                return resolve(res)
+            })
+        })
+    }
+    getToken(token){
+        return new Promise((resolve, reject) => {
+            this.redisClient
+                .hgetall(`${this.tokenBase}${token}`, (err, res) => {
+                    if (err) reject(err)
+                    return resolve(res)
+                })
+        })
     }
     insert(token:Token):boolean{
         if(!token?.access_token){

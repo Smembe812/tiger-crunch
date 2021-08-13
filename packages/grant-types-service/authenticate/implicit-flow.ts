@@ -5,7 +5,8 @@ export default function makeImplicitFlow({
     GrantResponse,
     nonceManager,
     util,
-    jwt
+    jwt,
+    tokenCache
 }){
     return function ImplicitFlow(params){
         this.params = params
@@ -80,6 +81,7 @@ export default function makeImplicitFlow({
                     aud: this.params.client_id,
                     auth_time: this.auth_time,
                     at_hash,
+                    uah: this.params.uah
                 }, 
                 { exp }
             );
@@ -89,6 +91,19 @@ export default function makeImplicitFlow({
                 expiresIn:exp, 
                 token_type:"bearer"
             }
+            return this
+        }
+        this.cacheToken = async function(){
+            const sid = await util.generateSessionId(this.token.access_token)
+            const cachePayload = {
+                access_token: this.token.access_token,
+                expires_in: this.token.expiresIn,
+                id_token: this.token.id_token,
+                refresh_token: null,
+                sid,
+                sub: this.sub
+            }
+            await tokenCache.setCache(cachePayload)
             return this
         }
         this.processResponse = function(){

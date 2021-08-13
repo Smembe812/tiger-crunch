@@ -238,6 +238,7 @@ describe("UserRequests", () => {
                     const response = await request(app)
                         .post(`/auth/token${valid_client_query}`)
                         .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
+                    // console.log(response)
                     const headers = response.header
                     const responseBody = response.body
                     const cacheControl = headers['cache-control']
