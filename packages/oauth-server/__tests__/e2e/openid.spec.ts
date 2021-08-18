@@ -95,7 +95,7 @@ describe("UserRequests", () => {
     const testPort="5500"
     let signedCookie;
     before(async()=>{
-        suppressLog()
+        // suppressLog()
         server.listen(testPort, async() => {
             app.emit('listening', null)
             console.log(`Test app listening at https://tiger-crunch.com:${testPort}`)
@@ -534,7 +534,7 @@ describe("UserRequests", () => {
                     const response = await request(app)
                         .post(`/auth/introspection${valid_client_query}`)
                         .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
-                    // console.log(validClientCredentials, token, response)
+                    // console.log(response)
                     const headers = response.header
                     const responseBody = response.body
                     const cacheControl = headers['cache-control']

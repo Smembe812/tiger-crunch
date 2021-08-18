@@ -16,6 +16,14 @@ export async function generateRandomCode():Promise<{code:string, c_hash:string}>
         throw error
     }
 }
+export async function generateItHash(it:string):Promise<any>{
+    const [h,p,s] = it.split('.')
+    const hash = await createHash('sha256')
+    const b = Buffer.from(p+s)
+    const lmo = b.slice(0,b.length/2)
+    hash.update(lmo)
+    return hash
+}
 export async function verifyCode(code, code_hash):Promise<boolean>{
     const c_hash_buff= Buffer.from(toBase64(code_hash))
     const code_buf= Buffer.from(toBase64(code))
@@ -28,10 +36,13 @@ export async function verifyCode(code, code_hash):Promise<boolean>{
     )
     return bufferDifference === 0
 }
-export async function generateSessionId(at:string):Promise<string> {
+export async function generateSessionId(params:{
+    uah:string;
+    clientId:string;
+}): Promise<string> {
     const randomBuff = await generateRandomBytes(32)
     const salt = randomBuff.toString('hex')
-    const word = `${at}.${salt}`
+    const word = `${params.clientId} ${params.uah} ${salt}`
     const sessionBuf = await generateHash(word)
     const sid = sessionBuf.digest('hex')+`.${salt}`
     return sid

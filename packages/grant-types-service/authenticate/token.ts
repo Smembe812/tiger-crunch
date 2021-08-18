@@ -17,6 +17,7 @@ export default function makeTokenGrant({
         this.sub=null
         this.responseType=null
         this.response=null
+        this.sid=null
         this.token={}
         this.auth_time = (+ new Date/1000)
         this.verify = async function(){
@@ -80,15 +81,22 @@ export default function makeTokenGrant({
             }
             return this
         }
+        this.generateSessionId = async function generateSessionId(){
+            const sessionIdPayload = {
+                uah:this.params.uah,
+                clientId: this.params.client_id
+            }
+            this.sid = await util.generateSessionId(sessionIdPayload)
+            return this
+        }
         //maybe should fail silently?
         this.cacheToken = async function(){
-            const sid = await util.generateSessionId(this.token.access_token)
             const cachePayload = {
                 access_token: this.token.access_token,
                 expires_in: this.token.expiresIn,
                 id_token: this.token.id_token,
                 refresh_token: this.token.refresh_token,
-                sid,
+                sid: this.sid,
                 sub: this.sub
             }
             await tokenCache.setCache(cachePayload)

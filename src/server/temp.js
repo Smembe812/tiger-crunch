@@ -10,6 +10,14 @@ const options = {
 // var jwt = require('jsonwebtoken');
 const crypto = require('crypto');
 const assert = require('assert');
+async function main(){
+    const hash = await crypto.createHash('sha256')
+    const b = Buffer.from("eyJleHAiOjE2MjkxODk2MjYsImlhdCI6MTYyOTE4OTAyNiwic3ViIjoiMGY4ZDQ5YjgtNGJmNS00N2FkLWFlMGEtMzI5MmFjYmIzNTQ4IiwiaXNzIjoiaHR0cHM6Ly9hdXRoLnRpZ2VyLWNydW5jaC5jb20iLCJhdWQiOiI0ZjQyMjY3Mi05OTkyLTRhN2UtYTQwYS1kNTZmZGU3M2EwNjEiLCJhdF9oYXNoIjoiQkM5Ui1kaDdlcFhINFAtUnRkY3hSMXVVbGRYVU1HUmZQOFZxTmN0Z3paZz0iLCJydF9oYXNoIjoidTBUOE9FdXpJZjltS20yVGxSTjlUN2U3ZkEzMklOdnI1MHFqS2tnZGswOD0iLCJhdXRoX3RpbWUiOjE2MjkxODkwMjYuNzgxLCJzY29wZSI6Im9wZW5pZCAiLCJ1YWgiOiIyYzlkNTBkYmNkYTRiODEwMzQzNzFmMzRmYWE5MTY2ZGY1NWMyYmU2ZTNkMjgxOWQ2MWM4NjMxZDU3NGY3M2NhIn0bnrc35xCQexbATWpkalXG0O-rqsimJ5wpl3ZGyhYw0MzHTsMGr3r8bJwh-nMoRRRNjCdSzivv9vBBzZX-epS52xg1lT-MvxOCOgMfwdiTyzHTrXsxcbEsGEXifiL3xsOu9vGL9T2f92Yy2Zq_tgH5ikn5a21vcqeNnuS8BrLT0reACqj3PsdPRUnwfeQ0bOLgE-QxOd02_LheAaSUlQUGyrnkVp-fDK3B9QRgUtAVZW8dBYEQ8Q3uHtcOLac_oJGptWkWpDPPLR-4ntkgOsKkeDZY5TdOBQ_g77sGVbVHR33dIgWiMiUQLEIq8KflTPIEpQ9fMU8IeHAtnea6EoiFQ")
+    const lmo = b.slice(0,b.length/2)
+    hash.update(b)
+    console.log(hash.digest('hex'))
+}
+main()
 // const AUTH_SERVER = 'auth.tiger-crunch.com'
 // const IssuerMetaData = {
 //     issuer: AUTH_SERVER,
@@ -47,21 +55,22 @@ const assert = require('assert');
 //     next()
 // }
 
-const { 
-    privateKey: AUTH_SIGNER_KEY, 
-    publicKey: AUTH_PUB_KEY 
-} = crypto.generateKeyPairSync('rsa', {
-    modulusLength: 2048,
-    publicKeyEncoding: {
-        type: 'pkcs1',
-        format: 'pem'
-    },
-    privateKeyEncoding: {
-        type: 'pkcs1',
-        format: 'pem'
-    }
-});
-console.log(AUTH_SIGNER_KEY, AUTH_PUB_KEY)
+// const { 
+//     privateKey: AUTH_SIGNER_KEY, 
+//     publicKey: AUTH_PUB_KEY 
+// } = crypto.generateKeyPairSync('rsa', {
+//     modulusLength: 2048,
+//     publicKeyEncoding: {
+//         type: 'pkcs1',
+//         format: 'pem'
+//     },
+//     privateKeyEncoding: {
+//         type: 'pkcs1',
+//         format: 'pem'
+//     }
+// });
+// console.log(AUTH_SIGNER_KEY, AUTH_PUB_KEY)
+
 
 function Aunthenticator({Issuer}){
     // function IDUser(user){

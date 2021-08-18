@@ -16,6 +16,7 @@ export default function makeHybridFlow({
         this.code=null
         this.responseType=null
         this.response=null
+        this.sid=null
         this.auth_time = (+ new Date/1000)
         this.verify = async function(){
             if(!this.isValidResponseType()){
@@ -95,14 +96,21 @@ export default function makeHybridFlow({
             this.token = {id_token, ...this.token, expiresIn: exp, token_type:"bearer"}
             return this
         }
+        this.generateSessionId = async function generateSessionId(){
+            const sessionIdPayload = {
+                uah:this.params.uah,
+                clientId: this.params.client_id
+            }
+            this.sid = await util.generateSessionId(sessionIdPayload)
+            return this
+        }
         this.cacheToken = async function(){
-            const sid = await util.generateSessionId(this.token.access_token)
             const cachePayload = {
                 access_token: this.token.access_token,
                 expires_in: this.token.expiresIn,
                 id_token: this.token.id_token,
                 refresh_token: null,
-                sid,
+                sid: this.sid,
                 sub: this.sub
             }
             await tokenCache.setCache(cachePayload)

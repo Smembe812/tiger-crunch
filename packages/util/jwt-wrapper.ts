@@ -14,10 +14,11 @@ export default class JWT{
             throw new TypeError("jwk keystore not provided")
         }
         let exp;
-        if(!options.exp){
+        if(!options?.exp){
             exp = this.defaultExp
+        }else{
+            exp = options.exp;
         }
-        exp = options.exp;
         const pyl = {
             exp: Math.floor((Date.now() + (1000 * exp))/1000),
             iat: Math.floor(Date.now() / 1000),

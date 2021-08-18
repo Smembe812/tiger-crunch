@@ -1,5 +1,6 @@
 export default function makeGrantTypes({
     clientUseCases, 
+    userUseCases,
     dataSource, 
     tokenCache, 
     util, 
@@ -17,7 +18,9 @@ export default function makeGrantTypes({
         makeImplicitFlow,
         makeHybridFlow,
         makeRefreshTokenGrant,
-        makeIntrospection
+        makeIntrospection,
+        makeBasicAuth,
+        makeLogout
     } = Authenticate
     const ErrorWrapper = util.ErrorWrapper
     const ErrorScope="GrantTypes"
@@ -81,6 +84,23 @@ export default function makeGrantTypes({
             tokenCache,
             ErrorScope,
         })
+        const Logout = makeLogout({
+            ErrorWrapper,
+            ClientAuthenticity,
+            ResponseType,
+            GrantResponse,
+            jwt,
+            dataSource,
+            isCodeOwner,
+            util,
+            tokenCache
+        })
+        const Basic = makeBasicAuth({
+            userUseCases,
+            jwt,
+            util,
+            tokenCache
+        })
         async function codeGrant(params){
             //TODO: verify scope
             const {state,redirect_uri, scope} = params
@@ -111,13 +131,14 @@ export default function makeGrantTypes({
                 throw error
             }
         }
-        async function implicitFlow(params) : Promise <string>{
+        async function implicitFlow(params) : Promise <any>{
             const {redirect_uri,state} = params
             try {
                 const implicitFlow = new ImplicitFlow(params)
                 await implicitFlow.verify()
                 await implicitFlow.generateAccessToken()
                 await implicitFlow.generateIdToken()
+                await implicitFlow.generateSessionId()
                 await implicitFlow.cacheToken()
                 implicitFlow.processResponse()
                 const response = implicitFlow.getResponse()
@@ -134,6 +155,7 @@ export default function makeGrantTypes({
                 await hybridFlow.generateAccessToken()
                 await hybridFlow.generateCode()
                 await hybridFlow.generateIdToken()
+                await hybridFlow.generateSessionId()
                 await hybridFlow.cacheToken()
                 hybridFlow.processResponse()
                 const response = hybridFlow.getResponse()
@@ -148,6 +170,7 @@ export default function makeGrantTypes({
                 await tokenFlow.verify()
                 await tokenFlow.generateAccessToken()
                 await tokenFlow.generateIdToken()
+                await tokenFlow.generateSessionId()
                 await tokenFlow.cacheToken()
                 tokenFlow.processResponse()
                 const response = tokenFlow.getResponse()
@@ -163,6 +186,7 @@ export default function makeGrantTypes({
                 await refreshTokenFlow.verify()
                 await refreshTokenFlow.generateAccessToken()
                 await refreshTokenFlow.generateIdToken()
+                await refreshTokenFlow.generateSessionId()
                 await refreshTokenFlow.cacheToken()
                 refreshTokenFlow.processResponse()
                 const response = refreshTokenFlow.getResponse()
@@ -185,6 +209,36 @@ export default function makeGrantTypes({
                     response = {active:false}
                     return response
                 }
+                throw error
+            }
+        }
+        async function logoutFlow(params):Promise<object>{
+            let response;
+            try {
+                const logout = new Logout(params)
+                await logout.logout()
+                await logout.generateLogoutToken()
+                response = logout.getResponse()
+                return response
+            } catch (error) {
+                throw error
+            }
+        }
+        async function basicFlow(params):Promise<{
+            id_token: String;
+            sid: String;
+            exp: any;
+        }>{
+            let response;
+            try {
+                const basicF = new Basic(params)
+                await basicF.verifySub()
+                await basicF.generateIdToken()
+                await basicF.generateSessionId()
+                await basicF.cacheSession()
+                response = basicF.getResponse()
+                return response
+            } catch (error) {
                 throw error
             }
         }
@@ -362,7 +416,9 @@ export default function makeGrantTypes({
             tokenGrant,
             hybridFlow,
             refreshTokenGrant,
-            introspection
+            introspection,
+            logoutFlow,
+            basicFlow
         }
     }
 }

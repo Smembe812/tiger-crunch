@@ -104,9 +104,9 @@ Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6
 
 ### introspection
 POST https://tiger-crunch.com:4433/auth/introspection
-?token=5MztzrVaF9hFgBszYbFAXTiv9XpaIEKUWv97Vefeilg=
+?token=NnU97FnBDw5FJEWaeJRRNScVH3o0S5fLP6HsrVSQy8M=
 &token_hint=access_token HTTP/1.1
-Authorization: Basic f5c52129-8ccc-4e55-8641-53367a474a24:SxTkNbWqNFBn_v5sJyvlBSz86A2iZawM1vY1BAbZaJg=
+Authorization: Basic bd7e5e97-afe4-4796-b757-690ddc79ebb2:p4ETQXS1qpoMyiSdWhzjF6fz-u7ot2hD47ZQuCGwuG0=
 
 ### userinfo
 GET https://tiger-crunch.com:4433/userinfo HTTP/1.1
@@ -114,3 +114,8 @@ Authorization: Bearer wSThUv-eSR1UPzJ-YCJgnAecpAFIFGkMwL99uY5JS60=access_token
 
 ### jwk
 GET https://tiger-crunch.com:4433/jwks HTTP/1.1
+
+### logout
+POST https://tiger-crunch.com:4433/auth/logout HTTP/1.1
+Cookie: __IDT=s%3AeyJ0eXAiOiJqd3QiLCJhbGciOiJSUzI1NiIsImtpZCI6IjhnTWlxVXExSG1iejR5bGJPVVV3SEJUQ3o5NlAtQS00YVR1UlFiNmpSYVUifQ.eyJleHAiOjE2Mjk5MDY3MTgsImlhdCI6MTYyOTMwMTkxOCwic3ViIjoiYzZhODdlZDItZDhlZi00ODZkLTkwMjMtOTU1YzJiY2I1ZjE4IiwiaXNzIjoiaHR0cHM6Ly9hdXRoLnRpZ2VyLWNydW5jaC5jb20iLCJhdXRoX3RpbWUiOjE2MjkzMDE5MTh9.tqwwWQATicZY2bxjaxF7phOxnhJAMAPehkgftta2B3hpl8rgzelNw-IVHeLttYwqz2952Dt4EvT2GGn363GySj0Vy8DEIk8xqh1wwLRn09vFSLcAxmJ9qslJCqsFwWD0ZY2RrxIaarBQnb8JZQ-nmckUZYgwiL6azXF5Rg-H3wB8Q-0zG6pAhdweiGmXVqFoynJnwhOMdqdrwH7yMM8mLCck1PX7OghLFCeoCAToLhhzOqqHhxiMr67of8twwfJNHHWEl_WORGuso8BatxwFvtdBD19QxsjQely7D3oDZt4gWsghs_mgtIdJy-k1mDpboX0b3jQWP2J8_uyz-ulYEQ.of78oTUSJgj%2FigdoAOVctQWq%2Fv1fYgJyHvUjFbg9Xo4; Domain=.tiger-crunch.com; Path=/; Expires=Mon, 19 Jan 1970 20:45:06 GMT; Secure
+Cookie: __SID=s%3A82a278487c96625fce0c20ee7bc03b583ca999e95c0a24121bf388c3719f386d.c68ee3836530df7bcf60bb0ddae1ea4b0654cadcc099ff52191b996f0b112dc4.zoTgKqxajCjgLa7SMNcSQ9Bs%2F7NH%2BwBzBM0JHIB%2BQzs; Domain=.tiger-crunch.com; Path=/; Expires=Mon, 19 Jan 1970 20:45:06 GMT; Secure

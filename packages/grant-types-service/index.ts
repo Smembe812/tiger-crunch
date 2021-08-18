@@ -1,4 +1,5 @@
 import Client from "@smembe812/clients-service"
+import User from "@smembe812/user-service"
 import util from "@smembe812/util"
 import DataSource from './datasource'
 import NonceManager from "./nonce-manager"
@@ -8,6 +9,8 @@ import makeImplicitFlow from "./authenticate/implicit-flow"
 import makeHybridFlow from "./authenticate/hybrid-flow"
 import makeRefreshTokenGrant from "./authenticate/refresh-token"
 import makeIntrospection from "./authenticate/introspection"
+import makeBasicAuth from "./authenticate/basic"
+import makeLogout from "./authenticate/logout"
 import makeGrantTypes from './grant-types'
 import makePermissionsUseCases from './auth-permissions'
 import TokenCache from "./cache-adapter"
@@ -35,6 +38,7 @@ export const permissionsDataSource = new PermissionsPool('level-auth-permissions
 export const permissionsUseCases = makePermissionsUseCases({dataSource:permissionsDataSource})
 export const GrantTypes = makeGrantTypes({
     clientUseCases: Client.useCases,
+    userUseCases: User.userUseCases,
     dataSource,
     util,
     tokenCache,
@@ -45,7 +49,9 @@ export const GrantTypes = makeGrantTypes({
         makeImplicitFlow,
         makeHybridFlow,
         makeRefreshTokenGrant,
-        makeIntrospection
+        makeIntrospection,
+        makeLogout,
+        makeBasicAuth
     },
     permissionsUseCases
 })

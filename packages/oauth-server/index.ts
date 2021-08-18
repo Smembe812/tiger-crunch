@@ -39,7 +39,7 @@ import logger from "./logger"
 import basicAuth from "basic-auth"
 import User from '@smembe812/user-service'
 import Client from "@smembe812/clients-service"
-import makeGrantTypes from "@smembe812/grant-types-service/"
+import makeGrantTypes, { GrantTypes } from "@smembe812/grant-types-service/"
 const grantTypes = makeGrantTypes.GrantTypes({jwt, keys})
 const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
@@ -102,35 +102,30 @@ app.post('/auth', async(req, res, next) => {
             cb_params = jwt.verify({token:cb_token})
             id_token_params.client = {domain: require("url").parse(cb_params.redirect_uri).host}
         }
-        isAuthentic = await isAuthenticated({claims})
-        if (isAuthentic){
-            const user = await userUseCases.getUser(claims)
-            id_token_params.user = user
-            const id_token = await jwt.sign({
-                sub: user.id,
-                aud: !id_token_params.client ? "tiger-crunch.com": id_token_params.client.domain,
-                iss:'https://auth.tiger-crunch.com',
-                uah
-            },
-            {exp: 60 * 60 * 24})
-            res.set({'Cache-Control':'no-store'})
-            res.cookie('__IDT',  id_token, {
-                expires: new Date(Date.now() + 24 * 3600000), // cookie will be removed after 14 hours
-                secure: true,
-                // httpOnly: true,
-                signed: true,
-                domain: '.tiger-crunch.com'
-            })
-            if (cb_params){
-                return res.redirect(`/auth/code?${cb_params.raw_query}`)
-            }
-            return res.json({id_token})
+        const response = await grantTypes.basicFlow(claims)
+        res.set({'Cache-Control':'no-store'})
+        res.cookie('__IDT',  response.id_token, {
+            expires: new Date(response.exp), // cookie will be removed after 14 hours
+            secure: true,
+            // httpOnly: true,
+            signed: true,
+            domain: '.tiger-crunch.com'
+        })
+        res.cookie('__SID',  response.sid, {
+            expires: new Date(response.exp), // cookie will be removed after 14 hours
+            secure: true,
+            // httpOnly: true,
+            signed: true,
+            domain: '.tiger-crunch.com'
+        })
+        if (cb_params){
+            return res.redirect(`/auth/code?${cb_params.raw_query}`)
         }
+        return res.json(response)
     } catch (error) {
         console.log(error)
         return res.json({message: "wrong pin or email"})
     }
-    return res.json({message: "wrong pin or email"})
 })
 
 app.post('/users', async (req, res, next) => {
@@ -251,7 +246,7 @@ app.get('/auth/implicit/', async(req, res, next) => {
                 const cb_token = await jwt.sign({raw_query, redirect_uri},{exp:60*5})
                 return res.redirect(`https://auth.tiger-crunch.com:3000/?cb=${cb_token}`)
             }
-            const redirectUri = await grantTypes.implicitFlow({
+            const {redirectUri, sid} = await grantTypes.implicitFlow({
                 domain:client_domain,
                 response_type,
                 scope,
@@ -268,15 +263,7 @@ app.get('/auth/implicit/', async(req, res, next) => {
                     return res.json({redirectUri})
                 }
             }
-            const random_buffer = await util.generateRandomBytes(128)
-            const salt = random_buffer.toString('hex')
-            const word = `${client_id} ${client_domain} ${req['browserHash']} ${salt}`
-            const sessionStateBuffer = await util.generateHash(word)
-            const __SSID = sessionStateBuffer.digest('hex') + `.${salt}`;
-            // sessionCacheClient.set(__SSID, "value", redis.print)
-            // sessionCacheClient.expire(__SSID, 60 * 5)
-            
-            res.cookie('__SSID',  __SSID, {
+            res.cookie('__SID',  sid, {
                 expires: new Date(Date.now() + 8 * 3600000), // cookie will be removed after 8 hours
                 secure: true,
                 // httpOnly: true,
@@ -388,7 +375,17 @@ app.post('/auth/introspection/', async(req:any, res, next) => {
     } catch (error) {
         logger.error(error)
         return res.json({error: error.message})
-        }
+    }
+})
+app.post('/auth/logout', async(req, res, next) => {
+    const idToken = req.signedCookies['__IDT']
+    const sid = req.signedCookies['__SID']
+    try {
+        const response = await grantTypes.logoutFlow({sid, idToken})
+        return res.json({id_token:response})
+    } catch (error) {
+        return res.json({error: error.message})
+    }
 })
 app.post('/clients', async (req, res) => {
     const {email, project_name, domain} = req.body
