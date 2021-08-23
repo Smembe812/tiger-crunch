@@ -42,7 +42,7 @@ export async function generateSessionId(params:{
 }): Promise<string> {
     const randomBuff = await generateRandomBytes(32)
     const salt = randomBuff.toString('hex')
-    const word = `${params.clientId} ${params.uah} ${salt}`
+    const word = `${params.clientId}.${params.uah}.${salt}`
     const sessionBuf = await generateHash(word)
     const sid = sessionBuf.digest('hex')+`.${salt}`
     return sid

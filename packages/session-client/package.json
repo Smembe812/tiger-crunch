@@ -6,10 +6,10 @@
     "scripts": {
         "test": "echo \"Error: no test specified\" && exit 1",
         "start": "node server",
-        "build:dev": "webpack --config webpack.dev.js",
-        "build": "webpack --config webpack.prod.js",
-        "watch": "webpack --config webpack.dev.js --watch",
-        "start:webpack": "webpack --config webpack.dev.js serve --open"
+        "build:dev": "npx webpack --config webpack.dev.js",
+        "build": "npx webpack --config webpack.prod.js",
+        "watch": "npx webpack --config webpack.dev.js --watch",
+        "start:webpack": "npx webpack --config webpack.dev.js serve --open"
     },
     "author": "Paul Sembereka <psemberekajr@gmail.com>",
     "repository": {

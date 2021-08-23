@@ -95,7 +95,7 @@ describe("UserRequests", () => {
     const testPort="5500"
     let signedCookie;
     before(async()=>{
-        // suppressLog()
+        suppressLog()
         server.listen(testPort, async() => {
             app.emit('listening', null)
             console.log(`Test app listening at https://tiger-crunch.com:${testPort}`)
