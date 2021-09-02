@@ -6,26 +6,25 @@ const expect = chai.expect
 chai.use(chaiAsPromised)
 import {URL} from 'url'
 import sinon from 'sinon'
-import { access_token_mock, expected_token, id_token_mock, refresh_token_mock, tokenInputMock, userIdMock} from '../data/token-grant'
+import { access_token_mock, id_token_mock, refresh_token_mock, userIdMock} from '../data/token-grant'
 import Client from '@smembe812/clients-service'
 import util from '@smembe812/util'
 import {
 	GrantTypes, 
 	nonceManager,
 	dataSource, 
-	permissionsDataSource, 
-	permissionsUseCases
+	permissionsDataSource,
+	tokenCache
 } from '../../index'
-import { expectedImpResponse, mockImplicitInput, mockRedirectError, token } from '../data/implicit-flow'
+import { expectedImpResponse, mockImplicitInput, sidMock, token } from '../data/implicit-flow'
 const jwt = new util.JWT({
 	keyStore: null
 })
 describe('Implicit-flow',()=>{
-	let grantTypes, tokenCache
+	let grantTypes
 	beforeEach(async () => {
 		// not really using the database at all.
 		// proper instatiation of datasorce required before tests run
-		tokenCache = null
 		grantTypes = GrantTypes({jwt, keys:null})
 	})
 	afterEach(async function() {
@@ -39,7 +38,10 @@ describe('Implicit-flow',()=>{
 			.onFirstCall().resolves({code:access_token_mock, c_hash:null})
 			.onSecondCall().resolves({code:refresh_token_mock, c_hash:null})
 		sinon.stub(util, 'generateAccessToken').resolves({access_token:token.access_token})
+		sinon.stub(util, 'generateSessionId').resolves(sidMock)
 		sinon.stub(Client.useCases, 'verifyClientByDomain').resolves(true)
+		sinon.stub(tokenCache, 'setCache').resolves(true)
+		sinon.stub(tokenCache, 'getToken').resolves({it:id_token_mock,rt:null,at:null})
 		sinon.stub(jwt, 'sign').resolves(id_token_mock)
 		sinon.stub(dataSource, 'get').resolves(userIdMock)
 		sinon.stub(nonceManager, 'isAuthenticNonce').resolves(true)
@@ -62,6 +64,8 @@ describe('Implicit-flow',()=>{
 			.onSecondCall().throwsException(new Error('Testing_error'))
 		sinon.stub(Client.useCases, 'verifyClientByDomain').throwsException(new Error('Testing_error'))
 		sinon.stub(jwt, 'sign').throwsException(new Error('Testing_error'))
+		sinon.stub(tokenCache, 'getToken').throwsException(new Error('Testing error'))
+		sinon.stub(tokenCache, 'setCache').throwsException(new Error('Testing error'))
 		sinon.stub(nonceManager, 'isAuthenticNonce').throwsException(new Error('Testing_error'))
 		sinon.stub(nonceManager, 'persistNonce').throwsException(new Error('Testing_error'))
 		sinon.stub(dataSource, 'get').throwsException(new Error('Testing_error'))

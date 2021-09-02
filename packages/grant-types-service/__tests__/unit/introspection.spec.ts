@@ -12,11 +12,9 @@ import {
 	GrantTypes, 
 	nonceManager,
 	dataSource, 
-	permissionsDataSource, 
-	permissionsUseCases,
+	permissionsDataSource,
 	tokenCache
 } from '../../index'
-import TokenCache from '../../cache-adapter'
 const jwt = new util.JWT({
 	keyStore: null
 })

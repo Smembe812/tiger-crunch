@@ -5,7 +5,7 @@ const chaiAsPromised = require('chai-as-promised')
 const expect = chai.expect
 chai.use(chaiAsPromised)
 import sinon from 'sinon'
-import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, tokenInputMock, userIdMock} from '../data/token-grant'
+import { access_token_mock, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, sidMock, tokenInputMock} from '../data/token-grant'
 import Client from '@smembe812/clients-service'
 import util from '@smembe812/util'
 import {
@@ -41,6 +41,7 @@ describe('Token-grant',()=>{
 			access_token:access_token_mock, 
 			refresh_token: refresh_token_mock
 		})
+		sinon.stub(util, 'generateSessionId').resolves(sidMock)
 		sinon.stub(tokenCache, 'insert').returns(true)
 		sinon.stub(Client.useCases, 'verifyClientBySecret').resolves(true)
 		sinon.stub(jwt, 'sign').resolves(id_token_mock)
@@ -53,6 +54,7 @@ describe('Token-grant',()=>{
 		sinon.stub(util, 'generateRandomCode')
 			.onFirstCall().throwsException(new Error('Testing error'))
 			.onSecondCall().throwsException(new Error('Testing error'))
+		sinon.stub(util, 'generateSessionId').throwsException(new Error('Testing error'))
 		sinon.stub(util, 'generateAccessToken').throwsException(new Error('Testing error'))
 		sinon.stub(tokenCache, 'insert').throwsException(new Error('Testing error'))
 		sinon.stub(Client.useCases, 'verifyClientBySecret').throwsException(new Error('Testing error'))

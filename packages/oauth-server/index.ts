@@ -5,7 +5,7 @@ dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
 //configure jwt
 import util from '@smembe812/util'
 const JWT = util.JWT
-import keys, {AUTH_SIGNER_KEY, AUTH_PUB_KEY, KeyStore} from './keys'
+import keys, { KeyStore} from './keys'
 const keyStore = new KeyStore()
 const jwt = new JWT({
 	keyStore
@@ -55,7 +55,7 @@ app.use(cors({
 app.use(userAgent.express())
 app.use(bodyParser.json())
 //TODO change cookie signer secret
-app.use(cookieParser(AUTH_SIGNER_KEY.toString('utf-8')))
+app.use(cookieParser(sha256('veryrandom')))
 app.use(logConnections)
 app.use(async (req, res, next) =>{
 	const fingerprint =  await browserHash(req)

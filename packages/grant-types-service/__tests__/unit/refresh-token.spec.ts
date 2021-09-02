@@ -5,18 +5,16 @@ const chaiAsPromised = require('chai-as-promised')
 const expect = chai.expect
 chai.use(chaiAsPromised)
 import sinon from 'sinon'
-import { access_token_mock, code_fake, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, refreshTokenInput, userIdMock, validExpiredTokenPayload, sidMock} from '../data/refresh-token'
+import { access_token_mock, dataSourceRes, expected_token, id_token_mock, refresh_token_mock, refreshTokenInput, validExpiredTokenPayload, sidMock} from '../data/refresh-token'
 import Client from '@smembe812/clients-service'
 import util from '@smembe812/util'
 import {
 	GrantTypes, 
 	nonceManager,
 	dataSource, 
-	permissionsDataSource, 
-	permissionsUseCases,
+	permissionsDataSource,
 	tokenCache
 } from '../../index'
-import TokenCache from '../../cache-adapter'
 const jwt = new util.JWT({
 	keyStore:null
 })
