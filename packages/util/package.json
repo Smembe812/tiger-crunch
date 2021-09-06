@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/util",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "utility functions",
   "main": "./lib/",
   "scripts": {

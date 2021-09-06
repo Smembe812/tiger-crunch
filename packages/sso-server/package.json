@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/sso-server",
-  "version": "0.1.8",
+  "version": "0.1.10",
   "description": "sign in and session server",
   "main": "index.js",
   "scripts": {
