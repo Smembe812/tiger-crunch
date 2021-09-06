@@ -492,7 +492,4 @@ function logConnections(req, res, next){
 		req.method+' '+req.url)
 	next()
 }
-async function isAuthenticated(user, agent=null) : Promise<boolean>{
-	return await userUseCases.verifyUser(user.claims)
-}
 export default app
