@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/kafka-broker",
-    "version": "0.1.13",
+    "version": "0.1.14",
     "description": "kafka broker for project tiger-crunch",
     "main": "./lib/",
     "scripts": {
@@ -14,7 +14,7 @@
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
-        "@smembe812/util": "^0.1.13",
+        "@smembe812/util": "^0.1.14",
         "dotenv": "^8.2.0",
         "kafka-node": "^5.0.0",
         "uuid": "^8.3.2"
