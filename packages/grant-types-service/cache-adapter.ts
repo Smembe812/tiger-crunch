@@ -18,7 +18,7 @@ export default class TokenCache {
 	blacklist='tc:blacklist:'
 	sessions = 'tc:sessions:';
 	redisOptions = {
-		host: REDIS_URI,
+		host: '0.0.0.0',
 		port: '6379',
 	}
 	redisClient;
