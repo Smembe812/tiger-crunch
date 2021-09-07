@@ -1,6 +1,7 @@
 import LRU from 'lru-cache'
 import util from '@smembe812/util'
 import redis from 'redis'
+//redis host for different environments
 const REDIS_URI = process.env.REDIS_URI || 'localhost'
 interface Token {
     access_token:string;
