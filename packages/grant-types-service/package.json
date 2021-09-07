@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/grant-types-service",
-    "version": "0.1.17",
+    "version": "0.1.18",
     "description": "grant types for OAuth and OID",
     "main": "./lib/index.js",
     "types": "./index.d.ts",
