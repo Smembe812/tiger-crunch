@@ -1,6 +1,7 @@
 import LRU from 'lru-cache'
 import util from '@smembe812/util'
 import redis from 'redis'
+const REDIS_URI = process.env.REDIS_URI || 'localhost'
 interface Token {
     access_token:string;
     expires_in:number;
@@ -17,7 +18,7 @@ export default class TokenCache {
 	blacklist='tc:blacklist:'
 	sessions = 'tc:sessions:';
 	redisOptions = {
-		host: 'localhost',
+		host: REDIS_URI,
 		port: '6379',
 	}
 	redisClient;
