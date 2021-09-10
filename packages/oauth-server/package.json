@@ -1,6 +1,6 @@
 {
     "name": "@smembe812/oauth-server",
-    "version": "0.1.19",
+    "version": "0.1.20",
     "description": "outh server for project tiger-crunch",
     "main": "./lib/index.js",
     "types": "./index.d.ts",
@@ -16,7 +16,7 @@
     },
     "dependencies": {
         "@smembe812/clients-service": "^0.1.14",
-        "@smembe812/grant-types-service": "^0.1.19",
+        "@smembe812/grant-types-service": "^0.1.20",
         "@smembe812/user-service": "^0.1.14",
         "@smembe812/util": "^0.1.14",
         "@types/graphql": "^14.5.0",
