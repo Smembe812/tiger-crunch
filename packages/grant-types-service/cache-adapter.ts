@@ -3,6 +3,7 @@ import util from '@smembe812/util'
 import redis from 'redis'
 //redis host for different environments
 const REDIS_URI = process.env.REDIS_URI || 'localhost'
+const REDIS_SECRET = process.env.REDIS_SECRET
 interface Token {
     access_token:string;
     expires_in:number;
@@ -21,6 +22,7 @@ export default class TokenCache {
 	redisOptions = {
 		host: REDIS_URI,
 		port: '6379',
+		password: REDIS_SECRET
 	}
 	redisClient;
 	constructor(options){
