@@ -1,7 +1,9 @@
 //setup environment variables
 import path from 'path'
 import dotenv from 'dotenv'
-dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
+if(!process.env.REDIS_SECRET){
+	dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
+}
 //configure jwt
 import util from '@smembe812/util'
 const JWT = util.JWT
