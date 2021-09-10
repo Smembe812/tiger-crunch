@@ -22,7 +22,6 @@ export default class TokenCache {
 	redisOptions = {
 		host: REDIS_URI,
 		port: '6379',
-		password: REDIS_SECRET
 	}
 	redisClient;
 	constructor(options){
