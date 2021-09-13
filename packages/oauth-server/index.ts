@@ -1,9 +1,9 @@
 //setup environment variables
 import path from 'path'
 import dotenv from 'dotenv'
-if(!process.env.REDIS_SECRET){
-	dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
-}
+dotenv.config()
+dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
+console.log(process.env)
 //configure jwt
 import util from '@smembe812/util'
 const JWT = util.JWT
@@ -44,6 +44,7 @@ import basicAuth from 'basic-auth'
 import User from '@smembe812/user-service'
 import Client from '@smembe812/clients-service'
 import { GrantTypes } from '@smembe812/grant-types-service/'
+import { COPYFILE_FICLONE } from 'constants'
 const grantTypes = GrantTypes({jwt, keys})
 const userUseCases = User.userUseCases
 const clientUseCases = Client.useCases
