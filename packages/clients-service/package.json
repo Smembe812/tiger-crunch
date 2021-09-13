@@ -1,6 +1,6 @@
 {
   "name": "@smembe812/clients-service",
-  "version": "0.1.14",
+  "version": "0.1.24",
   "description": "clients service for tc",
   "main": "./lib/",
   "scripts": {
@@ -14,8 +14,8 @@
     "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
   },
   "dependencies": {
-    "@smembe812/user-service": "^0.1.14",
-    "@smembe812/util": "^0.1.14",
+    "@smembe812/user-service": "^0.1.24",
+    "@smembe812/util": "^0.1.24",
     "dotenv": "^9.0.2",
     "jsonwebtoken": "^8.5.1",
     "level": "^7.0.0",
