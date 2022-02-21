@@ -26,6 +26,6 @@ jobs:
       with:
         node-version: ${{ matrix.node-version }}
         cache: 'npm'
-    - run: npm  ci -w @smembe812/oauth-server
-    - run: npm run build --if-present  -w @smembe812/oauth-server
-    - run: npm test:unit  -w @smembe812/oauth-server
+    - run: npm install lerna -g
+    - run: lerna run build
+    - run: lerna run test:unit && lerna run test:e2e
