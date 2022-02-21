@@ -20,12 +20,15 @@ jobs:
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Use Node.js ${{ matrix.node-version }}
+    - name: Set up Node.js ⚙️
       uses: actions/setup-node@v2
       with:
-        node-version: ${{ matrix.node-version }}
-        cache: 'npm'
+        node-version: '14.x'
+        cache: 'yarn'
+    - name: Install dependencies 📦
+      run: yarn install --frozen-lockfile
     - run: npm install lerna -g
     - run: lerna run build
     - run: lerna run test:unit && lerna run test:e2e
+    
+   
