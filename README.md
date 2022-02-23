@@ -1,3 +1,5 @@
+[![UnitTests CI](https://github.com/Smembe812/tiger-crunch/actions/workflows/UnitTests.yml/badge.svg)](https://github.com/Smembe812/tiger-crunch/actions/workflows/UnitTests.yml)
+
 Follows OpenID specs from <https://openid.net/specs/openid-connect-core-1_0.html>
 Draws dome inspiration from Curity <https://oauth.tools/>
 
