@@ -10,7 +10,8 @@ import fs from "fs"
 import { hash, user as userMock } from "../data/user";
 import userEntity from "../../user.entity";
 import identityManager from "../../idmanager"
-import validators from "@smembe812/util/validators"
+import Util from "@smembe812/util"
+const validators = Util.validators
 describe('UserEntity', function() {
     process.env.AUTH_SIGNER = fs.readFileSync('../../test.pem', "utf8")
     const user = userEntity({identityManager, validators})

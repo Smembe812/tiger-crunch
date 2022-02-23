@@ -78,7 +78,9 @@ export default function makeIntrospectioon({
 		}
 		this.verifyClient = async function(){
 			const client = new ClientAuthenticity(this.params)
+			console.time("verifyClient")
 			this.isValidClient = await client.verifyBySecret()
+			console.timeEnd("verifyClient")
 			return this
 		}
 		this.clientOwnsIdToken = function(){

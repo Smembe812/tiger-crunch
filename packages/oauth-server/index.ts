@@ -1,7 +1,7 @@
 //setup environment variables
 import path from 'path'
 import dotenv from 'dotenv'
-dotenv.config()
+// dotenv.config()
 dotenv.config({path:path.resolve(__dirname+'../../../../.env')})
 //configure jwt
 import util from '@smembe812/util'
@@ -12,18 +12,18 @@ const jwt = new JWT({
 	keyStore
 })
 import URL from 'url'
-// import redis from "redis"
-// const redisOptions = {
-//     host: 'localhost',
-//     port: '6379',
-// }
-// const sessionCacheClient = redis.createClient(redisOptions);
-// sessionCacheClient.on("error", function(error) {
-//     console.error(error);
-// });
-// sessionCacheClient.set("key", "value", redis.print);
-// sessionCacheClient.expire("key", 60 * 5)
-// sessionCacheClient.get("key", redis.print);
+import redis from "redis"
+const redisOptions = {
+    host: 'localhost',
+    port: '6379',
+}
+const sessionCacheClient = redis.createClient(redisOptions);
+sessionCacheClient.on("error", function(error) {
+    console.error(error);
+});
+sessionCacheClient.set("key", "value", redis.print);
+sessionCacheClient.expire("key", 60 * 5)
+sessionCacheClient.get("key", redis.print);
 // server config
 export const options = {
 	key: keys.SEVER_KEY,
