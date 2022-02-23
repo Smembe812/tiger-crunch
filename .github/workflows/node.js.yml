@@ -16,19 +16,27 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 16.x]
+        node-version: [14.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
     steps:
+    - uses: actions/checkout@v2
     - name: Set up Node.js ⚙️
       uses: actions/setup-node@v2
       with:
         node-version: '14.x'
-        cache: 'yarn'
-    - name: Install dependencies 📦
-      run: yarn install --frozen-lockfile
-    - run: npm install lerna -g
-    - run: lerna run build
-    - run: lerna run test:unit && lerna run test:e2e
-    
+    - name: Setup npm
+      run: | # Custom action
+        npm set @smembe812:registry=https://npm.pkg.github.com/
+        npm set "//npm.pkg.github.com/:_authToken=$secrets.GAT"
+    - name: Setup lerna
+      run: | # Install and link dependencies
+        npm install lerna -g
+        lerna clean -y
+        lerna link
+        lerna bootstrap
+    - name: Run unit tests # Run tests of all packages
+      run: npm run test:unit --workspaces --if-present
+     
    
+
