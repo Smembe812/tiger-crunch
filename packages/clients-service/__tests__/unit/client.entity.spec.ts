@@ -10,7 +10,8 @@ import fs from "fs"
 import { hash, client as clientMock } from "../data/client";
 import clientEntity from "../../client.entity";
 import makeClientManager from "../../client-manager"
-import validators from "@smembe812/util/validators"
+import Utils from "@smembe812/util"
+const validators = Utils.validators
 const clientManager = makeClientManager()
 describe('clientEntity', function() {
     process.env.AUTH_SIGNER = fs.readFileSync('../../test.pem', "utf8")

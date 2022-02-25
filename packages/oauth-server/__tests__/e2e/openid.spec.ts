@@ -95,7 +95,7 @@ describe("UserRequests", () => {
     const testPort="5500"
     let signedCookie;
     before(async()=>{
-        suppressLog()
+        // suppressLog()
         server.listen(testPort, async() => {
             app.emit('listening', null)
             console.log(`Test app listening at https://tiger-crunch.com:${testPort}`)
@@ -529,11 +529,15 @@ describe("UserRequests", () => {
             describe("valid client", () => {
                 const access_token="4Zr0T0pDeMmz8w9RYRPKtEyYjG6nhOOeipXfMvOssNA="
                 it("can get token info", async () => {
+                    console.time("get token")
                     const token = await getToken(validClientCredentials.getCredentials())
+                    console.timeEnd("get token")
                     const valid_client_query = `?token=${token.access_token}&token_hint=access_token`
+                    console.time("actual response")
                     const response = await request(app)
                         .post(`/auth/introspection${valid_client_query}`)
                         .auth(validClientCredentials.client_id, validClientCredentials.client_secret)
+                    console.timeEnd("actual response")
                     // console.log(response)
                     const headers = response.header
                     const responseBody = response.body

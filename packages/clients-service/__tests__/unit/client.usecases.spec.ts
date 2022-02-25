@@ -10,9 +10,9 @@ import { client as clientMock, clientOutPut, client_secret_base64_fake, clientWi
 import makeClientEntity from '../../client.entity'
 import makeUseCases from '../../usecases'
 import makeClientManager from '../../client-manager'
-import validators from '@smembe812/util/validators'
+import util from "@smembe812/util"
+const validators = util.validators
 import DataSource from '../../datasource'
-import util from '@smembe812/util'
 describe('Client.UseCases', function() {
 	const clientManager = makeClientManager()
 	const clientEntity = makeClientEntity({clientManager, validators})

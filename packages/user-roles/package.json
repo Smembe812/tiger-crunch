@@ -10,7 +10,6 @@
         "clean": "rm -rf ./lib && rm -rf tsconfig.build.tsbuildinfo",
         "build": "npm run clean && npm run compile",
         "test": "yarn run test:unit && yarn run test:e2e",
-        "test:unit": "mocha -r ts-node/register '__tests__/unit/*spec.ts'",
         "test:e2e": "mocha -r ts-node/register '__tests__/e2e/*spec.ts'"
     },
     "dependencies": {
